@@ -1,135 +1,217 @@
-import { DashboardLayout } from "@/components/dashboard-layout"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { ArrowUpRight, Home, TrendingUp, Users, Activity } from "lucide-react"
+import { createClient } from "@/lib/supabase/server"
+import { redirect } from "next/navigation"
+import { Home, TrendingUp, DollarSign, BarChart3, ArrowUpRight, ArrowDownRight } from "lucide-react"
 
-// This would normally come from authentication/session
-const mockUser = {
-  role: "buyer" as const,
-  name: "John Doe",
-  email: "john@example.com",
-}
+export default async function DashboardPage() {
+  const supabase = await createClient()
 
-export default function DashboardPage() {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    redirect("/auth/login")
+  }
+
+  // Get user profile
+  const { data: profile } = await supabase.from("profiles").select("user_role, full_name").eq("id", user.id).single()
+
+  const userRole = profile?.user_role || "buyer"
+  const userName = profile?.full_name || user.email?.split("@")[0]
+
+  // Get some sample data for the dashboard
+  const { data: properties } = await supabase.from("properties").select("*").limit(3)
+
+  const { data: marketData } = await supabase
+    .from("market_analytics")
+    .select("*")
+    .eq("city", "Austin")
+    .order("month_year", { ascending: false })
+    .limit(1)
+    .single()
+
   return (
-    <DashboardLayout userRole={mockUser.role} userName={mockUser.name} userEmail={mockUser.email}>
-      <div className="space-y-6">
-        {/* Welcome Section */}
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Welcome back, {mockUser.name}!</h1>
-          <p className="text-muted-foreground mt-2">Here's what's happening with your real estate journey today.</p>
-        </div>
+    <div className="space-y-8">
+      {/* Welcome Section */}
+      <div>
+        <h1 className="text-3xl font-bold text-balance">Welcome back, {userName}!</h1>
+        <p className="text-muted-foreground mt-2">
+          {userRole === "buyer"
+            ? "Here's what's happening in your local real estate market."
+            : "Track your investments and discover new opportunities."}
+        </p>
+      </div>
 
-        {/* Quick Stats */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Saved Properties</CardTitle>
-              <Home className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">12</div>
-              <p className="text-xs text-muted-foreground">+2 from last week</p>
-            </CardContent>
-          </Card>
+      {/* Stats Cards */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              {userRole === "buyer" ? "Saved Properties" : "Portfolio Value"}
+            </CardTitle>
+            <Home className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{userRole === "buyer" ? "12" : "$2.4M"}</div>
+            <p className="text-xs text-muted-foreground">
+              {userRole === "buyer" ? "+2 from last week" : "+12% from last month"}
+            </p>
+          </CardContent>
+        </Card>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Market Alerts</CardTitle>
-              <Activity className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">3</div>
-              <p className="text-xs text-muted-foreground">New opportunities</p>
-            </CardContent>
-          </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              {userRole === "buyer" ? "Market Trend" : "Monthly Cash Flow"}
+            </CardTitle>
+            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {userRole === "buyer" ? (
+                <div className="flex items-center">
+                  Rising
+                  <ArrowUpRight className="h-4 w-4 text-green-500 ml-1" />
+                </div>
+              ) : (
+                "$8,450"
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {userRole === "buyer" ? "Austin market up 5.2%" : "+$320 from last month"}
+            </p>
+          </CardContent>
+        </Card>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Avg. Property Price</CardTitle>
-              <TrendingUp className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">$485K</div>
-              <p className="text-xs text-muted-foreground">+5.2% from last month</p>
-            </CardContent>
-          </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              {userRole === "buyer" ? "Avg. Price/SqFt" : "Total Properties"}
+            </CardTitle>
+            <DollarSign className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{userRole === "buyer" ? "$285" : "7"}</div>
+            <p className="text-xs text-muted-foreground">
+              {userRole === "buyer" ? "+$12 from last month" : "2 new acquisitions"}
+            </p>
+          </CardContent>
+        </Card>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Search Radius</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">15mi</div>
-              <p className="text-xs text-muted-foreground">From your location</p>
-            </CardContent>
-          </Card>
-        </div>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              {userRole === "buyer" ? "Days on Market" : "Avg. ROI"}
+            </CardTitle>
+            <BarChart3 className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{userRole === "buyer" ? "28" : "14.2%"}</div>
+            <p className="text-xs text-muted-foreground">
+              {userRole === "buyer" ? "-3 days from last month" : "+1.8% from last quarter"}
+            </p>
+          </CardContent>
+        </Card>
+      </div>
 
-        {/* Recent Activity */}
-        <div className="grid gap-6 md:grid-cols-2">
-          <Card>
-            <CardHeader>
-              <CardTitle>Recent Property Views</CardTitle>
-              <CardDescription>Properties you've viewed recently</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {[
-                { address: "123 Oak Street, Downtown", price: "$425,000", status: "New" },
-                { address: "456 Pine Avenue, Suburbs", price: "$380,000", status: "Price Drop" },
-                { address: "789 Elm Drive, Riverside", price: "$520,000", status: "Hot" },
-              ].map((property, index) => (
-                <div key={index} className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">{property.address}</p>
-                    <p className="text-sm text-muted-foreground">{property.price}</p>
+      {/* Main Content Grid */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        {/* Recent Properties */}
+        <Card>
+          <CardHeader>
+            <CardTitle>{userRole === "buyer" ? "Recently Viewed" : "Recent Opportunities"}</CardTitle>
+            <CardDescription>
+              {userRole === "buyer" ? "Properties you've recently looked at" : "New investment opportunities"}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {properties?.slice(0, 3).map((property) => (
+              <div key={property.id} className="flex items-center justify-between p-3 border rounded-lg">
+                <div className="flex-1">
+                  <h4 className="font-medium">{property.title}</h4>
+                  <p className="text-sm text-muted-foreground">
+                    {property.city}, {property.state}
+                  </p>
+                  <div className="flex items-center space-x-2 mt-1">
+                    <Badge variant="secondary">{property.property_type}</Badge>
+                    <span className="text-sm text-muted-foreground">
+                      {property.bedrooms}bd • {property.bathrooms}ba
+                    </span>
                   </div>
-                  <Badge
-                    variant={
-                      property.status === "New" ? "default" : property.status === "Hot" ? "destructive" : "secondary"
-                    }
-                  >
-                    {property.status}
-                  </Badge>
                 </div>
-              ))}
-              <Button variant="outline" className="w-full bg-transparent">
-                View All Properties
-                <ArrowUpRight className="ml-2 h-4 w-4" />
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Market Insights</CardTitle>
-              <CardDescription>Latest trends in your area</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm">Average Days on Market</span>
-                  <span className="font-medium">28 days</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm">Price per Sq Ft</span>
-                  <span className="font-medium">$245</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm">Market Competition</span>
-                  <Badge variant="secondary">Moderate</Badge>
+                <div className="text-right">
+                  <p className="font-semibold">${property.price.toLocaleString()}</p>
+                  <p className="text-sm text-muted-foreground">
+                    ${Math.round(property.price / property.square_feet)}/sqft
+                  </p>
                 </div>
               </div>
-              <Button variant="outline" className="w-full bg-transparent">
-                View Full Report
-                <ArrowUpRight className="ml-2 h-4 w-4" />
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
+            ))}
+            <Button variant="outline" className="w-full bg-transparent">
+              View All Properties
+            </Button>
+          </CardContent>
+        </Card>
+
+        {/* Market Insights */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Market Insights</CardTitle>
+            <CardDescription>Latest trends in your area</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {marketData && (
+              <>
+                <div className="flex items-center justify-between p-3 border rounded-lg">
+                  <div>
+                    <h4 className="font-medium">Average Home Price</h4>
+                    <p className="text-sm text-muted-foreground">Austin, TX</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-semibold">${marketData.avg_price?.toLocaleString()}</p>
+                    <div className="flex items-center text-sm text-green-600">
+                      <ArrowUpRight className="h-3 w-3 mr-1" />
+                      {marketData.market_trend}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between p-3 border rounded-lg">
+                  <div>
+                    <h4 className="font-medium">Price per Sq Ft</h4>
+                    <p className="text-sm text-muted-foreground">Market average</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-semibold">${marketData.price_per_sqft}</p>
+                    <p className="text-sm text-muted-foreground">+$12 from last month</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between p-3 border rounded-lg">
+                  <div>
+                    <h4 className="font-medium">Days on Market</h4>
+                    <p className="text-sm text-muted-foreground">Average listing time</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-semibold">{marketData.days_on_market} days</p>
+                    <div className="flex items-center text-sm text-green-600">
+                      <ArrowDownRight className="h-3 w-3 mr-1" />
+                      Faster sales
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
+
+            <Button variant="outline" className="w-full bg-transparent">
+              View Detailed Market Report
+            </Button>
+          </CardContent>
+        </Card>
       </div>
-    </DashboardLayout>
+    </div>
   )
 }

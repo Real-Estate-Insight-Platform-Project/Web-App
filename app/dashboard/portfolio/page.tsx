@@ -1,393 +1,324 @@
 "use client"
 
-import { useState } from "react"
-import { DashboardLayout } from "@/components/dashboard-layout"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Progress } from "@/components/ui/progress"
-import { TrendingUp, TrendingDown, DollarSign, Home, MapPin, Calendar, Target, AlertTriangle, Plus } from "lucide-react"
+import { createClient } from "@/lib/supabase/client"
+import { TrendingUp, TrendingDown, DollarSign, Home, Plus, BarChart3, Calculator } from "lucide-react"
+import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts"
+import Link from "next/link"
 
-// Mock user data
-const mockUser = {
-  role: "investor" as const,
-  name: "Sarah Johnson",
-  email: "sarah@example.com",
-}
-
-// Mock portfolio data
-const mockPortfolio = {
-  totalValue: 2450000,
-  totalInvested: 1850000,
-  totalROI: 32.4,
-  monthlyIncome: 18500,
-  properties: [
-    {
-      id: 1,
-      address: "123 Rental Street",
-      city: "Downtown",
-      type: "Multi-family",
-      purchasePrice: 450000,
-      currentValue: 520000,
-      monthlyRent: 3200,
-      expenses: 800,
-      roi: 15.6,
-      occupancy: 100,
-      purchaseDate: "2022-03-15",
-      image: "/investment-property-1.png",
-    },
-    {
-      id: 2,
-      address: "456 Investment Ave",
-      city: "Suburbs",
-      type: "Single-family",
-      purchasePrice: 320000,
-      currentValue: 385000,
-      monthlyRent: 2400,
-      expenses: 600,
-      roi: 20.3,
-      occupancy: 100,
-      purchaseDate: "2021-08-22",
-      image: "/investment-property-2.png",
-    },
-    {
-      id: 3,
-      address: "789 Commercial Blvd",
-      city: "Business District",
-      type: "Commercial",
-      purchasePrice: 680000,
-      currentValue: 750000,
-      monthlyRent: 4800,
-      expenses: 1200,
-      roi: 10.6,
-      occupancy: 85,
-      purchaseDate: "2023-01-10",
-      image: "/investment-property-3.png",
-    },
-  ],
+interface InvestmentAnalysis {
+  id: string
+  property_id: string
+  purchase_price: number
+  down_payment: number
+  loan_amount: number
+  interest_rate: number
+  loan_term: number
+  monthly_rent: number
+  monthly_expenses: number
+  cash_flow: number
+  cap_rate: number
+  roi: number
+  created_at: string
+  properties: {
+    id: string
+    title: string
+    address: string
+    city: string
+    state: string
+    property_type: string
+    bedrooms: number
+    bathrooms: number
+    square_feet: number
+  }
 }
 
 export default function PortfolioPage() {
-  const [selectedTimeframe, setSelectedTimeframe] = useState("12m")
+  const [investments, setInvestments] = useState<InvestmentAnalysis[]>([])
+  const [loading, setLoading] = useState(true)
 
-  const totalNetIncome = mockPortfolio.properties.reduce((sum, prop) => sum + (prop.monthlyRent - prop.expenses), 0)
-  const averageROI = mockPortfolio.properties.reduce((sum, prop) => sum + prop.roi, 0) / mockPortfolio.properties.length
+  const supabase = createClient()
+
+  useEffect(() => {
+    fetchPortfolio()
+  }, [])
+
+  const fetchPortfolio = async () => {
+    setLoading(true)
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+
+    if (user) {
+      const { data, error } = await supabase
+        .from("investment_analysis")
+        .select(`
+          *,
+          properties (*)
+        `)
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+
+      if (!error && data) {
+        setInvestments(data as InvestmentAnalysis[])
+      }
+    }
+    setLoading(false)
+  }
+
+  // Calculate portfolio metrics
+  const totalInvestment = investments.reduce((sum, inv) => sum + inv.purchase_price, 0)
+  const totalCashFlow = investments.reduce((sum, inv) => sum + (inv.cash_flow || 0), 0)
+  const averageROI =
+    investments.length > 0 ? investments.reduce((sum, inv) => sum + (inv.roi || 0), 0) / investments.length : 0
+  const averageCapRate =
+    investments.length > 0 ? investments.reduce((sum, inv) => sum + (inv.cap_rate || 0), 0) / investments.length : 0
+
+  // Prepare chart data
+  const propertyTypeData = investments.reduce((acc: any[], inv) => {
+    const type = inv.properties.property_type
+    const existing = acc.find((item) => item.name === type)
+    if (existing) {
+      existing.value += 1
+      existing.investment += inv.purchase_price
+    } else {
+      acc.push({
+        name: type,
+        value: 1,
+        investment: inv.purchase_price,
+      })
+    }
+    return acc
+  }, [])
+
+  const cashFlowData = investments.map((inv) => ({
+    property: inv.properties.title.substring(0, 20) + "...",
+    cashFlow: inv.cash_flow || 0,
+    roi: inv.roi || 0,
+  }))
+
+  const COLORS = ["#dc2626", "#7c2d12", "#991b1b", "#b91c1c", "#ef4444"]
 
   return (
-    <DashboardLayout userRole={mockUser.role} userName={mockUser.name} userEmail={mockUser.email}>
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground">Investment Portfolio</h1>
-            <p className="text-muted-foreground mt-2">Track and manage your real estate investments</p>
-          </div>
-          <Button>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">Investment Portfolio</h1>
+          <p className="text-muted-foreground mt-2">Track and analyze your real estate investments</p>
+        </div>
+        <Link href="/dashboard/analysis">
+          <Button className="bg-primary hover:bg-primary/90">
             <Plus className="h-4 w-4 mr-2" />
-            Add Property
+            Add Investment
           </Button>
-        </div>
+        </Link>
+      </div>
 
-        {/* Portfolio Overview */}
+      {loading ? (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Portfolio Value</CardTitle>
-              <Home className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">${mockPortfolio.totalValue.toLocaleString()}</div>
-              <p className="text-xs text-muted-foreground">
-                <span className="text-green-600">+12.4%</span> from last year
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total ROI</CardTitle>
-              <TrendingUp className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{mockPortfolio.totalROI}%</div>
-              <p className="text-xs text-muted-foreground">
-                <span className="text-green-600">+2.1%</span> from last quarter
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Monthly Income</CardTitle>
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">${totalNetIncome.toLocaleString()}</div>
-              <p className="text-xs text-muted-foreground">Net after expenses</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Average ROI</CardTitle>
-              <Target className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{averageROI.toFixed(1)}%</div>
-              <p className="text-xs text-muted-foreground">Across {mockPortfolio.properties.length} properties</p>
-            </CardContent>
-          </Card>
+          {[...Array(4)].map((_, i) => (
+            <Card key={i} className="animate-pulse">
+              <CardContent className="p-6">
+                <div className="h-4 bg-muted rounded mb-2"></div>
+                <div className="h-8 bg-muted rounded mb-2"></div>
+                <div className="h-3 bg-muted rounded w-2/3"></div>
+              </CardContent>
+            </Card>
+          ))}
         </div>
+      ) : (
+        <>
+          {/* Portfolio Overview */}
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total Portfolio Value</CardTitle>
+                <DollarSign className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">${totalInvestment.toLocaleString()}</div>
+                <p className="text-xs text-muted-foreground">{investments.length} properties</p>
+              </CardContent>
+            </Card>
 
-        <Tabs defaultValue="properties" className="space-y-6">
-          <TabsList>
-            <TabsTrigger value="properties">Properties ({mockPortfolio.properties.length})</TabsTrigger>
-            <TabsTrigger value="performance">Performance</TabsTrigger>
-            <TabsTrigger value="analytics">Analytics</TabsTrigger>
-          </TabsList>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Monthly Cash Flow</CardTitle>
+                <TrendingUp className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className={`text-2xl font-bold ${totalCashFlow >= 0 ? "text-green-600" : "text-red-600"}`}>
+                  ${totalCashFlow.toFixed(0)}
+                </div>
+                <div className="flex items-center text-xs">
+                  {totalCashFlow >= 0 ? (
+                    <TrendingUp className="h-3 w-3 text-green-500 mr-1" />
+                  ) : (
+                    <TrendingDown className="h-3 w-3 text-red-500 mr-1" />
+                  )}
+                  <span className="text-muted-foreground">
+                    {totalCashFlow >= 0 ? "Positive" : "Negative"} cash flow
+                  </span>
+                </div>
+              </CardContent>
+            </Card>
 
-          <TabsContent value="properties" className="space-y-4">
-            <div className="grid gap-6">
-              {mockPortfolio.properties.map((property) => (
-                <Card key={property.id} className="overflow-hidden">
-                  <div className="md:flex">
-                    {/* Property Image */}
-                    <div className="md:w-80 h-48 md:h-auto relative">
-                      <img
-                        src={property.image || "/placeholder.svg"}
-                        alt={property.address}
-                        className="w-full h-full object-cover"
-                      />
-                      <Badge className="absolute top-2 left-2 bg-white/90 text-gray-800">{property.type}</Badge>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Average ROI</CardTitle>
+                <BarChart3 className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{averageROI.toFixed(1)}%</div>
+                <p className="text-xs text-muted-foreground">Return on investment</p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Average Cap Rate</CardTitle>
+                <Home className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{averageCapRate.toFixed(1)}%</div>
+                <p className="text-xs text-muted-foreground">Capitalization rate</p>
+              </CardContent>
+            </Card>
+          </div>
+
+          {investments.length > 0 ? (
+            <>
+              {/* Charts */}
+              <div className="grid gap-6 lg:grid-cols-2">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Portfolio Distribution</CardTitle>
+                    <CardDescription>Investment by property type</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="h-80">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie
+                            data={propertyTypeData}
+                            cx="50%"
+                            cy="50%"
+                            labelLine={false}
+                            label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                            outerRadius={80}
+                            fill="#8884d8"
+                            dataKey="value"
+                          >
+                            {propertyTypeData.map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                            ))}
+                          </Pie>
+                          <Tooltip formatter={(value: any, name) => [value, `${name} properties`]} />
+                        </PieChart>
+                      </ResponsiveContainer>
                     </div>
-
-                    {/* Property Details */}
-                    <div className="flex-1 p-6">
-                      <div className="flex items-start justify-between mb-4">
-                        <div>
-                          <h3 className="text-xl font-semibold text-foreground">{property.address}</h3>
-                          <p className="text-muted-foreground flex items-center gap-1">
-                            <MapPin className="h-4 w-4" />
-                            {property.city}
-                          </p>
-                          <p className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
-                            <Calendar className="h-4 w-4" />
-                            Purchased {new Date(property.purchaseDate).toLocaleDateString()}
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-2xl font-bold text-foreground">
-                            ${property.currentValue.toLocaleString()}
-                          </p>
-                          <p className="text-sm text-muted-foreground">
-                            Purchased: ${property.purchasePrice.toLocaleString()}
-                          </p>
-                          <div className="flex items-center gap-1 mt-1">
-                            {property.currentValue > property.purchasePrice ? (
-                              <TrendingUp className="h-4 w-4 text-green-600" />
-                            ) : (
-                              <TrendingDown className="h-4 w-4 text-red-600" />
-                            )}
-                            <span
-                              className={`text-sm font-medium ${
-                                property.currentValue > property.purchasePrice ? "text-green-600" : "text-red-600"
-                              }`}
-                            >
-                              {(
-                                ((property.currentValue - property.purchasePrice) / property.purchasePrice) *
-                                100
-                              ).toFixed(1)}
-                              %
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Financial Metrics */}
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-                        <div className="text-center p-3 bg-muted/50 rounded-lg">
-                          <p className="text-sm text-muted-foreground">Monthly Rent</p>
-                          <p className="text-lg font-semibold">${property.monthlyRent.toLocaleString()}</p>
-                        </div>
-                        <div className="text-center p-3 bg-muted/50 rounded-lg">
-                          <p className="text-sm text-muted-foreground">Net Income</p>
-                          <p className="text-lg font-semibold">
-                            ${(property.monthlyRent - property.expenses).toLocaleString()}
-                          </p>
-                        </div>
-                        <div className="text-center p-3 bg-muted/50 rounded-lg">
-                          <p className="text-sm text-muted-foreground">ROI</p>
-                          <p className="text-lg font-semibold text-green-600">{property.roi}%</p>
-                        </div>
-                        <div className="text-center p-3 bg-muted/50 rounded-lg">
-                          <p className="text-sm text-muted-foreground">Occupancy</p>
-                          <p className="text-lg font-semibold">{property.occupancy}%</p>
-                        </div>
-                      </div>
-
-                      {/* Occupancy Progress */}
-                      <div className="mb-4">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-sm text-muted-foreground">Occupancy Rate</span>
-                          <span className="text-sm font-medium">{property.occupancy}%</span>
-                        </div>
-                        <Progress value={property.occupancy} className="h-2" />
-                      </div>
-
-                      {/* Actions */}
-                      <div className="flex items-center justify-between">
-                        <div className="flex gap-2">
-                          {property.occupancy < 100 && (
-                            <Badge variant="outline" className="text-orange-600 border-orange-600">
-                              <AlertTriangle className="h-3 w-3 mr-1" />
-                              Vacancy
-                            </Badge>
-                          )}
-                        </div>
-                        <div className="flex gap-2">
-                          <Button variant="outline" size="sm" className="bg-transparent">
-                            View Details
-                          </Button>
-                          <Button size="sm">Manage</Button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                  </CardContent>
                 </Card>
-              ))}
-            </div>
-          </TabsContent>
 
-          <TabsContent value="performance" className="space-y-6">
-            <div className="grid md:grid-cols-2 gap-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Cash Flow Analysis</CardTitle>
+                    <CardDescription>Monthly cash flow by property</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="h-80">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={cashFlowData}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="property" angle={-45} textAnchor="end" height={100} />
+                          <YAxis />
+                          <Tooltip formatter={(value: number) => [`$${value}`, "Cash Flow"]} />
+                          <Bar dataKey="cashFlow" fill="#dc2626" />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Property List */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Portfolio Performance</CardTitle>
-                  <CardDescription>Track your investment returns over time</CardDescription>
+                  <CardTitle>Investment Properties</CardTitle>
+                  <CardDescription>Detailed view of your investment portfolio</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Total Invested</span>
-                      <span className="font-medium">${mockPortfolio.totalInvested.toLocaleString()}</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Current Value</span>
-                      <span className="font-medium">${mockPortfolio.totalValue.toLocaleString()}</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Total Gain</span>
-                      <span className="font-medium text-green-600">
-                        ${(mockPortfolio.totalValue - mockPortfolio.totalInvested).toLocaleString()}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Annual Return</span>
-                      <span className="font-medium text-green-600">{mockPortfolio.totalROI}%</span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Income Distribution</CardTitle>
-                  <CardDescription>Monthly rental income by property</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    {mockPortfolio.properties.map((property) => {
-                      const percentage = (property.monthlyRent / mockPortfolio.monthlyIncome) * 100
-                      return (
-                        <div key={property.id}>
-                          <div className="flex items-center justify-between mb-1">
-                            <span className="text-sm text-muted-foreground">{property.address}</span>
-                            <span className="text-sm font-medium">${property.monthlyRent.toLocaleString()}</span>
+                    {investments.map((investment) => (
+                      <div key={investment.id} className="border rounded-lg p-4 hover:bg-muted/50 transition-colors">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center space-x-3 mb-2">
+                              <h3 className="font-semibold text-lg">{investment.properties.title}</h3>
+                              <Badge variant="secondary" className="capitalize">
+                                {investment.properties.property_type}
+                              </Badge>
+                            </div>
+                            <p className="text-sm text-muted-foreground mb-3">
+                              {investment.properties.address}, {investment.properties.city},{" "}
+                              {investment.properties.state}
+                            </p>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                              <div>
+                                <p className="text-muted-foreground">Purchase Price</p>
+                                <p className="font-medium">${investment.purchase_price.toLocaleString()}</p>
+                              </div>
+                              <div>
+                                <p className="text-muted-foreground">Monthly Rent</p>
+                                <p className="font-medium">${investment.monthly_rent?.toLocaleString() || "N/A"}</p>
+                              </div>
+                              <div>
+                                <p className="text-muted-foreground">Cash Flow</p>
+                                <p
+                                  className={`font-medium ${(investment.cash_flow || 0) >= 0 ? "text-green-600" : "text-red-600"}`}
+                                >
+                                  ${investment.cash_flow?.toFixed(0) || "N/A"}
+                                </p>
+                              </div>
+                              <div>
+                                <p className="text-muted-foreground">ROI</p>
+                                <p className="font-medium">{investment.roi?.toFixed(1) || "N/A"}%</p>
+                              </div>
+                            </div>
                           </div>
-                          <Progress value={percentage} className="h-2" />
-                        </div>
-                      )
-                    })}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="analytics" className="space-y-6">
-            <div className="grid md:grid-cols-3 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Property Types</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    {["Single-family", "Multi-family", "Commercial"].map((type) => {
-                      const count = mockPortfolio.properties.filter((p) => p.type === type).length
-                      const percentage = (count / mockPortfolio.properties.length) * 100
-                      return (
-                        <div key={type}>
-                          <div className="flex items-center justify-between mb-1">
-                            <span className="text-sm text-muted-foreground">{type}</span>
-                            <span className="text-sm font-medium">{count} properties</span>
+                          <div className="flex flex-col space-y-2">
+                            <Button variant="outline" size="sm" className="bg-transparent">
+                              <Calculator className="h-4 w-4 mr-2" />
+                              Edit Analysis
+                            </Button>
                           </div>
-                          <Progress value={percentage} className="h-2" />
                         </div>
-                      )
-                    })}
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>ROI Distribution</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    {mockPortfolio.properties.map((property) => (
-                      <div key={property.id}>
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="text-sm text-muted-foreground">{property.address}</span>
-                          <span className="text-sm font-medium">{property.roi}%</span>
-                        </div>
-                        <Progress value={property.roi} className="h-2" />
                       </div>
                     ))}
                   </div>
                 </CardContent>
               </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Key Metrics</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Avg. Cap Rate</span>
-                      <span className="font-medium">8.2%</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Cash-on-Cash Return</span>
-                      <span className="font-medium">12.4%</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Debt Service Coverage</span>
-                      <span className="font-medium">1.35x</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Loan-to-Value</span>
-                      <span className="font-medium">72%</span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-        </Tabs>
-      </div>
-    </DashboardLayout>
+            </>
+          ) : (
+            <Card className="p-8 text-center">
+              <div className="text-muted-foreground">
+                <Home className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <h3 className="text-lg font-medium mb-2">No investments yet</h3>
+                <p className="mb-4">Start building your portfolio by analyzing potential investment properties.</p>
+                <Link href="/dashboard/analysis">
+                  <Button className="bg-primary hover:bg-primary/90">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Your First Investment
+                  </Button>
+                </Link>
+              </div>
+            </Card>
+          )}
+        </>
+      )}
+    </div>
   )
 }
