@@ -1,319 +1,340 @@
 "use client"
 
-import { useState } from "react"
-import { DashboardLayout } from "@/components/dashboard-layout"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { useState, useEffect } from "react"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Slider } from "@/components/ui/slider"
 import { Badge } from "@/components/ui/badge"
-import { Search, Filter, Heart, MapPin, Bed, Bath, Square, Star, Car, Wifi, Dumbbell } from "lucide-react"
+import { createClient } from "@/lib/supabase/client"
+import { Heart, MapPin, Bed, Bath, Square, Calendar } from "lucide-react"
 
-// Mock user data
-const mockUser = {
-  role: "buyer" as const,
-  name: "John Doe",
-  email: "john@example.com",
+interface Property {
+  id: string
+  title: string
+  description: string
+  price: number
+  address: string
+  city: string
+  state: string
+  property_type: string
+  bedrooms: number
+  bathrooms: number
+  square_feet: number
+  year_built: number
+  listing_status: string
 }
 
-// Mock property data
-const mockProperties = [
-  {
-    id: 1,
-    address: "123 Oak Street",
-    city: "Downtown",
-    price: 425000,
-    beds: 3,
-    baths: 2,
-    sqft: 1850,
-    image: "/modern-house-exterior.png",
-    status: "New",
-    aiScore: 92,
-    features: ["Parking", "WiFi", "Gym"],
-    description: "Beautiful modern home in prime downtown location with updated kitchen and hardwood floors.",
-  },
-  {
-    id: 2,
-    address: "456 Pine Avenue",
-    city: "Suburbs",
-    price: 380000,
-    beds: 4,
-    baths: 3,
-    sqft: 2100,
-    image: "/suburban-family-home.png",
-    status: "Price Drop",
-    aiScore: 88,
-    features: ["Parking", "Gym"],
-    description: "Spacious family home with large backyard, perfect for growing families.",
-  },
-  {
-    id: 3,
-    address: "789 Elm Drive",
-    city: "Riverside",
-    price: 520000,
-    beds: 2,
-    baths: 2,
-    sqft: 1200,
-    image: "/riverside-condo.png",
-    status: "Hot",
-    aiScore: 95,
-    features: ["WiFi", "Gym"],
-    description: "Luxury riverside condo with stunning water views and premium amenities.",
-  },
-]
-
 export default function PropertySearchPage() {
-  const [priceRange, setPriceRange] = useState([200000, 600000])
-  const [searchQuery, setSearchQuery] = useState("")
-  const [savedProperties, setSavedProperties] = useState<number[]>([])
+  const [properties, setProperties] = useState<Property[]>([])
+  const [loading, setLoading] = useState(true)
+  const [favorites, setFavorites] = useState<Set<string>>(new Set())
 
-  const toggleSaved = (propertyId: number) => {
-    setSavedProperties((prev) =>
-      prev.includes(propertyId) ? prev.filter((id) => id !== propertyId) : [...prev, propertyId],
-    )
+  // Search filters
+  const [searchCity, setSearchCity] = useState("")
+  const [propertyType, setPropertyType] = useState("any")
+  const [minPrice, setMinPrice] = useState("")
+  const [maxPrice, setMaxPrice] = useState("")
+  const [minBedrooms, setMinBedrooms] = useState("any")
+  const [minBathrooms, setMinBathrooms] = useState("any")
+
+  const supabase = createClient()
+
+  useEffect(() => {
+    fetchProperties()
+    fetchFavorites()
+  }, [])
+
+  const fetchProperties = async () => {
+    setLoading(true)
+    let query = supabase.from("properties").select("*").eq("listing_status", "active")
+
+    if (searchCity) {
+      query = query.ilike("city", `%${searchCity}%`)
+    }
+    if (propertyType !== "any") {
+      query = query.eq("property_type", propertyType)
+    }
+    if (minPrice) {
+      query = query.gte("price", Number.parseInt(minPrice))
+    }
+    if (maxPrice) {
+      query = query.lte("price", Number.parseInt(maxPrice))
+    }
+    if (minBedrooms !== "any") {
+      query = query.gte("bedrooms", Number.parseInt(minBedrooms))
+    }
+    if (minBathrooms !== "any") {
+      query = query.gte("bathrooms", Number.parseFloat(minBathrooms))
+    }
+
+    const { data, error } = await query.order("created_at", { ascending: false })
+
+    if (!error && data) {
+      setProperties(data)
+    }
+    setLoading(false)
   }
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "New":
-        return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300"
-      case "Hot":
-        return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300"
-      case "Price Drop":
-        return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
-      default:
-        return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300"
+  const fetchFavorites = async () => {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+    if (user) {
+      const { data } = await supabase.from("user_favorites").select("property_id").eq("user_id", user.id)
+      if (data) {
+        setFavorites(new Set(data.map((fav) => fav.property_id)))
+      }
     }
   }
 
-  const getFeatureIcon = (feature: string) => {
-    switch (feature) {
-      case "Parking":
-        return <Car className="h-3 w-3" />
-      case "WiFi":
-        return <Wifi className="h-3 w-3" />
-      case "Gym":
-        return <Dumbbell className="h-3 w-3" />
-      default:
-        return null
+  const toggleFavorite = async (propertyId: string) => {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+    if (!user) return
+
+    if (favorites.has(propertyId)) {
+      // Remove from favorites
+      await supabase.from("user_favorites").delete().eq("user_id", user.id).eq("property_id", propertyId)
+      setFavorites((prev) => {
+        const newSet = new Set(prev)
+        newSet.delete(propertyId)
+        return newSet
+      })
+    } else {
+      // Add to favorites
+      await supabase.from("user_favorites").insert({ user_id: user.id, property_id: propertyId })
+      setFavorites((prev) => new Set(prev).add(propertyId))
     }
+  }
+
+  const handleSearch = () => {
+    fetchProperties()
+  }
+
+  const clearFilters = () => {
+    setSearchCity("")
+    setPropertyType("any")
+    setMinPrice("")
+    setMaxPrice("")
+    setMinBedrooms("any")
+    setMinBathrooms("any")
+    fetchProperties()
   }
 
   return (
-    <DashboardLayout userRole={mockUser.role} userName={mockUser.name} userEmail={mockUser.email}>
-      <div className="space-y-6">
-        {/* Header */}
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Property Search</h1>
-          <p className="text-muted-foreground mt-2">Find your perfect home with AI-powered recommendations</p>
-        </div>
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold">Property Search</h1>
+        <p className="text-muted-foreground mt-2">Find your perfect home with advanced search filters</p>
+      </div>
 
-        <div className="grid lg:grid-cols-4 gap-6">
-          {/* Filters Sidebar */}
-          <Card className="lg:col-span-1">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Filter className="h-5 w-5" />
-                Filters
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Location Search */}
-              <div className="space-y-2">
-                <Label>Location</Label>
-                <div className="relative">
-                  <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="City, neighborhood, or ZIP"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
-              </div>
+      {/* Search Filters */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Search Filters</CardTitle>
+          <CardDescription>Narrow down your search to find the perfect property</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <div className="space-y-2">
+              <Label htmlFor="city">City</Label>
+              <Input
+                id="city"
+                placeholder="Enter city name"
+                value={searchCity}
+                onChange={(e) => setSearchCity(e.target.value)}
+              />
+            </div>
 
-              {/* Price Range */}
-              <div className="space-y-3">
-                <Label>Price Range</Label>
-                <Slider
-                  value={priceRange}
-                  onValueChange={setPriceRange}
-                  max={1000000}
-                  min={100000}
-                  step={10000}
-                  className="w-full"
-                />
-                <div className="flex justify-between text-sm text-muted-foreground">
-                  <span>${priceRange[0].toLocaleString()}</span>
-                  <span>${priceRange[1].toLocaleString()}</span>
-                </div>
-              </div>
-
-              {/* Property Type */}
-              <div className="space-y-2">
-                <Label>Property Type</Label>
-                <Select>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Any type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="house">House</SelectItem>
-                    <SelectItem value="condo">Condo</SelectItem>
-                    <SelectItem value="townhouse">Townhouse</SelectItem>
-                    <SelectItem value="apartment">Apartment</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Bedrooms */}
-              <div className="space-y-2">
-                <Label>Bedrooms</Label>
-                <Select>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Any" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="1">1+</SelectItem>
-                    <SelectItem value="2">2+</SelectItem>
-                    <SelectItem value="3">3+</SelectItem>
-                    <SelectItem value="4">4+</SelectItem>
-                    <SelectItem value="5">5+</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Bathrooms */}
-              <div className="space-y-2">
-                <Label>Bathrooms</Label>
-                <Select>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Any" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="1">1+</SelectItem>
-                    <SelectItem value="2">2+</SelectItem>
-                    <SelectItem value="3">3+</SelectItem>
-                    <SelectItem value="4">4+</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <Button className="w-full">Apply Filters</Button>
-            </CardContent>
-          </Card>
-
-          {/* Results */}
-          <div className="lg:col-span-3 space-y-4">
-            {/* Results Header */}
-            <div className="flex items-center justify-between">
-              <p className="text-sm text-muted-foreground">
-                Showing {mockProperties.length} properties • Sorted by AI Match Score
-              </p>
-              <Select defaultValue="ai-score">
-                <SelectTrigger className="w-48">
-                  <SelectValue />
+            <div className="space-y-2">
+              <Label htmlFor="property-type">Property Type</Label>
+              <Select value={propertyType} onValueChange={setPropertyType}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Any type" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="ai-score">AI Match Score</SelectItem>
-                  <SelectItem value="price-low">Price: Low to High</SelectItem>
-                  <SelectItem value="price-high">Price: High to Low</SelectItem>
-                  <SelectItem value="newest">Newest First</SelectItem>
+                  <SelectItem value="any">Any type</SelectItem>
+                  <SelectItem value="house">House</SelectItem>
+                  <SelectItem value="apartment">Apartment</SelectItem>
+                  <SelectItem value="condo">Condo</SelectItem>
+                  <SelectItem value="townhouse">Townhouse</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
-            {/* Property Cards */}
-            <div className="space-y-4">
-              {mockProperties.map((property) => (
-                <Card key={property.id} className="overflow-hidden">
-                  <div className="md:flex">
-                    {/* Property Image */}
-                    <div className="md:w-80 h-48 md:h-auto relative">
-                      <img
-                        src={property.image || "/placeholder.svg"}
-                        alt={property.address}
-                        className="w-full h-full object-cover"
-                      />
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="absolute top-2 right-2 bg-white/80 hover:bg-white"
-                        onClick={() => toggleSaved(property.id)}
-                      >
-                        <Heart
-                          className={`h-4 w-4 ${
-                            savedProperties.includes(property.id) ? "fill-red-500 text-red-500" : "text-gray-600"
-                          }`}
-                        />
-                      </Button>
-                    </div>
+            <div className="space-y-2">
+              <Label htmlFor="min-price">Min Price</Label>
+              <Input
+                id="min-price"
+                type="number"
+                placeholder="$0"
+                value={minPrice}
+                onChange={(e) => setMinPrice(e.target.value)}
+              />
+            </div>
 
-                    {/* Property Details */}
-                    <div className="flex-1 p-6">
-                      <div className="flex items-start justify-between mb-2">
-                        <div>
-                          <h3 className="text-xl font-semibold text-foreground">{property.address}</h3>
-                          <p className="text-muted-foreground flex items-center gap-1">
-                            <MapPin className="h-4 w-4" />
-                            {property.city}
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-2xl font-bold text-foreground">${property.price.toLocaleString()}</p>
-                          <div className="flex items-center gap-2 mt-1">
-                            <Badge className={getStatusColor(property.status)}>{property.status}</Badge>
-                            <div className="flex items-center gap-1 text-sm">
-                              <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                              <span className="font-medium">{property.aiScore}</span>
-                              <span className="text-muted-foreground">AI Match</span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
+            <div className="space-y-2">
+              <Label htmlFor="max-price">Max Price</Label>
+              <Input
+                id="max-price"
+                type="number"
+                placeholder="No limit"
+                value={maxPrice}
+                onChange={(e) => setMaxPrice(e.target.value)}
+              />
+            </div>
 
-                      <div className="flex items-center gap-6 mb-3 text-sm text-muted-foreground">
-                        <div className="flex items-center gap-1">
-                          <Bed className="h-4 w-4" />
-                          {property.beds} beds
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Bath className="h-4 w-4" />
-                          {property.baths} baths
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Square className="h-4 w-4" />
-                          {property.sqft.toLocaleString()} sqft
-                        </div>
-                      </div>
+            <div className="space-y-2">
+              <Label htmlFor="min-bedrooms">Min Bedrooms</Label>
+              <Select value={minBedrooms} onValueChange={setMinBedrooms}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Any" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="any">Any</SelectItem>
+                  <SelectItem value="1">1+</SelectItem>
+                  <SelectItem value="2">2+</SelectItem>
+                  <SelectItem value="3">3+</SelectItem>
+                  <SelectItem value="4">4+</SelectItem>
+                  <SelectItem value="5">5+</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
-                      <p className="text-sm text-muted-foreground mb-4">{property.description}</p>
-
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          {property.features.map((feature) => (
-                            <Badge key={feature} variant="outline" className="text-xs">
-                              {getFeatureIcon(feature)}
-                              <span className="ml-1">{feature}</span>
-                            </Badge>
-                          ))}
-                        </div>
-                        <div className="flex gap-2">
-                          <Button variant="outline" size="sm" className="bg-transparent">
-                            View Details
-                          </Button>
-                          <Button size="sm">Schedule Tour</Button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </Card>
-              ))}
+            <div className="space-y-2">
+              <Label htmlFor="min-bathrooms">Min Bathrooms</Label>
+              <Select value={minBathrooms} onValueChange={setMinBathrooms}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Any" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="any">Any</SelectItem>
+                  <SelectItem value="1">1+</SelectItem>
+                  <SelectItem value="1.5">1.5+</SelectItem>
+                  <SelectItem value="2">2+</SelectItem>
+                  <SelectItem value="2.5">2.5+</SelectItem>
+                  <SelectItem value="3">3+</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
+
+          <div className="flex gap-3 mt-6">
+            <Button onClick={handleSearch} className="bg-primary hover:bg-primary/90">
+              Search Properties
+            </Button>
+            <Button variant="outline" onClick={clearFilters} className="bg-transparent">
+              Clear Filters
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Search Results */}
+      <div>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-semibold">{loading ? "Loading..." : `${properties.length} Properties Found`}</h2>
         </div>
+
+        {loading ? (
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {[...Array(6)].map((_, i) => (
+              <Card key={i} className="animate-pulse">
+                <div className="h-48 bg-muted rounded-t-lg"></div>
+                <CardContent className="p-4">
+                  <div className="h-4 bg-muted rounded mb-2"></div>
+                  <div className="h-3 bg-muted rounded mb-4 w-2/3"></div>
+                  <div className="h-6 bg-muted rounded w-1/3"></div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {properties.map((property) => (
+              <Card key={property.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+                <div className="relative">
+                  <div className="h-48 bg-gradient-to-br from-red-100 to-red-200 flex items-center justify-center">
+                    <div className="text-center text-muted-foreground">
+                      <MapPin className="h-8 w-8 mx-auto mb-2" />
+                      <p className="text-sm">Property Image</p>
+                    </div>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className={`absolute top-2 right-2 ${
+                      favorites.has(property.id) ? "text-red-500" : "text-gray-400"
+                    }`}
+                    onClick={() => toggleFavorite(property.id)}
+                  >
+                    <Heart className={`h-5 w-5 ${favorites.has(property.id) ? "fill-current" : ""}`} />
+                  </Button>
+                </div>
+
+                <CardContent className="p-4">
+                  <div className="space-y-3">
+                    <div>
+                      <h3 className="font-semibold text-lg line-clamp-1">{property.title}</h3>
+                      <p className="text-sm text-muted-foreground flex items-center">
+                        <MapPin className="h-3 w-3 mr-1" />
+                        {property.address}, {property.city}, {property.state}
+                      </p>
+                    </div>
+
+                    <div className="flex items-center space-x-4 text-sm text-muted-foreground">
+                      <div className="flex items-center">
+                        <Bed className="h-4 w-4 mr-1" />
+                        {property.bedrooms} bed
+                      </div>
+                      <div className="flex items-center">
+                        <Bath className="h-4 w-4 mr-1" />
+                        {property.bathrooms} bath
+                      </div>
+                      <div className="flex items-center">
+                        <Square className="h-4 w-4 mr-1" />
+                        {property.square_feet?.toLocaleString()} sqft
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-2xl font-bold text-primary">${property.price.toLocaleString()}</p>
+                        <p className="text-sm text-muted-foreground">
+                          ${Math.round(property.price / property.square_feet)}/sqft
+                        </p>
+                      </div>
+                      <Badge variant="secondary" className="capitalize">
+                        {property.property_type}
+                      </Badge>
+                    </div>
+
+                    <div className="flex items-center text-sm text-muted-foreground">
+                      <Calendar className="h-3 w-3 mr-1" />
+                      Built in {property.year_built}
+                    </div>
+
+                    <Button className="w-full bg-primary hover:bg-primary/90">View Details</Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+
+        {!loading && properties.length === 0 && (
+          <Card className="p-8 text-center">
+            <div className="text-muted-foreground">
+              <MapPin className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <h3 className="text-lg font-medium mb-2">No properties found</h3>
+              <p>Try adjusting your search filters to see more results.</p>
+            </div>
+          </Card>
+        )}
       </div>
-    </DashboardLayout>
+    </div>
   )
 }

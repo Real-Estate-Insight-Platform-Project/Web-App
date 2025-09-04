@@ -1,202 +1,295 @@
+"use client"
+
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Badge } from "@/components/ui/badge"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Camera, MapPin, Calendar, Mail, Phone, Building2 } from "lucide-react"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Badge } from "@/components/ui/badge"
+import { createClient } from "@/lib/supabase/client"
+import { User, Mail, Calendar, MapPin, Save, Camera } from "lucide-react"
+import { useRouter } from "next/navigation"
+
+interface UserProfile {
+  id: string
+  email: string
+  full_name: string
+  user_role: "buyer" | "investor"
+  created_at: string
+  updated_at: string
+}
 
 export default function ProfilePage() {
+  const [profile, setProfile] = useState<UserProfile | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [fullName, setFullName] = useState("")
+  const [userRole, setUserRole] = useState<"buyer" | "investor">("buyer")
+
+  const supabase = createClient()
+  const router = useRouter()
+
+  useEffect(() => {
+    fetchProfile()
+  }, [])
+
+  const fetchProfile = async () => {
+    setLoading(true)
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+
+    if (user) {
+      const { data, error } = await supabase.from("profiles").select("*").eq("id", user.id).single()
+
+      if (!error && data) {
+        setProfile(data)
+        setFullName(data.full_name || "")
+        setUserRole(data.user_role || "buyer")
+      } else if (error && error.code === "PGRST116") {
+        // Profile doesn't exist, create one
+        const newProfile = {
+          id: user.id,
+          email: user.email!,
+          full_name: user.user_metadata?.full_name || user.email?.split("@")[0] || "",
+          user_role: (user.user_metadata?.user_role as "buyer" | "investor") || "buyer",
+        }
+
+        const { error: insertError } = await supabase.from("profiles").insert(newProfile)
+        if (!insertError) {
+          setProfile({ ...newProfile, created_at: new Date().toISOString(), updated_at: new Date().toISOString() })
+          setFullName(newProfile.full_name)
+          setUserRole(newProfile.user_role)
+        }
+      }
+    }
+    setLoading(false)
+  }
+
+  const updateProfile = async () => {
+    if (!profile) return
+
+    setSaving(true)
+    const { error } = await supabase
+      .from("profiles")
+      .update({
+        full_name: fullName,
+        user_role: userRole,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", profile.id)
+
+    if (!error) {
+      setProfile((prev) =>
+        prev
+          ? {
+              ...prev,
+              full_name: fullName,
+              user_role: userRole,
+              updated_at: new Date().toISOString(),
+            }
+          : null,
+      )
+      // Refresh the page to update the dashboard layout
+      router.refresh()
+    }
+    setSaving(false)
+  }
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="animate-pulse">
+          <div className="h-8 bg-muted rounded w-1/3 mb-2"></div>
+          <div className="h-4 bg-muted rounded w-1/2"></div>
+        </div>
+        <div className="grid gap-6 lg:grid-cols-2">
+          <Card className="animate-pulse">
+            <CardContent className="p-6">
+              <div className="h-20 bg-muted rounded mb-4"></div>
+              <div className="space-y-3">
+                <div className="h-4 bg-muted rounded"></div>
+                <div className="h-4 bg-muted rounded w-2/3"></div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    )
+  }
+
+  if (!profile) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <User className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
+          <h3 className="text-lg font-medium mb-2">Profile not found</h3>
+          <p className="text-muted-foreground">Unable to load your profile information.</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Profile</h1>
-        <p className="text-muted-foreground">Manage your account information and preferences</p>
+        <h1 className="text-3xl font-bold">Profile</h1>
+        <p className="text-muted-foreground mt-2">Manage your account information and preferences</p>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-3">
-        {/* Profile Overview */}
-        <Card className="md:col-span-1">
-          <CardHeader className="text-center">
-            <div className="relative mx-auto w-24 h-24">
-              <Avatar className="w-24 h-24">
-                <AvatarImage src="/professional-headshot.png" />
-                <AvatarFallback className="text-lg">JD</AvatarFallback>
-              </Avatar>
-              <Button
-                size="icon"
-                variant="outline"
-                className="absolute -bottom-2 -right-2 h-8 w-8 rounded-full bg-transparent"
-              >
-                <Camera className="h-4 w-4" />
+      <div className="grid gap-6 lg:grid-cols-2">
+        {/* Profile Information */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <User className="h-5 w-5 mr-2" />
+              Personal Information
+            </CardTitle>
+            <CardDescription>Update your personal details and account type</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Avatar Section */}
+            <div className="flex items-center space-x-4">
+              <div className="relative">
+                <Avatar className="h-20 w-20">
+                  <AvatarImage src="/placeholder.svg" alt={profile.full_name} />
+                  <AvatarFallback className="bg-primary text-primary-foreground text-xl">
+                    {profile.full_name ? profile.full_name.charAt(0).toUpperCase() : "U"}
+                  </AvatarFallback>
+                </Avatar>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="absolute -bottom-2 -right-2 h-8 w-8 rounded-full bg-background"
+                >
+                  <Camera className="h-4 w-4" />
+                </Button>
+              </div>
+              <div>
+                <h3 className="font-semibold text-lg">{profile.full_name || "User"}</h3>
+                <p className="text-sm text-muted-foreground">{profile.email}</p>
+                <Badge variant="secondary" className="mt-1 capitalize">
+                  {profile.user_role}
+                </Badge>
+              </div>
+            </div>
+
+            {/* Form Fields */}
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="full-name">Full Name</Label>
+                <Input
+                  id="full-name"
+                  type="text"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  placeholder="Enter your full name"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="email">Email Address</Label>
+                <Input id="email" type="email" value={profile.email} disabled className="bg-muted" />
+                <p className="text-xs text-muted-foreground">Email cannot be changed from this page</p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="user-role">Account Type</Label>
+                <Select value={userRole} onValueChange={(value: "buyer" | "investor") => setUserRole(value)}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="buyer">Home Buyer</SelectItem>
+                    <SelectItem value="investor">Real Estate Investor</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  Changing your account type will update your dashboard features
+                </p>
+              </div>
+
+              <Button onClick={updateProfile} disabled={saving} className="w-full bg-primary hover:bg-primary/90">
+                <Save className="h-4 w-4 mr-2" />
+                {saving ? "Saving..." : "Save Changes"}
               </Button>
             </div>
-            <CardTitle>John Doe</CardTitle>
-            <CardDescription>
-              <Badge variant="secondary" className="mb-2">
-                <Building2 className="w-3 h-3 mr-1" />
-                Buyer
-              </Badge>
-              <div className="flex items-center justify-center text-sm text-muted-foreground">
-                <MapPin className="w-3 h-3 mr-1" />
-                San Francisco, CA
-              </div>
-            </CardDescription>
+          </CardContent>
+        </Card>
+
+        {/* Account Details */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Account Details</CardTitle>
+            <CardDescription>Your account information and activity</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Member since</span>
-              <div className="flex items-center">
-                <Calendar className="w-3 h-3 mr-1" />
-                Jan 2024
-              </div>
-            </div>
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Properties saved</span>
-              <span className="font-medium">12</span>
-            </div>
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Searches performed</span>
-              <span className="font-medium">47</span>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Personal Information */}
-        <Card className="md:col-span-2">
-          <CardHeader>
-            <CardTitle>Personal Information</CardTitle>
-            <CardDescription>Update your personal details and contact information</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="firstName">First Name</Label>
-                <Input id="firstName" defaultValue="John" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="lastName">Last Name</Label>
-                <Input id="lastName" defaultValue="Doe" />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="email">Email Address</Label>
-              <div className="flex">
-                <Mail className="w-4 h-4 mt-3 mr-3 text-muted-foreground" />
-                <Input id="email" type="email" defaultValue="john.doe@example.com" className="flex-1" />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="phone">Phone Number</Label>
-              <div className="flex">
-                <Phone className="w-4 h-4 mt-3 mr-3 text-muted-foreground" />
-                <Input id="phone" type="tel" defaultValue="+1 (555) 123-4567" className="flex-1" />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="location">Location</Label>
-              <div className="flex">
-                <MapPin className="w-4 h-4 mt-3 mr-3 text-muted-foreground" />
-                <Input id="location" defaultValue="San Francisco, CA" className="flex-1" />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="bio">Bio</Label>
-              <Textarea
-                id="bio"
-                placeholder="Tell us about yourself and your real estate goals..."
-                defaultValue="First-time homebuyer looking for a modern condo in the Bay Area. Interested in properties with good investment potential and proximity to tech hubs."
-                className="min-h-[100px]"
-              />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Preferences */}
-        <Card className="md:col-span-3">
-          <CardHeader>
-            <CardTitle>Preferences</CardTitle>
-            <CardDescription>Customize your experience and search preferences</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="grid gap-6 md:grid-cols-2">
-              <div className="space-y-4">
-                <h4 className="font-medium">Search Preferences</h4>
-                <div className="space-y-3">
-                  <div className="space-y-2">
-                    <Label htmlFor="priceRange">Preferred Price Range</Label>
-                    <Select defaultValue="500k-1m">
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="under-500k">Under $500K</SelectItem>
-                        <SelectItem value="500k-1m">$500K - $1M</SelectItem>
-                        <SelectItem value="1m-2m">$1M - $2M</SelectItem>
-                        <SelectItem value="over-2m">Over $2M</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="propertyType">Property Type</Label>
-                    <Select defaultValue="condo">
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="house">House</SelectItem>
-                        <SelectItem value="condo">Condo</SelectItem>
-                        <SelectItem value="townhouse">Townhouse</SelectItem>
-                        <SelectItem value="apartment">Apartment</SelectItem>
-                      </SelectContent>
-                    </Select>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between p-3 border rounded-lg">
+                <div className="flex items-center space-x-3">
+                  <Mail className="h-4 w-4 text-muted-foreground" />
+                  <div>
+                    <p className="text-sm font-medium">Email Address</p>
+                    <p className="text-xs text-muted-foreground">Your login email</p>
                   </div>
                 </div>
+                <p className="text-sm">{profile.email}</p>
               </div>
 
-              <div className="space-y-4">
-                <h4 className="font-medium">Notification Preferences</h4>
-                <div className="space-y-3">
-                  <div className="space-y-2">
-                    <Label htmlFor="emailFreq">Email Notifications</Label>
-                    <Select defaultValue="weekly">
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="daily">Daily</SelectItem>
-                        <SelectItem value="weekly">Weekly</SelectItem>
-                        <SelectItem value="monthly">Monthly</SelectItem>
-                        <SelectItem value="never">Never</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="alertType">Price Alert Sensitivity</Label>
-                    <Select defaultValue="medium">
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="high">High (All changes)</SelectItem>
-                        <SelectItem value="medium">Medium (5%+ changes)</SelectItem>
-                        <SelectItem value="low">Low (10%+ changes)</SelectItem>
-                      </SelectContent>
-                    </Select>
+              <div className="flex items-center justify-between p-3 border rounded-lg">
+                <div className="flex items-center space-x-3">
+                  <User className="h-4 w-4 text-muted-foreground" />
+                  <div>
+                    <p className="text-sm font-medium">Account Type</p>
+                    <p className="text-xs text-muted-foreground">Your user role</p>
                   </div>
                 </div>
+                <Badge variant="secondary" className="capitalize">
+                  {profile.user_role}
+                </Badge>
+              </div>
+
+              <div className="flex items-center justify-between p-3 border rounded-lg">
+                <div className="flex items-center space-x-3">
+                  <Calendar className="h-4 w-4 text-muted-foreground" />
+                  <div>
+                    <p className="text-sm font-medium">Member Since</p>
+                    <p className="text-xs text-muted-foreground">Account creation date</p>
+                  </div>
+                </div>
+                <p className="text-sm">{new Date(profile.created_at).toLocaleDateString()}</p>
+              </div>
+
+              <div className="flex items-center justify-between p-3 border rounded-lg">
+                <div className="flex items-center space-x-3">
+                  <MapPin className="h-4 w-4 text-muted-foreground" />
+                  <div>
+                    <p className="text-sm font-medium">Last Updated</p>
+                    <p className="text-xs text-muted-foreground">Profile last modified</p>
+                  </div>
+                </div>
+                <p className="text-sm">{new Date(profile.updated_at).toLocaleDateString()}</p>
               </div>
             </div>
 
-            <div className="flex justify-end space-x-4 pt-4 border-t">
-              <Button variant="outline">Cancel</Button>
-              <Button>Save Changes</Button>
+            <div className="pt-4 border-t">
+              <h4 className="font-medium mb-3">Account Statistics</h4>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="text-center p-3 bg-muted rounded-lg">
+                  <p className="text-2xl font-bold text-primary">{profile.user_role === "buyer" ? "12" : "7"}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {profile.user_role === "buyer" ? "Saved Properties" : "Properties Owned"}
+                  </p>
+                </div>
+                <div className="text-center p-3 bg-muted rounded-lg">
+                  <p className="text-2xl font-bold text-primary">{profile.user_role === "buyer" ? "45" : "23"}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {profile.user_role === "buyer" ? "Properties Viewed" : "Analyses Created"}
+                  </p>
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>
