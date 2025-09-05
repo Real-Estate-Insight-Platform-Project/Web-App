@@ -24,7 +24,7 @@ export default function ChatAssistantPage() {
     {
       id: "welcome",
       content:
-        "Hello! I'm your AI assistant for real estate data analysis. I can help you query property information, market analytics, and provide insights based on your database. What would you like to know?",
+        "Hello! I'm your AI assistant for real estate data analysis. I can help you query property information, market analytics, and provide insights based on our database. What would you like to know?",
       role: "assistant",
       timestamp: new Date(),
     },
@@ -128,6 +128,7 @@ export default function ChatAssistantPage() {
     "What's the average property price in Austin?",
     "Show me properties with 3+ bedrooms under $500k",
     "What are the market trends for condos?",
+    "Find properties with the highest ROI potential",
   ]
 
   const handleExampleClick = (question: string) => {
