@@ -14,7 +14,19 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Home, BarChart3, Search, Heart, Calculator, TrendingUp, Settings, LogOut, Menu, User } from "lucide-react"
+import {
+  Home,
+  BarChart3,
+  Search,
+  Heart,
+  Calculator,
+  TrendingUp,
+  Settings,
+  LogOut,
+  Menu,
+  User,
+  MessageSquare,
+} from "lucide-react"
 import Link from "next/link"
 import { useRouter, usePathname } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
@@ -43,6 +55,7 @@ export function DashboardLayout({ children, userRole, userName, userEmail }: Das
     { href: "/dashboard/favorites", icon: Heart, label: "Saved Properties" },
     { href: "/dashboard/market-insights", icon: BarChart3, label: "Market Insights" },
     { href: "/dashboard/calculator", icon: Calculator, label: "Mortgage Calculator" },
+    { href: "/dashboard/chat-assistant", icon: MessageSquare, label: "AI Assistant" },
   ]
 
   const investorNavItems = [
@@ -51,6 +64,7 @@ export function DashboardLayout({ children, userRole, userName, userEmail }: Das
     { href: "/dashboard/search", icon: Search, label: "Property Search" },
     { href: "/dashboard/analysis", icon: Calculator, label: "Investment Analysis" },
     { href: "/dashboard/market-insights", icon: BarChart3, label: "Market Insights" },
+    { href: "/dashboard/chat-assistant", icon: MessageSquare, label: "AI Assistant" },
   ]
 
   const navItems = userRole === "buyer" ? buyerNavItems : investorNavItems
