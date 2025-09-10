@@ -6,24 +6,22 @@ import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { createClient } from "@/lib/supabase/client"
 import { TrendingUp, TrendingDown, Minus, BarChart3, Home, DollarSign, Calendar } from "lucide-react"
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts"
 
 interface MarketData {
-  id: string
-  city: string
+  year: number
+  month: number
   state: string
-  avg_price: number
-  median_price: number
-  price_per_sqft: number
+  median_listing_price: number
+  average_listing_price: number
+  median_listing_price_per_square_foot: number
+  total_listing_count: number
+  median_days_on_market: number
   market_trend: string
-  inventory_level: number
-  days_on_market: number
-  month_year: string
 }
 
 export default function MarketInsightsPage() {
-  const [marketData, setMarketData] = useState<MarketData[]>([])
-  const [selectedCity, setSelectedCity] = useState("Austin")
+  const [marketData, setMarketData] = useState<MarketData | null>(null)
+  const [selectedCity, setSelectedCity] = useState("California")
   const [loading, setLoading] = useState(true)
 
   const supabase = createClient()
@@ -35,19 +33,22 @@ export default function MarketInsightsPage() {
   const fetchMarketData = async () => {
     setLoading(true)
     const { data, error } = await supabase
-      .from("market_analytics")
+      .from("predictions")
       .select("*")
-      .eq("city", selectedCity)
-      .order("month_year", { ascending: true })
+      .eq("state", selectedCity)
+      .order("year", { ascending: false })
+      .order("month", { ascending: false })
+      .limit(1)
 
-    if (!error && data) {
-      setMarketData(data)
+    if (!error && data && data.length > 0) {
+      console.log("Market data fetched successfully:", data[0])
+      setMarketData(data[0])
+    } else {
+      console.error("Error fetching market data:", error)
+      setMarketData(null)
     }
     setLoading(false)
   }
-
-  const latestData = marketData[marketData.length - 1]
-  const previousData = marketData[marketData.length - 2]
 
   const getTrendIcon = (trend: string) => {
     switch (trend) {
@@ -71,17 +72,6 @@ export default function MarketInsightsPage() {
     }
   }
 
-  const formatChartData = () => {
-    return marketData.map((data) => ({
-      month: new Date(data.month_year).toLocaleDateString("en-US", { month: "short", year: "2-digit" }),
-      avgPrice: data.avg_price,
-      medianPrice: data.median_price,
-      pricePerSqft: data.price_per_sqft,
-      daysOnMarket: data.days_on_market,
-      inventory: data.inventory_level,
-    }))
-  }
-
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -96,9 +86,9 @@ export default function MarketInsightsPage() {
               <SelectValue placeholder="Select city" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="Austin">Austin, TX</SelectItem>
-              <SelectItem value="Dallas">Dallas, TX</SelectItem>
-              <SelectItem value="Houston">Houston, TX</SelectItem>
+              <SelectItem value="California">California</SelectItem>
+              <SelectItem value="Florida">Florida</SelectItem>
+              <SelectItem value="Texas">Texas</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -116,7 +106,7 @@ export default function MarketInsightsPage() {
             </Card>
           ))}
         </div>
-      ) : latestData ? (
+      ) : marketData ? (
         <>
           {/* Key Metrics */}
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -126,10 +116,10 @@ export default function MarketInsightsPage() {
                 <DollarSign className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">${latestData.avg_price?.toLocaleString()}</div>
+                <div className="text-2xl font-bold">${marketData.average_listing_price?.toLocaleString()}</div>
                 <div className="flex items-center space-x-1 text-xs text-muted-foreground">
-                  {getTrendIcon(latestData.market_trend)}
-                  <span className="capitalize">{latestData.market_trend}</span>
+                  {getTrendIcon(marketData.market_trend)}
+                  <span className="capitalize">{marketData.market_trend}</span>
                 </div>
               </CardContent>
             </Card>
@@ -140,19 +130,10 @@ export default function MarketInsightsPage() {
                 <Home className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">${latestData.median_price?.toLocaleString()}</div>
-                <p className="text-xs text-muted-foreground">
-                  {previousData && (
-                    <>
-                      {latestData.median_price > previousData.median_price ? "+" : ""}
-                      {(
-                        ((latestData.median_price - previousData.median_price) / previousData.median_price) *
-                        100
-                      ).toFixed(1)}
-                      % from last month
-                    </>
-                  )}
-                </p>
+                <div className="text-2xl font-bold">${marketData.median_listing_price?.toLocaleString()}</div>
+                <div className="flex items-center space-x-1 text-xs text-muted-foreground">
+                  <span>Latest prediction for {marketData.month}/{marketData.year}</span>
+                </div>
               </CardContent>
             </Card>
 
@@ -162,15 +143,10 @@ export default function MarketInsightsPage() {
                 <BarChart3 className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">${latestData.price_per_sqft}</div>
-                <p className="text-xs text-muted-foreground">
-                  {previousData && (
-                    <>
-                      {latestData.price_per_sqft > previousData.price_per_sqft ? "+" : ""}$
-                      {(latestData.price_per_sqft - previousData.price_per_sqft).toFixed(2)} from last month
-                    </>
-                  )}
-                </p>
+                <div className="text-2xl font-bold">${marketData.median_listing_price_per_square_foot}</div>
+                <div className="flex items-center space-x-1 text-xs text-muted-foreground">
+                  <span>Median price per square foot</span>
+                </div>
               </CardContent>
             </Card>
 
@@ -180,15 +156,10 @@ export default function MarketInsightsPage() {
                 <Calendar className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{latestData.days_on_market}</div>
-                <p className="text-xs text-muted-foreground">
-                  {previousData && (
-                    <>
-                      {latestData.days_on_market < previousData.days_on_market ? "-" : "+"}
-                      {Math.abs(latestData.days_on_market - previousData.days_on_market)} from last month
-                    </>
-                  )}
-                </p>
+                <div className="text-2xl font-bold">{marketData.median_days_on_market}</div>
+                <div className="flex items-center space-x-1 text-xs text-muted-foreground">
+                  <span>Median days on market</span>
+                </div>
               </CardContent>
             </Card>
           </div>
@@ -201,66 +172,13 @@ export default function MarketInsightsPage() {
                   <h3 className="text-lg font-semibold">Market Trend</h3>
                   <p className="text-muted-foreground">Current market direction in {selectedCity}</p>
                 </div>
-                <Badge className={`${getTrendColor(latestData.market_trend)} border`}>
-                  {getTrendIcon(latestData.market_trend)}
-                  <span className="ml-2 capitalize font-medium">{latestData.market_trend}</span>
+                <Badge className={`${getTrendColor(marketData.market_trend)} border`}>
+                  {getTrendIcon(marketData.market_trend)}
+                  <span className="ml-2 capitalize font-medium">{marketData.market_trend}</span>
                 </Badge>
               </div>
             </CardContent>
           </Card>
-
-          {/* Price Trends Chart */}
-          <div className="grid gap-6 lg:grid-cols-2">
-            <Card>
-              <CardHeader>
-                <CardTitle>Price Trends</CardTitle>
-                <CardDescription>Average and median home prices over time</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="h-80">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={formatChartData()}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="month" />
-                      <YAxis tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`} />
-                      <Tooltip
-                        formatter={(value: number) => [`$${value.toLocaleString()}`, ""]}
-                        labelFormatter={(label) => `Month: ${label}`}
-                      />
-                      <Line type="monotone" dataKey="avgPrice" stroke="#dc2626" strokeWidth={2} name="Average Price" />
-                      <Line
-                        type="monotone"
-                        dataKey="medianPrice"
-                        stroke="#7c2d12"
-                        strokeWidth={2}
-                        name="Median Price"
-                      />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Market Activity</CardTitle>
-                <CardDescription>Days on market and inventory levels</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="h-80">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={formatChartData()}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="month" />
-                      <YAxis />
-                      <Tooltip />
-                      <Bar dataKey="daysOnMarket" fill="#dc2626" name="Days on Market" />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
 
           {/* Market Summary */}
           <Card>
@@ -271,15 +189,15 @@ export default function MarketInsightsPage() {
             <CardContent className="space-y-4">
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="p-4 border rounded-lg">
-                  <h4 className="font-medium mb-2">Inventory Level</h4>
-                  <p className="text-2xl font-bold text-primary">{latestData.inventory_level?.toLocaleString()}</p>
+                  <h4 className="font-medium mb-2">Total Listings</h4>
+                  <p className="text-2xl font-bold text-primary">{marketData.total_listing_count}</p>
                   <p className="text-sm text-muted-foreground">Active listings</p>
                 </div>
 
                 <div className="p-4 border rounded-lg">
                   <h4 className="font-medium mb-2">Market Velocity</h4>
-                  <p className="text-2xl font-bold text-primary">{latestData.days_on_market} days</p>
-                  <p className="text-sm text-muted-foreground">Average time to sell</p>
+                  <p className="text-2xl font-bold text-primary">{marketData.median_days_on_market} days</p>
+                  <p className="text-sm text-muted-foreground">Median time to sell</p>
                 </div>
               </div>
 
@@ -287,12 +205,12 @@ export default function MarketInsightsPage() {
                 <h4 className="font-medium mb-2">Market Analysis</h4>
                 <p className="text-sm text-muted-foreground">
                   The {selectedCity} market is currently showing a{" "}
-                  <strong className="capitalize">{latestData.market_trend}</strong> trend. With an average price of{" "}
-                  <strong>${latestData.avg_price?.toLocaleString()}</strong> and properties spending an average of{" "}
-                  <strong>{latestData.days_on_market} days</strong> on the market,
-                  {latestData.market_trend === "rising" && " this indicates a seller's market with strong demand."}
-                  {latestData.market_trend === "declining" && " buyers may have more negotiating power."}
-                  {latestData.market_trend === "stable" &&
+                  <strong className="capitalize">{marketData.market_trend}</strong> trend. With an average price of{" "}
+                  <strong>${marketData.average_listing_price?.toLocaleString()}</strong> and properties spending an average of{" "}
+                  <strong>{marketData.median_days_on_market} days</strong> on the market,
+                  {marketData.market_trend === "rising" && " this indicates a seller's market with strong demand."}
+                  {marketData.market_trend === "declining" && " buyers may have more negotiating power."}
+                  {marketData.market_trend === "stable" &&
                     " the market shows balanced conditions for both buyers and sellers."}
                 </p>
               </div>
