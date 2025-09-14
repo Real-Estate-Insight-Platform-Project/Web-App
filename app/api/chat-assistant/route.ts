@@ -9,7 +9,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Call the Python backend API
-    const pythonApiUrl = process.env.PYTHON_API_URL
+    const pythonApiUrl = process.env.NEXT_PUBLIC_PYTHON_API_URL
 
     const response = await fetch(`${pythonApiUrl}/ask`, {
       method: "POST",
