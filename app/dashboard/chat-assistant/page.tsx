@@ -149,11 +149,11 @@ export default function ChatAssistantPage() {
         </p>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-4">
+      <div className="grid gap-6 lg:grid-cols-4 h-[calc(100vh-12rem)]">
         {/* Chat Interface */}
-        <div className="lg:col-span-3">
-          <Card className="h-[600px] flex flex-col">
-            <CardHeader className="border-b">
+        <div className="lg:col-span-3 flex flex-col">
+          <Card className="flex flex-col h-full">
+            <CardHeader className="border-b flex-shrink-0">
               <CardTitle className="flex items-center gap-2">
                 <Bot className="h-5 w-5 text-primary" />
                 Real Estate AI Assistant
@@ -162,9 +162,9 @@ export default function ChatAssistantPage() {
             </CardHeader>
 
             {/* Messages */}
-            <CardContent className="flex-1 p-0">
+            <CardContent className="flex-1 p-0 overflow-hidden">
               <ScrollArea className="h-full p-4" ref={scrollAreaRef}>
-                <div className="space-y-4">
+                <div className="space-y-4 pb-4">
                   {messages.map((message) => (
                     <div
                       key={message.id}
