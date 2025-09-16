@@ -6,24 +6,50 @@ import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { createClient } from "@/lib/supabase/client"
 import { TrendingUp, TrendingDown, Minus, BarChart3, Home, DollarSign, Calendar } from "lucide-react"
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts"
+import { 
+  LineChart, 
+  Line, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  Legend, 
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  ReferenceLine,
+  Label
+} from "recharts"
 
 interface MarketData {
-  id: string
-  city: string
+  year: number
+  month: number
   state: string
-  avg_price: number
-  median_price: number
-  price_per_sqft: number
-  market_trend: string
-  inventory_level: number
-  days_on_market: number
-  month_year: string
+  median_listing_price: number
+  average_listing_price: number
+  median_listing_price_per_square_foot: number
+  total_listing_count: number
+  median_days_on_market: number
+  market_trend?: string
+}
+
+// For chart data formatting
+interface ChartData {
+  date: string
+  month: string
+  monthYear: string
+  median_listing_price: number
+  average_listing_price: number
+  total_listing_count: number
+  median_days_on_market: number
+  isForecast?: boolean
 }
 
 export default function MarketInsightsPage() {
-  const [marketData, setMarketData] = useState<MarketData[]>([])
-  const [selectedCity, setSelectedCity] = useState("Austin")
+  const [marketData, setMarketData] = useState<MarketData | null>(null)
+  const [historicalData, setHistoricalData] = useState<MarketData[]>([])
+  const [chartData, setChartData] = useState<ChartData[]>([])
+  const [selectedCity, setSelectedCity] = useState("California")
   const [loading, setLoading] = useState(true)
 
   const supabase = createClient()
@@ -34,22 +60,94 @@ export default function MarketInsightsPage() {
 
   const fetchMarketData = async () => {
     setLoading(true)
-    const { data, error } = await supabase
-      .from("market_analytics")
+    
+    // Fetch latest prediction
+    const { data: predictionData, error: predictionError } = await supabase
+      .from("predictions")
       .select("*")
-      .eq("city", selectedCity)
-      .order("month_year", { ascending: true })
+      .eq("state", selectedCity)
+      .order("year", { ascending: false })
+      .order("month", { ascending: false })
+      .limit(1)
 
-    if (!error && data) {
-      setMarketData(data)
+    // Fetch historical data
+    const { data: historicalData, error: historicalError } = await supabase
+      .from("state_market")
+      .select(`
+        year,
+        month,
+        state,
+        median_listing_price,
+        average_listing_price,
+        median_listing_price_per_square_foot,
+        total_listing_count,
+        median_days_on_market
+      `)
+      .eq("state", selectedCity)
+      .order("year", { ascending: true })
+      .order("month", { ascending: true })
+
+    if (predictionError) {
+      console.error("Error fetching prediction data:", predictionError)
     }
+
+    if (historicalError) {
+      console.error("Error fetching historical data:", historicalError)
+    }
+
+    // Set latest prediction data
+    if (predictionData && predictionData.length > 0) {
+      console.log("Prediction data fetched successfully:", predictionData[0])
+      setMarketData(predictionData[0])
+    } else {
+      setMarketData(null)
+    }
+
+    // Set historical data and format for charts
+    if (historicalData && historicalData.length > 0) {
+      console.log("Historical data fetched successfully:", historicalData.length, "records")
+      setHistoricalData(historicalData)
+      
+      // Format data for charts
+      const formattedData: ChartData[] = historicalData.map(item => {
+        const date = new Date(item.year, item.month - 1);
+        return {
+          date: date.toISOString(),
+          month: date.toLocaleDateString('en-US', { month: 'short' }),
+          monthYear: date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' }),
+          median_listing_price: item.median_listing_price,
+          average_listing_price: item.average_listing_price,
+          total_listing_count: item.total_listing_count,
+          median_days_on_market: item.median_days_on_market,
+          isForecast: false
+        };
+      });
+
+      // Add forecast point if prediction data exists
+      if (predictionData && predictionData.length > 0) {
+        const forecastDate = new Date(predictionData[0].year, predictionData[0].month - 1);
+        formattedData.push({
+          date: forecastDate.toISOString(),
+          month: forecastDate.toLocaleDateString('en-US', { month: 'short' }),
+          monthYear: forecastDate.toLocaleDateString('en-US', { month: 'short', year: '2-digit' }),
+          median_listing_price: predictionData[0].median_listing_price,
+          average_listing_price: predictionData[0].average_listing_price,
+          total_listing_count: predictionData[0].total_listing_count,
+          median_days_on_market: predictionData[0].median_days_on_market,
+          isForecast: true
+        });
+      }
+      
+      // Sort by date
+      formattedData.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+      
+      setChartData(formattedData);
+    }
+    
     setLoading(false)
   }
 
-  const latestData = marketData[marketData.length - 1]
-  const previousData = marketData[marketData.length - 2]
-
-  const getTrendIcon = (trend: string) => {
+  const getTrendIcon = (trend: string | undefined) => {
     switch (trend) {
       case "rising":
         return <TrendingUp className="h-4 w-4 text-green-500" />
@@ -60,7 +158,7 @@ export default function MarketInsightsPage() {
     }
   }
 
-  const getTrendColor = (trend: string) => {
+  const getTrendColor = (trend: string | undefined) => {
     switch (trend) {
       case "rising":
         return "text-green-600 bg-green-50 border-green-200"
@@ -70,17 +168,72 @@ export default function MarketInsightsPage() {
         return "text-yellow-600 bg-yellow-50 border-yellow-200"
     }
   }
-
-  const formatChartData = () => {
-    return marketData.map((data) => ({
-      month: new Date(data.month_year).toLocaleDateString("en-US", { month: "short", year: "2-digit" }),
-      avgPrice: data.avg_price,
-      medianPrice: data.median_price,
-      pricePerSqft: data.price_per_sqft,
-      daysOnMarket: data.days_on_market,
-      inventory: data.inventory_level,
-    }))
+  
+  // Helper function to determine market conditions for annotations
+  const getMarketCondition = (index: number) => {
+    if (index < 1 || index >= chartData.length) return null;
+    
+    const current = chartData[index];
+    const previous = chartData[index - 1];
+    
+    // Buyer's Advantage: listing count rises, days on market lengthens
+    if (
+      current.total_listing_count > previous.total_listing_count &&
+      current.median_days_on_market > previous.median_days_on_market
+    ) {
+      return "Buyer's Advantage";
+    }
+    
+    // Seller's Market: listing count drops, days on market shortens
+    if (
+      current.total_listing_count < previous.total_listing_count &&
+      current.median_days_on_market < previous.median_days_on_market
+    ) {
+      return "Seller's Market";
+    }
+    
+    return null;
   }
+  
+  // Custom tooltip for price chart
+  const PriceChartTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-white p-4 rounded shadow-md border">
+          <p className="font-medium">{label}</p>
+          <p className="text-[#8884d8]">Median Price: ${payload[0].value.toLocaleString()}</p>
+          <p className="text-[#82ca9d]">Average Price: ${payload[1].value.toLocaleString()}</p>
+          {payload[0].payload.isForecast && (
+            <p className="text-xs font-semibold mt-2 text-blue-600">Forecast</p>
+          )}
+        </div>
+      );
+    }
+    return null;
+  };
+  
+  // Custom tooltip for supply & demand chart
+  const SupplyDemandTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+      const marketCondition = getMarketCondition(payload[0]?.payload?.index);
+      
+      return (
+        <div className="bg-white p-4 rounded shadow-md border">
+          <p className="font-medium">{label}</p>
+          <p className="text-[#8884d8]">Listings: {payload[0]?.value.toLocaleString()}</p>
+          <p className="text-[#ff7300]">Days on Market: {payload[1]?.value}</p>
+          {marketCondition && (
+            <p className={`text-xs font-semibold mt-2 ${
+              marketCondition === "Buyer's Advantage" ? "text-blue-600" : "text-red-600"
+            }`}>
+              {marketCondition}
+            </p>
+          )}
+        </div>
+      );
+    }
+    return null;
+  };
 
   return (
     <div className="space-y-6">
@@ -96,9 +249,50 @@ export default function MarketInsightsPage() {
               <SelectValue placeholder="Select city" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="Austin">Austin, TX</SelectItem>
-              <SelectItem value="Dallas">Dallas, TX</SelectItem>
-              <SelectItem value="Houston">Houston, TX</SelectItem>
+                <SelectItem value="Alaska">Alaska</SelectItem>
+                <SelectItem value="Alabama">Alabama</SelectItem>
+                <SelectItem value="Arkansas">Arkansas</SelectItem>
+                <SelectItem value="Arizona">Arizona</SelectItem>
+                <SelectItem value="California">California</SelectItem>
+                <SelectItem value="Colorado">Colorado</SelectItem>
+                <SelectItem value="Connecticut">Connecticut</SelectItem>
+                <SelectItem value="District of Columbia">District of Columbia</SelectItem>
+                <SelectItem value="Delaware">Delaware</SelectItem>
+                <SelectItem value="Florida">Florida</SelectItem>
+                <SelectItem value="Georgia">Georgia</SelectItem>
+                <SelectItem value="Hawaii">Hawaii</SelectItem>
+                <SelectItem value="Iowa">Iowa</SelectItem>
+                <SelectItem value="Idaho">Idaho</SelectItem>
+                <SelectItem value="Illinois">Illinois</SelectItem>
+                <SelectItem value="Indiana">Indiana</SelectItem>
+                <SelectItem value="Kansas">Kansas</SelectItem>
+                <SelectItem value="Kentucky">Kentucky</SelectItem>
+                <SelectItem value="Louisiana">Louisiana</SelectItem>
+                <SelectItem value="Massachusetts">Massachusetts</SelectItem>
+                <SelectItem value="Maryland">Maryland</SelectItem>
+                <SelectItem value="Maine">Maine</SelectItem>
+                <SelectItem value="Michigan">Michigan</SelectItem>
+                <SelectItem value="Minnesota">Minnesota</SelectItem>
+                <SelectItem value="Missouri">Missouri</SelectItem>
+                <SelectItem value="Mississippi">Mississippi</SelectItem>
+                <SelectItem value="Montana">Montana</SelectItem>
+                <SelectItem value="North Carolina">North Carolina</SelectItem>
+                <SelectItem value="North Dakota">North Dakota</SelectItem>
+                <SelectItem value="Nebraska">Nebraska</SelectItem>
+                <SelectItem value="New Hampshire">New Hampshire</SelectItem>
+                <SelectItem value="New Jersey">New Jersey</SelectItem>
+                <SelectItem value="New Mexico">New Mexico</SelectItem>
+                <SelectItem value="Nevada">Nevada</SelectItem>
+                <SelectItem value="New York">New York</SelectItem>
+                <SelectItem value="Ohio">Ohio</SelectItem>
+                <SelectItem value="Oklahoma">Oklahoma</SelectItem>
+                <SelectItem value="Oregon">Oregon</SelectItem>
+                <SelectItem value="Pennsylvania">Pennsylvania</SelectItem>
+                <SelectItem value="Rhode Island">Rhode Island</SelectItem>
+                <SelectItem value="South Carolina">South Carolina</SelectItem>
+                <SelectItem value="South Dakota">South Dakota</SelectItem>
+                <SelectItem value="Tennessee">Tennessee</SelectItem>
+                <SelectItem value="Texas">Texas</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -116,7 +310,7 @@ export default function MarketInsightsPage() {
             </Card>
           ))}
         </div>
-      ) : latestData ? (
+      ) : marketData ? (
         <>
           {/* Key Metrics */}
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -126,10 +320,10 @@ export default function MarketInsightsPage() {
                 <DollarSign className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">${latestData.avg_price?.toLocaleString()}</div>
+                <div className="text-2xl font-bold">${marketData.average_listing_price?.toLocaleString()}</div>
                 <div className="flex items-center space-x-1 text-xs text-muted-foreground">
-                  {getTrendIcon(latestData.market_trend)}
-                  <span className="capitalize">{latestData.market_trend}</span>
+                  {getTrendIcon(marketData.market_trend)}
+                  <span className="capitalize">{marketData.market_trend}</span>
                 </div>
               </CardContent>
             </Card>
@@ -140,19 +334,10 @@ export default function MarketInsightsPage() {
                 <Home className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">${latestData.median_price?.toLocaleString()}</div>
-                <p className="text-xs text-muted-foreground">
-                  {previousData && (
-                    <>
-                      {latestData.median_price > previousData.median_price ? "+" : ""}
-                      {(
-                        ((latestData.median_price - previousData.median_price) / previousData.median_price) *
-                        100
-                      ).toFixed(1)}
-                      % from last month
-                    </>
-                  )}
-                </p>
+                <div className="text-2xl font-bold">${marketData.median_listing_price?.toLocaleString()}</div>
+                <div className="flex items-center space-x-1 text-xs text-muted-foreground">
+                  <span>Latest prediction for {marketData.month}/{marketData.year}</span>
+                </div>
               </CardContent>
             </Card>
 
@@ -162,15 +347,10 @@ export default function MarketInsightsPage() {
                 <BarChart3 className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">${latestData.price_per_sqft}</div>
-                <p className="text-xs text-muted-foreground">
-                  {previousData && (
-                    <>
-                      {latestData.price_per_sqft > previousData.price_per_sqft ? "+" : ""}$
-                      {(latestData.price_per_sqft - previousData.price_per_sqft).toFixed(2)} from last month
-                    </>
-                  )}
-                </p>
+                <div className="text-2xl font-bold">${marketData.median_listing_price_per_square_foot}</div>
+                <div className="flex items-center space-x-1 text-xs text-muted-foreground">
+                  <span>Median price per square foot</span>
+                </div>
               </CardContent>
             </Card>
 
@@ -180,15 +360,10 @@ export default function MarketInsightsPage() {
                 <Calendar className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{latestData.days_on_market}</div>
-                <p className="text-xs text-muted-foreground">
-                  {previousData && (
-                    <>
-                      {latestData.days_on_market < previousData.days_on_market ? "-" : "+"}
-                      {Math.abs(latestData.days_on_market - previousData.days_on_market)} from last month
-                    </>
-                  )}
-                </p>
+                <div className="text-2xl font-bold">{marketData.median_days_on_market}</div>
+                <div className="flex items-center space-x-1 text-xs text-muted-foreground">
+                  <span>Median days on market</span>
+                </div>
               </CardContent>
             </Card>
           </div>
@@ -201,66 +376,189 @@ export default function MarketInsightsPage() {
                   <h3 className="text-lg font-semibold">Market Trend</h3>
                   <p className="text-muted-foreground">Current market direction in {selectedCity}</p>
                 </div>
-                <Badge className={`${getTrendColor(latestData.market_trend)} border`}>
-                  {getTrendIcon(latestData.market_trend)}
-                  <span className="ml-2 capitalize font-medium">{latestData.market_trend}</span>
+                <Badge className={`${getTrendColor(marketData.market_trend)} border`}>
+                  {getTrendIcon(marketData.market_trend)}
+                  <span className="ml-2 capitalize font-medium">{marketData.market_trend}</span>
                 </Badge>
               </div>
             </CardContent>
           </Card>
-
-          {/* Price Trends Chart */}
-          <div className="grid gap-6 lg:grid-cols-2">
-            <Card>
-              <CardHeader>
-                <CardTitle>Price Trends</CardTitle>
-                <CardDescription>Average and median home prices over time</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="h-80">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={formatChartData()}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="month" />
-                      <YAxis tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`} />
-                      <Tooltip
-                        formatter={(value: number) => [`$${value.toLocaleString()}`, ""]}
-                        labelFormatter={(label) => `Month: ${label}`}
-                      />
-                      <Line type="monotone" dataKey="avgPrice" stroke="#dc2626" strokeWidth={2} name="Average Price" />
-                      <Line
-                        type="monotone"
-                        dataKey="medianPrice"
-                        stroke="#7c2d12"
-                        strokeWidth={2}
-                        name="Median Price"
-                      />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Market Activity</CardTitle>
-                <CardDescription>Days on market and inventory levels</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="h-80">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={formatChartData()}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="month" />
-                      <YAxis />
-                      <Tooltip />
-                      <Bar dataKey="daysOnMarket" fill="#dc2626" name="Days on Market" />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+          
+          {/* Chart 1: Median vs. Average Listing Prices */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Median vs. Average Listing Prices (with Forecast)</CardTitle>
+              <CardDescription>Historical and predicted home prices</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="h-80">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={chartData.map((item, index) => ({ ...item, index }))}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis 
+                      dataKey="monthYear" 
+                      tick={{ fontSize: 12 }}
+                    />
+                    <YAxis 
+                      tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`}
+                      domain={['auto', 'auto']}
+                    />
+                    <Tooltip content={<PriceChartTooltip />} />
+                    <Legend />
+                    
+                    {/* Median Listing Price */}
+                    <Line 
+                      type="monotone" 
+                      dataKey="median_listing_price" 
+                      name="Median Price" 
+                      stroke="#8884d8" 
+                      strokeWidth={2}
+                      dot={(props: any) => {
+                        if (props.payload.isForecast) {
+                          return (
+                            <circle
+                              key={`median-forecast-${props.cx}-${props.cy}`}
+                              cx={props.cx}
+                              cy={props.cy}
+                              r={6}
+                              fill="#8884d8"
+                              strokeWidth={2}
+                            />
+                          );
+                        }
+                        return (
+                          <circle
+                            key={`median-${props.cx}-${props.cy}`}
+                            cx={props.cx}
+                            cy={props.cy}
+                            r={4}
+                            fill="#8884d8"
+                            strokeWidth={0}
+                          />
+                        );
+                      }}
+                      strokeDasharray="0"
+                    />
+                    
+                    {/* Average Listing Price */}
+                    <Line 
+                      type="monotone" 
+                      dataKey="average_listing_price" 
+                      name="Average Price" 
+                      stroke="#82ca9d" 
+                      strokeWidth={2}
+                      dot={(props: any) => {
+                        if (props.payload.isForecast) {
+                          return (
+                            <circle
+                              key={`average-forecast-${props.cx}-${props.cy}`}
+                              cx={props.cx}
+                              cy={props.cy}
+                              r={6}
+                              fill="#82ca9d"
+                              strokeWidth={2}
+                            />
+                          );
+                        }
+                        return (
+                          <circle
+                            key={`average-${props.cx}-${props.cy}`}
+                            cx={props.cx}
+                            cy={props.cy}
+                            r={4}
+                            fill="#82ca9d"
+                            strokeWidth={0}
+                          />
+                        );
+                      }}
+                      strokeDasharray="0"
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+          
+          {/* Chart 2: Market Supply & Demand Chart */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Market Supply & Demand Trends</CardTitle>
+              <CardDescription>Relationship between listing count and days on market</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="h-80">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart 
+                    data={chartData.map((item, index) => ({ ...item, index }))}
+                    margin={{ top: 20, right: 30, left: 20, bottom: 10 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="monthYear" />
+                    
+                    {/* Left Y-axis for listing count */}
+                    <YAxis 
+                      yAxisId="left"
+                      tickFormatter={(value) => value.toLocaleString()}
+                    />
+                    
+                    {/* Right Y-axis for days on market */}
+                    <YAxis 
+                      yAxisId="right" 
+                      orientation="right"
+                      tickFormatter={(value) => `${value} days`}
+                    />
+                    
+                    <Tooltip content={<SupplyDemandTooltip />} />
+                    <Legend />
+                    
+                    {/* Market Condition Annotations */}
+                    {chartData.map((item, index) => {
+                      const condition = getMarketCondition(index);
+                      if (!condition) return null;
+                      
+                      return (
+                        <ReferenceLine
+                          key={index}
+                          x={item.monthYear}
+                          stroke={condition === "Buyer's Advantage" ? "#2563eb" : "#dc2626"}
+                          strokeDasharray="3 3"
+                        >
+                          <Label
+                            value={condition}
+                            position="insideTop"
+                            fill={condition === "Buyer's Advantage" ? "#2563eb" : "#dc2626"}
+                            fontSize={10}
+                          />
+                        </ReferenceLine>
+                      );
+                    })}
+                    
+                    {/* Total Listing Count */}
+                    <Line
+                      yAxisId="left"
+                      type="monotone"
+                      dataKey="total_listing_count"
+                      name="Listings"
+                      stroke="#8884d8"
+                      strokeWidth={2}
+                      dot={false}
+                    />
+                    
+                    {/* Median Days on Market */}
+                    <Line
+                      yAxisId="right"
+                      type="monotone"
+                      dataKey="median_days_on_market"
+                      name="Days on Market"
+                      stroke="#ff7300"
+                      strokeWidth={2}
+                      dot={false}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
 
           {/* Market Summary */}
           <Card>
@@ -271,30 +569,56 @@ export default function MarketInsightsPage() {
             <CardContent className="space-y-4">
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="p-4 border rounded-lg">
-                  <h4 className="font-medium mb-2">Inventory Level</h4>
-                  <p className="text-2xl font-bold text-primary">{latestData.inventory_level?.toLocaleString()}</p>
+                  <h4 className="font-medium mb-2">Total Listings</h4>
+                  <p className="text-2xl font-bold text-primary">{marketData.total_listing_count.toLocaleString()}</p>
                   <p className="text-sm text-muted-foreground">Active listings</p>
                 </div>
 
                 <div className="p-4 border rounded-lg">
                   <h4 className="font-medium mb-2">Market Velocity</h4>
-                  <p className="text-2xl font-bold text-primary">{latestData.days_on_market} days</p>
-                  <p className="text-sm text-muted-foreground">Average time to sell</p>
+                  <p className="text-2xl font-bold text-primary">{marketData.median_days_on_market} days</p>
+                  <p className="text-sm text-muted-foreground">Median time to sell</p>
                 </div>
               </div>
 
               <div className="p-4 bg-muted rounded-lg">
                 <h4 className="font-medium mb-2">Market Analysis</h4>
                 <p className="text-sm text-muted-foreground">
-                  The {selectedCity} market is currently showing a{" "}
-                  <strong className="capitalize">{latestData.market_trend}</strong> trend. With an average price of{" "}
-                  <strong>${latestData.avg_price?.toLocaleString()}</strong> and properties spending an average of{" "}
-                  <strong>{latestData.days_on_market} days</strong> on the market,
-                  {latestData.market_trend === "rising" && " this indicates a seller's market with strong demand."}
-                  {latestData.market_trend === "declining" && " buyers may have more negotiating power."}
-                  {latestData.market_trend === "stable" &&
-                    " the market shows balanced conditions for both buyers and sellers."}
+                  The {selectedCity} market is currently showing 
+                  {marketData.market_trend ? (
+                    <>
+                      a <strong className="capitalize">{marketData.market_trend}</strong> trend. 
+                    </>
+                  ) : (
+                    <> the latest trends based on our predictions. </>
+                  )}
+                  With an average price of{" "}
+                  <strong>${marketData.average_listing_price.toLocaleString()}</strong> and properties spending an average of{" "}
+                  <strong>{marketData.median_days_on_market} days</strong> on the market,
+                  {marketData.market_trend === "rising" && " this indicates a seller's market with strong demand."}
+                  {marketData.market_trend === "declining" && " buyers may have more negotiating power."}
+                  {marketData.market_trend === "stable" && " the market shows balanced conditions for both buyers and sellers."}
+                  {!marketData.market_trend && " market conditions should be carefully evaluated."}
                 </p>
+                
+                {historicalData.length > 0 && (
+                  <div className="mt-3">
+                    <p className="text-sm text-muted-foreground">
+                      Based on historical data analysis, the market has shown {" "}
+                      {
+                        historicalData[historicalData.length - 1].median_listing_price > historicalData[0].median_listing_price
+                          ? <span>a <strong className="text-green-600">positive growth trend</strong> in median listing prices</span>
+                          : <span>a <strong className="text-red-600">negative growth trend</strong> in median listing prices</span>
+                      } over the past {historicalData.length} months.
+                      
+                      {chartData.some(item => getMarketCondition(chartData.indexOf(item)) === "Buyer's Advantage") && 
+                        " There have been periods favorable to buyers when inventory increased while properties took longer to sell."}
+                      
+                      {chartData.some(item => getMarketCondition(chartData.indexOf(item)) === "Seller's Market") && 
+                        " The market has also shown strong seller's conditions when inventory decreased and properties sold more quickly."}
+                    </p>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
