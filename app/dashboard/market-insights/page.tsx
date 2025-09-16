@@ -72,7 +72,7 @@ export default function MarketInsightsPage() {
 
     // Fetch historical data
     const { data: historicalData, error: historicalError } = await supabase
-      .from("State_Market")
+      .from("state_market")
       .select(`
         year,
         month,
