@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge"
 import { createClient } from "@/lib/supabase/client"
 import { Heart, MapPin, Bed, Bath, Square, Calendar } from "lucide-react"
+import Image from "next/image"
 
 interface Property {
   id: string
@@ -24,6 +25,7 @@ interface Property {
   square_feet: number
   year_built: number
   listing_status: string
+  property_image: string | null
 }
 
 export default function PropertySearchPage() {
@@ -257,23 +259,41 @@ export default function PropertySearchPage() {
             {properties.map((property) => (
               <Card key={property.id} className="overflow-hidden hover:shadow-lg transition-shadow">
                 <div className="relative">
-                  <div className="h-48 bg-gradient-to-br from-red-100 to-red-200 flex items-center justify-center">
-                    <div className="text-center text-muted-foreground">
-                      <MapPin className="h-8 w-8 mx-auto mb-2" />
-                      <p className="text-sm">Property Image</p>
-                    </div>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className={`absolute top-2 right-2 ${
-                      favorites.has(property.id) ? "text-red-500" : "text-gray-400"
-                    }`}
-                    onClick={() => toggleFavorite(property.id)}
-                  >
-                    <Heart className={`h-5 w-5 ${favorites.has(property.id) ? "fill-current" : ""}`} />
-                  </Button>
-                </div>
+                        {property.property_image ? (
+                          <div className="h-48 relative">
+                            <Image
+                              src={property.property_image}
+                              alt={property.title}
+                              fill
+                              className="object-cover"
+                              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                              onError={(e) => {
+                                // Fallback to placeholder if image fails to load
+                                const target = e.target as HTMLImageElement
+                                target.style.display = 'none'
+                                // You might want to show the placeholder div instead
+                              }}
+                            />
+                          </div>
+                        ) : (
+                          <div className="h-48 bg-gradient-to-br from-red-100 to-red-200 flex items-center justify-center">
+                            <div className="text-center text-muted-foreground">
+                              <MapPin className="h-8 w-8 mx-auto mb-2" />
+                              <p className="text-sm">No Image Available</p>
+                            </div>
+                          </div>
+                        )}
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className={`absolute top-2 right-2 ${
+                            favorites.has(property.id) ? "text-red-500" : "text-gray-400"
+                          }`}
+                          onClick={() => toggleFavorite(property.id)}
+                        >
+                          <Heart className={`h-5 w-5 ${favorites.has(property.id) ? "fill-current" : ""}`} />
+                        </Button>
+                      </div>
 
                 <CardContent className="p-4">
                   <div className="space-y-3">
