@@ -319,8 +319,15 @@ export default function MarketInsightsPage() {
                 <SelectItem value="South Dakota">South Dakota</SelectItem>
                 <SelectItem value="Tennessee">Tennessee</SelectItem>
                 <SelectItem value="Texas">Texas</SelectItem>
-            </SelectContent>
-          </Select>
+                <SelectItem value="Utah">Utah</SelectItem>
+                <SelectItem value="Virginia">Virginia</SelectItem>
+                <SelectItem value="Vermont">Vermont</SelectItem>
+                <SelectItem value="Washington">Washington</SelectItem>
+                <SelectItem value="Wisconsin">Wisconsin</SelectItem>
+                <SelectItem value="West Virginia">West Virginia</SelectItem>
+                <SelectItem value="Wyoming">Wyoming</SelectItem>
+              </SelectContent>
+              </Select>
         </div>
       </div>
 
