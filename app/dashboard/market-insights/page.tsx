@@ -49,7 +49,7 @@ export default function MarketInsightsPage() {
   const [marketData, setMarketData] = useState<MarketData | null>(null)
   const [historicalData, setHistoricalData] = useState<MarketData[]>([])
   const [chartData, setChartData] = useState<ChartData[]>([])
-  const [selectedCity, setSelectedCity] = useState("California")
+  const [selectedCity, setSelectedCity] = useState("Alaska")
   const [loading, setLoading] = useState(true)
 
   const supabase = createClient()
@@ -413,7 +413,7 @@ export default function MarketInsightsPage() {
           {/* Chart 1: Median vs. Average Listing Prices */}
           <Card>
             <CardHeader>
-              <CardTitle>Median vs. Average Listing Prices (with Forecast)</CardTitle>
+              <CardTitle>Median vs. Average Listing Prices (with Forecasts)</CardTitle>
               <CardDescription>Historical and predicted home prices</CardDescription>
             </CardHeader>
             <CardContent>
@@ -446,7 +446,7 @@ export default function MarketInsightsPage() {
                               key={`median-forecast-${props.cx}-${props.cy}`}
                               cx={props.cx}
                               cy={props.cy}
-                              r={6}
+                              r={3}
                               fill="#8884d8"
                               strokeWidth={2}
                             />
@@ -457,7 +457,7 @@ export default function MarketInsightsPage() {
                             key={`median-${props.cx}-${props.cy}`}
                             cx={props.cx}
                             cy={props.cy}
-                            r={4}
+                            r={1}
                             fill="#8884d8"
                             strokeWidth={0}
                           />
@@ -480,7 +480,7 @@ export default function MarketInsightsPage() {
                               key={`average-forecast-${props.cx}-${props.cy}`}
                               cx={props.cx}
                               cy={props.cy}
-                              r={6}
+                              r={3}
                               fill="#82ca9d"
                               strokeWidth={2}
                             />
@@ -491,7 +491,7 @@ export default function MarketInsightsPage() {
                             key={`average-${props.cx}-${props.cy}`}
                             cx={props.cx}
                             cy={props.cy}
-                            r={4}
+                            r={1}
                             fill="#82ca9d"
                             strokeWidth={0}
                           />
@@ -508,7 +508,7 @@ export default function MarketInsightsPage() {
           {/* Chart 2: Market Supply & Demand Chart */}
           <Card>
             <CardHeader>
-              <CardTitle>Market Supply & Demand Trends</CardTitle>
+              <CardTitle>Market Supply & Demand Trends (with Forecasts)</CardTitle>
               <CardDescription>Relationship between listing count and days on market</CardDescription>
             </CardHeader>
             <CardContent>
@@ -569,18 +569,18 @@ export default function MarketInsightsPage() {
                       strokeWidth={2}
                       dot={false}
                     />
-                    
+
                     {/* Total Listing Count - Forecast overlay with dashed line */}
                     <Line
                       yAxisId="left"
                       type="monotone"
                       dataKey={(entry: any) => entry.isForecast ? entry.total_listing_count : null}
-                      name="Listings (Forecast)"
-                      stroke="#8884d8"
+                      // name="Listings (Forecast)"
+                      stroke="#ffffffff"
                       strokeWidth={2}
                       strokeDasharray="5 5"
                       dot={{
-                        r: 4,
+                        r: 3,
                         fill: "#8884d8",
                         strokeWidth: 1,
                         stroke: "#8884d8"
@@ -604,12 +604,12 @@ export default function MarketInsightsPage() {
                       yAxisId="right"
                       type="monotone"
                       dataKey={(entry: any) => entry.isForecast ? entry.median_days_on_market : null}
-                      name="Days on Market (Forecast)"
-                      stroke="#ff7300"
+                      // name="Days on Market (Forecast)"
+                      stroke="#ffffffff"
                       strokeWidth={2}
                       strokeDasharray="5 5"
                       dot={{
-                        r: 4,
+                        r: 3,
                         fill: "#ff7300",
                         strokeWidth: 1,
                         stroke: "#ff7300"
