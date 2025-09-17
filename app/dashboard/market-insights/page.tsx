@@ -61,14 +61,13 @@ export default function MarketInsightsPage() {
   const fetchMarketData = async () => {
     setLoading(true)
     
-    // Fetch latest prediction
+    // Fetch all predictions for the selected state
     const { data: predictionData, error: predictionError } = await supabase
       .from("predictions")
       .select("*")
       .eq("state", selectedCity)
-      .order("year", { ascending: false })
-      .order("month", { ascending: false })
-      .limit(1)
+      .order("year", { ascending: true })
+      .order("month", { ascending: true })
 
     // Fetch historical data
     const { data: historicalData, error: historicalError } = await supabase
@@ -95,10 +94,19 @@ export default function MarketInsightsPage() {
       console.error("Error fetching historical data:", historicalError)
     }
 
-    // Set latest prediction data
+    // Set latest prediction data (closest future prediction for insights)
     if (predictionData && predictionData.length > 0) {
-      console.log("Prediction data fetched successfully:", predictionData[0])
-      setMarketData(predictionData[0])
+      // Find the closest future prediction
+      const currentDate = new Date()
+      const currentYear = currentDate.getFullYear()
+      const currentMonth = currentDate.getMonth() + 1 // getMonth() returns 0-11
+      
+      const closestPrediction = predictionData.find(pred => 
+        pred.year > currentYear || (pred.year === currentYear && pred.month >= currentMonth)
+      ) || predictionData[predictionData.length - 1] // fallback to latest if no future predictions
+      
+      console.log("Closest future prediction:", closestPrediction)
+      setMarketData(closestPrediction)
     } else {
       setMarketData(null)
     }
@@ -123,18 +131,20 @@ export default function MarketInsightsPage() {
         };
       });
 
-      // Add forecast point if prediction data exists
+      // Add all prediction points as forecast data
       if (predictionData && predictionData.length > 0) {
-        const forecastDate = new Date(predictionData[0].year, predictionData[0].month - 1);
-        formattedData.push({
-          date: forecastDate.toISOString(),
-          month: forecastDate.toLocaleDateString('en-US', { month: 'short' }),
-          monthYear: forecastDate.toLocaleDateString('en-US', { month: 'short', year: '2-digit' }),
-          median_listing_price: predictionData[0].median_listing_price,
-          average_listing_price: predictionData[0].average_listing_price,
-          total_listing_count: predictionData[0].total_listing_count,
-          median_days_on_market: predictionData[0].median_days_on_market,
-          isForecast: true
+        predictionData.forEach(prediction => {
+          const forecastDate = new Date(prediction.year, prediction.month - 1);
+          formattedData.push({
+            date: forecastDate.toISOString(),
+            month: forecastDate.toLocaleDateString('en-US', { month: 'short' }),
+            monthYear: forecastDate.toLocaleDateString('en-US', { month: 'short', year: '2-digit' }),
+            median_listing_price: prediction.median_listing_price,
+            average_listing_price: prediction.average_listing_price,
+            total_listing_count: prediction.total_listing_count,
+            median_days_on_market: prediction.median_days_on_market,
+            isForecast: true
+          });
         });
       }
       
@@ -202,9 +212,11 @@ export default function MarketInsightsPage() {
         <div className="bg-white p-4 rounded shadow-md border">
           <p className="font-medium">{label}</p>
           <p className="text-[#8884d8]">Median Price: ${payload[0].value.toLocaleString()}</p>
-          <p className="text-[#82ca9d]">Average Price: ${payload[1].value.toLocaleString()}</p>
+          <p className="text-[#82ca9d]">Average Price: ${payload[1]?.value.toLocaleString()}</p>
           {payload[0].payload.isForecast && (
-            <p className="text-xs font-semibold mt-2 text-blue-600">Forecast</p>
+            <p className="text-xs font-semibold mt-2 text-blue-600">
+              Forecast for {payload[0].payload.monthYear}
+            </p>
           )}
         </div>
       );
@@ -212,16 +224,30 @@ export default function MarketInsightsPage() {
     return null;
   };
   
+  // Create separate datasets for historical and forecast data
+  const historicalChartData = chartData.filter(item => !item.isForecast);
+  const forecastChartData = chartData.filter(item => item.isForecast);
+  
+  // To connect the historical and forecast data, we need to include the last historical point in forecast data
+  const lastHistoricalPoint = historicalChartData[historicalChartData.length - 1];
+  const forecastWithConnection = lastHistoricalPoint ? [lastHistoricalPoint, ...forecastChartData] : forecastChartData;
+  
   // Custom tooltip for supply & demand chart
   const SupplyDemandTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       const marketCondition = getMarketCondition(payload[0]?.payload?.index);
+      const isForecast = payload[0]?.payload?.isForecast;
       
       return (
         <div className="bg-white p-4 rounded shadow-md border">
           <p className="font-medium">{label}</p>
           <p className="text-[#8884d8]">Listings: {payload[0]?.value.toLocaleString()}</p>
           <p className="text-[#ff7300]">Days on Market: {payload[1]?.value}</p>
+          {isForecast && (
+            <p className="text-xs font-semibold mt-2 text-blue-600">
+              Forecast Data
+            </p>
+          )}
           {marketCondition && (
             <p className={`text-xs font-semibold mt-2 ${
               marketCondition === "Buyer's Advantage" ? "text-blue-600" : "text-red-600"
@@ -533,7 +559,7 @@ export default function MarketInsightsPage() {
                       );
                     })}
                     
-                    {/* Total Listing Count */}
+                    {/* Total Listing Count - All Data */}
                     <Line
                       yAxisId="left"
                       type="monotone"
@@ -544,7 +570,25 @@ export default function MarketInsightsPage() {
                       dot={false}
                     />
                     
-                    {/* Median Days on Market */}
+                    {/* Total Listing Count - Forecast overlay with dashed line */}
+                    <Line
+                      yAxisId="left"
+                      type="monotone"
+                      dataKey={(entry: any) => entry.isForecast ? entry.total_listing_count : null}
+                      name="Listings (Forecast)"
+                      stroke="#8884d8"
+                      strokeWidth={2}
+                      strokeDasharray="5 5"
+                      dot={{
+                        r: 4,
+                        fill: "#8884d8",
+                        strokeWidth: 1,
+                        stroke: "#8884d8"
+                      }}
+                      connectNulls={true}
+                    />
+                    
+                    {/* Median Days on Market - All Data */}
                     <Line
                       yAxisId="right"
                       type="monotone"
@@ -553,6 +597,24 @@ export default function MarketInsightsPage() {
                       stroke="#ff7300"
                       strokeWidth={2}
                       dot={false}
+                    />
+                    
+                    {/* Median Days on Market - Forecast overlay with dashed line */}
+                    <Line
+                      yAxisId="right"
+                      type="monotone"
+                      dataKey={(entry: any) => entry.isForecast ? entry.median_days_on_market : null}
+                      name="Days on Market (Forecast)"
+                      stroke="#ff7300"
+                      strokeWidth={2}
+                      strokeDasharray="5 5"
+                      dot={{
+                        r: 4,
+                        fill: "#ff7300",
+                        strokeWidth: 1,
+                        stroke: "#ff7300"
+                      }}
+                      connectNulls={true}
                     />
                   </LineChart>
                 </ResponsiveContainer>
