@@ -15,8 +15,6 @@ import {
   Tooltip, 
   Legend, 
   ResponsiveContainer,
-  BarChart,
-  Bar,
   ReferenceLine,
   Label
 } from "recharts"
