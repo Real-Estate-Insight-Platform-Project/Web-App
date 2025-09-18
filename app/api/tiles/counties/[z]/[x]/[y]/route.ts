@@ -13,8 +13,19 @@ export async function GET(
   }
 
   const buf = Buffer.from(await r.arrayBuffer());
+  
+  // If buffer is empty, return 204 without content
+  if (buf.length === 0) {
+    return new Response(null, {
+      status: 204,
+      headers: {
+        "Cache-Control": "public, max-age=3600, s-maxage=3600",
+      },
+    });
+  }
+  
   return new Response(buf, {
-    status: buf.length ? 200 : 204,
+    status: 200,
     headers: {
       "Content-Type": "application/vnd.mapbox-vector-tile",
       "Cache-Control": "public, max-age=3600, s-maxage=3600",
