@@ -7,8 +7,9 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { createClient } from "@/lib/supabase/client"
-import { Heart, MapPin, Bed, Bath, Square, Calendar, ExternalLink } from "lucide-react"
+import { Heart, MapPin, Bed, Bath, Square, Calendar, ExternalLink, X } from "lucide-react"
 import Image from "next/image"
 
 interface Property {
@@ -26,13 +27,15 @@ interface Property {
   year_built: number
   listing_status: string
   property_image: string | null
-  property_hyperlink: string | null // Add this field
+  property_hyperlink: string | null
 }
 
 export default function PropertySearchPage() {
   const [properties, setProperties] = useState<Property[]>([])
   const [loading, setLoading] = useState(true)
   const [favorites, setFavorites] = useState<Set<string>>(new Set())
+  const [selectedProperty, setSelectedProperty] = useState<Property | null>(null)
+  const [isModalOpen, setIsModalOpen] = useState(false)
 
   // Search filters
   const [searchCity, setSearchCity] = useState("")
@@ -138,6 +141,18 @@ export default function PropertySearchPage() {
     
     return url;
   };
+
+  // Function to open modal with property details
+  const openPropertyModal = (property: Property) => {
+    setSelectedProperty(property)
+    setIsModalOpen(true)
+  }
+
+  // Function to close modal
+  const closePropertyModal = () => {
+    setIsModalOpen(false)
+    setSelectedProperty(null)
+  }
 
   return (
     <div className="space-y-6">
@@ -354,7 +369,12 @@ export default function PropertySearchPage() {
                       </div>
 
                       <div className="flex gap-2">
-                        <Button className="flex-1 bg-primary hover:bg-primary/90">View Details</Button>
+                        <Button 
+                          className="flex-1 bg-primary hover:bg-primary/90"
+                          onClick={() => openPropertyModal(property)}
+                        >
+                          View Details
+                        </Button>
                         {formattedUrl && (
                           <Button 
                             asChild 
@@ -390,6 +410,116 @@ export default function PropertySearchPage() {
           </Card>
         )}
       </div>
+
+      {/* Property Details Modal */}
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto bg-background backdrop:blur-sm">
+          <div className="absolute right-4 top-4">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={closePropertyModal}
+              className="h-8 w-8 rounded-full"
+            >
+              <X className="h-4 w-4" />
+              <span className="sr-only">Close</span>
+            </Button>
+          </div>
+          
+          {selectedProperty && (
+            <div className="space-y-6">
+              <DialogHeader>
+                <DialogTitle className="text-2xl">{selectedProperty.title}</DialogTitle>
+                <DialogDescription className="flex items-center">
+                  <MapPin className="h-4 w-4 mr-1" />
+                  {selectedProperty.address}, {selectedProperty.city}, {selectedProperty.state}
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="relative h-64 w-full rounded-lg overflow-hidden">
+                {selectedProperty.property_image ? (
+                  <Image
+                    src={selectedProperty.property_image}
+                    alt={selectedProperty.title}
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 60vw"
+                  />
+                ) : (
+                  <div className="h-full bg-gradient-to-br from-red-100 to-red-200 flex items-center justify-center">
+                    <div className="text-center text-muted-foreground">
+                      <MapPin className="h-12 w-12 mx-auto mb-2" />
+                      <p>No Image Available</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <h3 className="font-semibold">Property Details</h3>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="flex items-center">
+                      <Bed className="h-4 w-4 mr-2" />
+                      <span>{selectedProperty.bedrooms} bedrooms</span>
+                    </div>
+                    <div className="flex items-center">
+                      <Bath className="h-4 w-4 mr-2" />
+                      <span>{selectedProperty.bathrooms} bathrooms</span>
+                    </div>
+                    <div className="flex items-center">
+                      <Square className="h-4 w-4 mr-2" />
+                      <span>{selectedProperty.square_feet?.toLocaleString()} sqft</span>
+                    </div>
+                    <div className="flex items-center">
+                      <Calendar className="h-4 w-4 mr-2" />
+                      <span>Built in {selectedProperty.year_built}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <h3 className="font-semibold">Pricing Information</h3>
+                  <div className="space-y-1">
+                    <p className="text-2xl font-bold text-primary">${selectedProperty.price.toLocaleString()}</p>
+                    <p className="text-sm text-muted-foreground">
+                      ${Math.round(selectedProperty.price / selectedProperty.square_feet)}/sqft
+                    </p>
+                    <Badge variant="secondary" className="capitalize mt-2">
+                      {selectedProperty.property_type}
+                    </Badge>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <h3 className="font-semibold">Description</h3>
+                <p className="text-muted-foreground">{selectedProperty.description}</p>
+              </div>
+
+              <div className="flex gap-3 pt-4">
+                <Button className="flex-1 bg-primary hover:bg-primary/90">Contact Agent</Button>
+                {formatUrl(selectedProperty.property_hyperlink) && (
+                  <Button 
+                    asChild 
+                    variant="outline" 
+                    className="flex-1"
+                  >
+                    <a 
+                      href={formatUrl(selectedProperty.property_hyperlink) as string} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                    >
+                      <ExternalLink className="h-4 w-4 mr-2" />
+                      Visit Property Website
+                    </a>
+                  </Button>
+                )}
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
