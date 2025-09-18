@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import { createClient } from "@/lib/supabase/client"
-import { Heart, MapPin, Bed, Bath, Square, Calendar } from "lucide-react"
+import { Heart, MapPin, Bed, Bath, Square, Calendar, ExternalLink } from "lucide-react"
 import Image from "next/image"
 
 interface Property {
@@ -26,6 +26,7 @@ interface Property {
   year_built: number
   listing_status: string
   property_image: string | null
+  property_hyperlink: string | null // Add this field
 }
 
 export default function PropertySearchPage() {
@@ -125,6 +126,18 @@ export default function PropertySearchPage() {
     setMinBathrooms("any")
     fetchProperties()
   }
+
+  // Function to validate and format URLs
+  const formatUrl = (url: string | null) => {
+    if (!url) return null;
+    
+    // Ensure the URL has a protocol
+    if (!url.startsWith('http://') && !url.startsWith('https://')) {
+      return `https://${url}`;
+    }
+    
+    return url;
+  };
 
   return (
     <div className="space-y-6">
@@ -256,92 +269,114 @@ export default function PropertySearchPage() {
           </div>
         ) : (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {properties.map((property) => (
-              <Card key={property.id} className="overflow-hidden hover:shadow-lg transition-shadow">
-                <div className="relative">
-                        {property.property_image ? (
-                          <div className="h-48 relative">
-                            <Image
-                              src={property.property_image}
-                              alt={property.title}
-                              fill
-                              className="object-cover"
-                              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                              onError={(e) => {
-                                // Fallback to placeholder if image fails to load
-                                const target = e.target as HTMLImageElement
-                                target.style.display = 'none'
-                                // You might want to show the placeholder div instead
-                              }}
-                            />
-                          </div>
-                        ) : (
-                          <div className="h-48 bg-gradient-to-br from-red-100 to-red-200 flex items-center justify-center">
-                            <div className="text-center text-muted-foreground">
-                              <MapPin className="h-8 w-8 mx-auto mb-2" />
-                              <p className="text-sm">No Image Available</p>
-                            </div>
-                          </div>
-                        )}
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className={`absolute top-2 right-2 ${
-                            favorites.has(property.id) ? "text-red-500" : "text-gray-400"
-                          }`}
-                          onClick={() => toggleFavorite(property.id)}
-                        >
-                          <Heart className={`h-5 w-5 ${favorites.has(property.id) ? "fill-current" : ""}`} />
-                        </Button>
+            {properties.map((property) => {
+              const formattedUrl = formatUrl(property.property_hyperlink);
+              
+              return (
+                <Card key={property.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+                  <div className="relative">
+                    {property.property_image ? (
+                      <div className="h-48 relative">
+                        <Image
+                          src={property.property_image}
+                          alt={property.title}
+                          fill
+                          className="object-cover"
+                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                          onError={(e) => {
+                            // Fallback to placeholder if image fails to load
+                            const target = e.target as HTMLImageElement
+                            target.style.display = 'none'
+                            // You might want to show the placeholder div instead
+                          }}
+                        />
                       </div>
+                    ) : (
+                      <div className="h-48 bg-gradient-to-br from-red-100 to-red-200 flex items-center justify-center">
+                        <div className="text-center text-muted-foreground">
+                          <MapPin className="h-8 w-8 mx-auto mb-2" />
+                          <p className="text-sm">No Image Available</p>
+                        </div>
+                      </div>
+                    )}
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className={`absolute top-2 right-2 ${
+                        favorites.has(property.id) ? "text-red-500" : "text-gray-400"
+                      }`}
+                      onClick={() => toggleFavorite(property.id)}
+                    >
+                      <Heart className={`h-5 w-5 ${favorites.has(property.id) ? "fill-current" : ""}`} />
+                    </Button>
+                  </div>
 
-                <CardContent className="p-4">
-                  <div className="space-y-3">
-                    <div>
-                      <h3 className="font-semibold text-lg line-clamp-1">{property.title}</h3>
-                      <p className="text-sm text-muted-foreground flex items-center">
-                        <MapPin className="h-3 w-3 mr-1" />
-                        {property.address}, {property.city}, {property.state}
-                      </p>
-                    </div>
-
-                    <div className="flex items-center space-x-4 text-sm text-muted-foreground">
-                      <div className="flex items-center">
-                        <Bed className="h-4 w-4 mr-1" />
-                        {property.bedrooms} bed
-                      </div>
-                      <div className="flex items-center">
-                        <Bath className="h-4 w-4 mr-1" />
-                        {property.bathrooms} bath
-                      </div>
-                      <div className="flex items-center">
-                        <Square className="h-4 w-4 mr-1" />
-                        {property.square_feet?.toLocaleString()} sqft
-                      </div>
-                    </div>
-
-                    <div className="flex items-center justify-between">
+                  <CardContent className="p-4">
+                    <div className="space-y-3">
                       <div>
-                        <p className="text-2xl font-bold text-primary">${property.price.toLocaleString()}</p>
-                        <p className="text-sm text-muted-foreground">
-                          ${Math.round(property.price / property.square_feet)}/sqft
+                        <h3 className="font-semibold text-lg line-clamp-1">{property.title}</h3>
+                        <p className="text-sm text-muted-foreground flex items-center">
+                          <MapPin className="h-3 w-3 mr-1" />
+                          {property.address}, {property.city}, {property.state}
                         </p>
                       </div>
-                      <Badge variant="secondary" className="capitalize">
-                        {property.property_type}
-                      </Badge>
-                    </div>
 
-                    <div className="flex items-center text-sm text-muted-foreground">
-                      <Calendar className="h-3 w-3 mr-1" />
-                      Built in {property.year_built}
-                    </div>
+                      <div className="flex items-center space-x-4 text-sm text-muted-foreground">
+                        <div className="flex items-center">
+                          <Bed className="h-4 w-4 mr-1" />
+                          {property.bedrooms} bed
+                        </div>
+                        <div className="flex items-center">
+                          <Bath className="h-4 w-4 mr-1" />
+                          {property.bathrooms} bath
+                        </div>
+                        <div className="flex items-center">
+                          <Square className="h-4 w-4 mr-1" />
+                          {property.square_feet?.toLocaleString()} sqft
+                        </div>
+                      </div>
 
-                    <Button className="w-full bg-primary hover:bg-primary/90">View Details</Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-2xl font-bold text-primary">${property.price.toLocaleString()}</p>
+                          <p className="text-sm text-muted-foreground">
+                            ${Math.round(property.price / property.square_feet)}/sqft
+                          </p>
+                        </div>
+                        <Badge variant="secondary" className="capitalize">
+                          {property.property_type}
+                        </Badge>
+                      </div>
+
+                      <div className="flex items-center text-sm text-muted-foreground">
+                        <Calendar className="h-3 w-3 mr-1" />
+                        Built in {property.year_built}
+                      </div>
+
+                      <div className="flex gap-2">
+                        <Button className="flex-1 bg-primary hover:bg-primary/90">View Details</Button>
+                        {formattedUrl && (
+                          <Button 
+                            asChild 
+                            variant="outline" 
+                            className="flex-initial"
+                            title="Go to property website"
+                          >
+                            <a 
+                              href={formattedUrl} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                            >
+                              <ExternalLink className="h-4 w-4" />
+                            </a>
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )
+            })}
           </div>
         )}
 
