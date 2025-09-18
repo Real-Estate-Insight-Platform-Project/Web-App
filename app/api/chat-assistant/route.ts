@@ -8,10 +8,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Question is required and must be a string" }, { status: 400 })
     }
 
-    // Call the Python backend API
-    const pythonApiUrl = process.env.NEXT_PUBLIC_PYTHON_API_URL
+    const sqlAgentUrl = process.env.NEXT_PUBLIC_SQL_AGENT_URL
 
-    const response = await fetch(`${pythonApiUrl}/ask`, {
+    const response = await fetch(`${sqlAgentUrl}/ask`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

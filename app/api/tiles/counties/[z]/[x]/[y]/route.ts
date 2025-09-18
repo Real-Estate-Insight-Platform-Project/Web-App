@@ -4,7 +4,7 @@ export async function GET(
 ) {
   const { z, x, y } = await ctx.params; // ← await the params
 
-  const base = process.env.NEXT_PUBLIC_PYTHON_API_URL!;
+  const base = process.env.NEXT_PUBLIC_MAP_API_URL!;
   const url  = `${base}/tiles/counties/${z}/${x}/${y}`;
 
   const r = await fetch(url, { cache: "no-store" });
