@@ -23,6 +23,8 @@ export default function ClientRiskMap() {
         const map = L.map(mapRef.current, {
           center: [39.8283, -98.5795],
           zoom: 4,
+          minZoom: 3,    // Prevent zooming out too far
+          maxZoom: 14,   // Prevent zooming in too far
           scrollWheelZoom: true
         });
 
@@ -43,7 +45,7 @@ export default function ClientRiskMap() {
               weight: 0.5, 
               color: "#fff", 
               fill: true, 
-              fillOpacity: 0.7,
+              fillOpacity: 0.3,
               fillColor: getRiskColor(p?.risk_index_rating),
             }),
           },
