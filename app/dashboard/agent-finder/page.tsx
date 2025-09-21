@@ -45,6 +45,7 @@ interface Agent {
   phone: string | null
   email: string | null
   profile_url: string | null
+  photo_url: string | null
   is_premier: boolean
   is_active: boolean
   total_score: number
@@ -59,8 +60,8 @@ interface Agent {
 
 interface SearchCriteria {
   transaction_type: "buying" | "selling" | null
-  locations: string[]
-  property_types: string[]
+  locations: string | null
+  property_types: string | null
   price_range: { min: number; max: number; label: string } | null
 }
 
@@ -139,8 +140,8 @@ export default function AgentFinderPage() {
   const [currentStep, setCurrentStep] = useState(0)
   const [searchCriteria, setSearchCriteria] = useState<SearchCriteria>({
     transaction_type: null,
-    locations: [],
-    property_types: [],
+    locations: null,
+    property_types: null,
     price_range: null,
   })
   const [agents, setAgents] = useState<Agent[]>([])
@@ -156,8 +157,8 @@ export default function AgentFinderPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          locations: searchCriteria.locations,
-          property_types: searchCriteria.property_types,
+          locations: searchCriteria.locations ? [searchCriteria.locations] : [],
+          property_types: searchCriteria.property_types ? [searchCriteria.property_types] : [],
           price_min: searchCriteria.price_range?.min,
           price_max: searchCriteria.price_range?.max,
           top_k: 10,
@@ -197,9 +198,9 @@ export default function AgentFinderPage() {
       case 0:
         return searchCriteria.transaction_type !== null
       case 1:
-        return searchCriteria.locations.length > 0
+        return searchCriteria.locations !== null
       case 2:
-        return searchCriteria.property_types.length > 0
+        return searchCriteria.property_types !== null
       case 3:
         return searchCriteria.price_range !== null
       default:
@@ -263,7 +264,7 @@ export default function AgentFinderPage() {
                     <div className="flex items-center space-x-4">
                       <div className="relative">
                         <Avatar className="h-16 w-16">
-                          <AvatarImage src="/placeholder.svg" alt={agent.name} />
+                          <AvatarImage src={agent.photo_url || "/placeholder.svg"} alt={agent.name} />
                           <AvatarFallback className="bg-primary text-primary-foreground text-lg">
                             {agent.name
                               .split(" ")
@@ -291,6 +292,16 @@ export default function AgentFinderPage() {
                             </Badge>
                           )}
                         </div>
+                        <div className="flex items-center space-x-4 mt-2 text-sm">
+                          <div className="flex items-center space-x-1">
+                            <span className="text-muted-foreground">Deals This Year:</span>
+                            <span className="font-medium">{agent.past_year_deals}</span>
+                          </div>
+                          <div className="flex items-center space-x-1">
+                            <span className="text-muted-foreground">Avg Transaction:</span>
+                            <span className="font-medium">{formatPrice(agent.avg_transaction_value)}</span>
+                          </div>
+                        </div>
                       </div>
                     </div>
                     <div className="text-right">
@@ -301,20 +312,6 @@ export default function AgentFinderPage() {
 
                   <div className="grid md:grid-cols-2 gap-6">
                     <div className="space-y-4">
-                      <div>
-                        <h4 className="font-medium mb-2">Performance Metrics</h4>
-                        <div className="space-y-2 text-sm">
-                          <div className="flex justify-between">
-                            <span>Deals This Year:</span>
-                            <span className="font-medium">{agent.past_year_deals}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span>Avg Transaction:</span>
-                            <span className="font-medium">{formatPrice(agent.avg_transaction_value)}</span>
-                          </div>
-                        </div>
-                      </div>
-
                       <div>
                         <h4 className="font-medium mb-2">Service Areas</h4>
                         <div className="flex flex-wrap gap-1">
@@ -356,22 +353,28 @@ export default function AgentFinderPage() {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-4">
                       {agent.phone && (
-                        <Button variant="outline" size="sm">
-                          <Phone className="h-4 w-4 mr-2" />
-                          Call
+                        <Button variant="outline" size="sm" asChild>
+                          <a href={`tel:${agent.phone}`}>
+                            <Phone className="h-4 w-4 mr-2" />
+                            Call
+                          </a>
                         </Button>
                       )}
                       {agent.email && (
-                        <Button variant="outline" size="sm">
-                          <Mail className="h-4 w-4 mr-2" />
-                          Email
+                        <Button variant="outline" size="sm" asChild>
+                          <a href={`mailto:${agent.email}`}>
+                            <Mail className="h-4 w-4 mr-2" />
+                            Email
+                          </a>
                         </Button>
                       )}
                     </div>
                     {agent.profile_url && (
-                      <Button variant="default" size="sm">
-                        View Profile
-                        <ExternalLink className="h-4 w-4 ml-2" />
+                      <Button variant="default" size="sm" asChild>
+                        <a href={agent.profile_url} target="_blank" rel="noopener noreferrer">
+                          View Profile
+                          <ExternalLink className="h-4 w-4 ml-2" />
+                        </a>
                       </Button>
                     )}
                   </div>
@@ -392,8 +395,7 @@ export default function AgentFinderPage() {
           Find Your Perfect Real Estate Agent
         </h1>
         <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-          Connect with top-rated real estate professionals who specialize in your area and property type. Our AI-powered
-          matching system finds agents with proven track records in your market.
+          Connect with top-rated real estate professionals who specialize in your area and property type. Our matching system finds agents with proven track records in your market.
         </p>
       </div>
 
@@ -502,7 +504,7 @@ export default function AgentFinderPage() {
         <Card>
           <CardHeader>
             <CardTitle>Which area are you looking to {searchCriteria.transaction_type}?</CardTitle>
-            <CardDescription>Select the locations where you want to find an agent</CardDescription>
+            <CardDescription>Select one location where you want to find an agent</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -510,14 +512,12 @@ export default function AgentFinderPage() {
                 {MAJOR_MARKETS.map((location) => (
                   <Button
                     key={location}
-                    variant={searchCriteria.locations.includes(location) ? "default" : "outline"}
+                    variant={searchCriteria.locations === location ? "default" : "outline"}
                     className="justify-start h-auto p-3 text-left"
                     onClick={() => {
                       setSearchCriteria((prev) => ({
                         ...prev,
-                        locations: prev.locations.includes(location)
-                          ? prev.locations.filter((l) => l !== location)
-                          : [...prev.locations, location],
+                        locations: prev.locations === location ? null : location,
                       }))
                     }}
                   >
@@ -526,16 +526,12 @@ export default function AgentFinderPage() {
                   </Button>
                 ))}
               </div>
-              {searchCriteria.locations.length > 0 && (
+              {searchCriteria.locations && (
                 <div className="mt-4">
-                  <p className="text-sm font-medium mb-2">Selected locations:</p>
-                  <div className="flex flex-wrap gap-2">
-                    {searchCriteria.locations.map((location) => (
-                      <Badge key={location} variant="secondary">
-                        {location}
-                      </Badge>
-                    ))}
-                  </div>
+                  <p className="text-sm font-medium mb-2">Selected location:</p>
+                  <Badge variant="secondary">
+                    {searchCriteria.locations}
+                  </Badge>
                 </div>
               )}
             </div>
@@ -547,7 +543,7 @@ export default function AgentFinderPage() {
         <Card>
           <CardHeader>
             <CardTitle>What type of property are you interested in?</CardTitle>
-            <CardDescription>Select all property types that apply to your search</CardDescription>
+            <CardDescription>Select one property type for your search</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -556,14 +552,12 @@ export default function AgentFinderPage() {
                 return (
                   <Button
                     key={type.value}
-                    variant={searchCriteria.property_types.includes(type.value) ? "default" : "outline"}
+                    variant={searchCriteria.property_types === type.value ? "default" : "outline"}
                     className="h-24 flex-col space-y-2"
                     onClick={() => {
                       setSearchCriteria((prev) => ({
                         ...prev,
-                        property_types: prev.property_types.includes(type.value)
-                          ? prev.property_types.filter((pt) => pt !== type.value)
-                          : [...prev.property_types, type.value],
+                        property_types: prev.property_types === type.value ? null : type.value,
                       }))
                     }}
                   >
