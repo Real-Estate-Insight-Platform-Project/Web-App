@@ -45,7 +45,7 @@ export default function ClientRiskMap() {
               weight: 0.5, 
               color: "#fff", 
               fill: true, 
-              fillOpacity: 0.3,
+              fillOpacity: 0.7,
               fillColor: getRiskColor(p?.risk_index_rating),
             }),
           },

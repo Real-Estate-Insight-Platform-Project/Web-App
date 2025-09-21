@@ -27,6 +27,7 @@ import {
   User,
   MessageSquare,
   Map,
+  Users,
 } from "lucide-react"
 import Link from "next/link"
 import { useRouter, usePathname } from "next/navigation"
@@ -55,6 +56,7 @@ export function DashboardLayout({ children, userRole, userName, userEmail }: Das
     { href: "/dashboard/search", icon: Search, label: "Property Search" },
     { href: "/dashboard/favorites", icon: Heart, label: "Saved Properties" },
     { href: "/dashboard/market-insights", icon: BarChart3, label: "Market Insights" },
+    { href: "/dashboard/agent-finder", icon: Users, label: "Agent Finder" }, 
     { href: "/dashboard/risk-map", icon: Map, label: "Risk Map" },
     { href: "/dashboard/calculator", icon: Calculator, label: "Mortgage Calculator" },
     { href: "/dashboard/chat-assistant", icon: MessageSquare, label: "AI Assistant" },
@@ -66,6 +68,7 @@ export function DashboardLayout({ children, userRole, userName, userEmail }: Das
     { href: "/dashboard/search", icon: Search, label: "Property Search" },
     { href: "/dashboard/analysis", icon: Calculator, label: "Investment Analysis" },
     { href: "/dashboard/market-insights", icon: BarChart3, label: "Market Insights" },
+    { href: "/dashboard/agent-finder", icon: Users, label: "Agent Finder" }, 
     { href: "/dashboard/risk-map", icon: Map, label: "Risk Map" },
     { href: "/dashboard/chat-assistant", icon: MessageSquare, label: "AI Assistant" },
   ]
