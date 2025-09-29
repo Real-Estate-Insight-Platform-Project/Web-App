@@ -7,9 +7,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { createClient } from "@/lib/supabase/client"
-import { Heart, MapPin, Bed, Bath, Square, Calendar, ExternalLink, X } from "lucide-react"
+import { Heart, MapPin, Bed, Bath, Square, Calendar, ExternalLink, ArrowLeft } from "lucide-react"
 import Image from "next/image"
 
 interface Property {
@@ -35,7 +34,7 @@ export default function PropertySearchPage() {
   const [loading, setLoading] = useState(true)
   const [favorites, setFavorites] = useState<Set<string>>(new Set())
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null)
-  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [viewMode, setViewMode] = useState<"list" | "detail">("list")
 
   // Search filters
   const [searchCity, setSearchCity] = useState("")
@@ -142,25 +141,164 @@ export default function PropertySearchPage() {
     return url;
   };
 
-  // Function to open modal with property details
-  const openPropertyModal = (property: Property) => {
+  // Function to show property details
+  const showPropertyDetails = (property: Property) => {
     setSelectedProperty(property)
-    setIsModalOpen(true)
+    setViewMode("detail")
   }
 
-  // Function to close modal
-  const closePropertyModal = () => {
-    setIsModalOpen(false)
+  // Function to go back to property list
+  const backToList = () => {
+    setViewMode("list")
     setSelectedProperty(null)
   }
 
-  return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Property Search</h1>
-        <p className="text-muted-foreground mt-2">Find your perfect home with advanced search filters</p>
-      </div>
+  // Property Details View
+  const PropertyDetailView = () => {
+    if (!selectedProperty) return null;
 
+    const formattedUrl = formatUrl(selectedProperty.property_hyperlink);
+
+    return (
+      <div className="space-y-6">
+        {/* Back Button */}
+        <Button
+          variant="ghost"
+          onClick={backToList}
+          className="mb-4 flex items-center gap-2"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back to Properties
+        </Button>
+
+        {/* Property Details Card */}
+        <Card className="overflow-hidden">
+          {/* Property Image */}
+          <div className="relative h-80 w-full">
+            {selectedProperty.property_image ? (
+              <Image
+                src={selectedProperty.property_image}
+                alt={selectedProperty.title}
+                fill
+                className="object-cover"
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 70vw"
+              />
+            ) : (
+              <div className="h-full bg-gradient-to-br from-red-100 to-red-200 flex items-center justify-center">
+                <div className="text-center text-muted-foreground">
+                  <MapPin className="h-12 w-12 mx-auto mb-2" />
+                  <p className="text-lg">No Image Available</p>
+                </div>
+              </div>
+            )}
+            
+            {/* Favorite Button */}
+            <Button
+              variant="ghost"
+              size="icon"
+              className={`absolute top-4 right-4 bg-background/80 backdrop-blur-sm ${
+                favorites.has(selectedProperty.id) ? "text-red-500" : "text-gray-400"
+              }`}
+              onClick={() => toggleFavorite(selectedProperty.id)}
+            >
+              <Heart className={`h-5 w-5 ${favorites.has(selectedProperty.id) ? "fill-current" : ""}`} />
+            </Button>
+          </div>
+
+          <CardContent className="p-6">
+            <div className="space-y-6">
+              {/* Header Section */}
+              <div>
+                <div className="flex flex-wrap justify-between items-start gap-4 mb-3">
+                  <h1 className="text-3xl font-bold">{selectedProperty.title}</h1>
+                  <Badge variant="secondary" className="capitalize text-lg px-3 py-1">
+                    {selectedProperty.property_type}
+                  </Badge>
+                </div>
+                <p className="text-muted-foreground flex items-center text-lg">
+                  <MapPin className="h-4 w-4 mr-2" />
+                  {selectedProperty.address}, {selectedProperty.city}, {selectedProperty.state}
+                </p>
+              </div>
+
+              {/* Price Section */}
+              <div className="bg-muted/50 rounded-lg p-4">
+                <div className="flex flex-wrap items-center justify-between gap-4">
+                  <div>
+                    <p className="text-3xl font-bold text-primary">${selectedProperty.price.toLocaleString()}</p>
+                    <p className="text-muted-foreground">
+                      ${Math.round(selectedProperty.price / selectedProperty.square_feet)}/sqft
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Calendar className="h-4 w-4" />
+                    Built in {selectedProperty.year_built}
+                  </div>
+                </div>
+              </div>
+
+              {/* Property Features Grid */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 py-4">
+                <div className="text-center p-4 bg-muted/30 rounded-lg">
+                  <Bed className="h-6 w-6 mx-auto mb-2 text-primary" />
+                  <p className="font-semibold text-lg">{selectedProperty.bedrooms}</p>
+                  <p className="text-sm text-muted-foreground">Bedrooms</p>
+                </div>
+                <div className="text-center p-4 bg-muted/30 rounded-lg">
+                  <Bath className="h-6 w-6 mx-auto mb-2 text-primary" />
+                  <p className="font-semibold text-lg">{selectedProperty.bathrooms}</p>
+                  <p className="text-sm text-muted-foreground">Bathrooms</p>
+                </div>
+                <div className="text-center p-4 bg-muted/30 rounded-lg">
+                  <Square className="h-6 w-6 mx-auto mb-2 text-primary" />
+                  <p className="font-semibold text-lg">{selectedProperty.square_feet.toLocaleString()}</p>
+                  <p className="text-sm text-muted-foreground">Sq Ft</p>
+                </div>
+                <div className="text-center p-4 bg-muted/30 rounded-lg">
+                  <Calendar className="h-6 w-6 mx-auto mb-2 text-primary" />
+                  <p className="font-semibold text-lg">{selectedProperty.year_built}</p>
+                  <p className="text-sm text-muted-foreground">Year Built</p>
+                </div>
+              </div>
+
+              {/* Description Section */}
+              <div>
+                <h2 className="text-xl font-semibold mb-3">Property Description</h2>
+                <p className="text-muted-foreground leading-relaxed">{selectedProperty.description}</p>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex flex-col sm:flex-row gap-3 pt-4">
+                <Button className="flex-1 bg-primary hover:bg-primary/90 py-3 text-lg">
+                  Contact Agent
+                </Button>
+                {formattedUrl && (
+                  <Button 
+                    asChild 
+                    variant="outline" 
+                    className="flex-1 py-3 text-lg"
+                  >
+                    <a 
+                      href={formattedUrl} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                    >
+                      <ExternalLink className="h-5 w-5 mr-2" />
+                      Visit Property Website
+                    </a>
+                  </Button>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  };
+
+  // Property List View
+  const PropertyListView = () => (
+    <div className="space-y-6">
       {/* Search Filters */}
       <Card>
         <CardHeader>
@@ -299,10 +437,8 @@ export default function PropertySearchPage() {
                           className="object-cover"
                           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                           onError={(e) => {
-                            // Fallback to placeholder if image fails to load
                             const target = e.target as HTMLImageElement
                             target.style.display = 'none'
-                            // You might want to show the placeholder div instead
                           }}
                         />
                       </div>
@@ -371,7 +507,7 @@ export default function PropertySearchPage() {
                       <div className="flex gap-2">
                         <Button 
                           className="flex-1 bg-primary hover:bg-primary/90"
-                          onClick={() => openPropertyModal(property)}
+                          onClick={() => showPropertyDetails(property)}
                         >
                           View Details
                         </Button>
@@ -410,116 +546,18 @@ export default function PropertySearchPage() {
           </Card>
         )}
       </div>
+    </div>
+  );
 
-      {/* Property Details Modal */}
-      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto bg-background backdrop:blur-sm">
-          <div className="absolute right-4 top-4">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={closePropertyModal}
-              className="h-8 w-8 rounded-full"
-            >
-              <X className="h-4 w-4" />
-              <span className="sr-only">Close</span>
-            </Button>
-          </div>
-          
-          {selectedProperty && (
-            <div className="space-y-6">
-              <DialogHeader>
-                <DialogTitle className="text-2xl">{selectedProperty.title}</DialogTitle>
-                <DialogDescription className="flex items-center">
-                  <MapPin className="h-4 w-4 mr-1" />
-                  {selectedProperty.address}, {selectedProperty.city}, {selectedProperty.state}
-                </DialogDescription>
-              </DialogHeader>
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold">Property Search</h1>
+        <p className="text-muted-foreground mt-2">Find your perfect home with advanced search filters</p>
+      </div>
 
-              <div className="relative h-64 w-full rounded-lg overflow-hidden">
-                {selectedProperty.property_image ? (
-                  <Image
-                    src={selectedProperty.property_image}
-                    alt={selectedProperty.title}
-                    fill
-                    className="object-cover"
-                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 60vw"
-                  />
-                ) : (
-                  <div className="h-full bg-gradient-to-br from-red-100 to-red-200 flex items-center justify-center">
-                    <div className="text-center text-muted-foreground">
-                      <MapPin className="h-12 w-12 mx-auto mb-2" />
-                      <p>No Image Available</p>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <h3 className="font-semibold">Property Details</h3>
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="flex items-center">
-                      <Bed className="h-4 w-4 mr-2" />
-                      <span>{selectedProperty.bedrooms} bedrooms</span>
-                    </div>
-                    <div className="flex items-center">
-                      <Bath className="h-4 w-4 mr-2" />
-                      <span>{selectedProperty.bathrooms} bathrooms</span>
-                    </div>
-                    <div className="flex items-center">
-                      <Square className="h-4 w-4 mr-2" />
-                      <span>{selectedProperty.square_feet?.toLocaleString()} sqft</span>
-                    </div>
-                    <div className="flex items-center">
-                      <Calendar className="h-4 w-4 mr-2" />
-                      <span>Built in {selectedProperty.year_built}</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <h3 className="font-semibold">Pricing Information</h3>
-                  <div className="space-y-1">
-                    <p className="text-2xl font-bold text-primary">${selectedProperty.price.toLocaleString()}</p>
-                    <p className="text-sm text-muted-foreground">
-                      ${Math.round(selectedProperty.price / selectedProperty.square_feet)}/sqft
-                    </p>
-                    <Badge variant="secondary" className="capitalize mt-2">
-                      {selectedProperty.property_type}
-                    </Badge>
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <h3 className="font-semibold">Description</h3>
-                <p className="text-muted-foreground">{selectedProperty.description}</p>
-              </div>
-
-              <div className="flex gap-3 pt-4">
-                <Button className="flex-1 bg-primary hover:bg-primary/90">Contact Agent</Button>
-                {formatUrl(selectedProperty.property_hyperlink) && (
-                  <Button 
-                    asChild 
-                    variant="outline" 
-                    className="flex-1"
-                  >
-                    <a 
-                      href={formatUrl(selectedProperty.property_hyperlink) as string} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                    >
-                      <ExternalLink className="h-4 w-4 mr-2" />
-                      Visit Property Website
-                    </a>
-                  </Button>
-                )}
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+      {/* Conditionally render list view or detail view */}
+      {viewMode === "list" ? <PropertyListView /> : <PropertyDetailView />}
     </div>
   )
 }
