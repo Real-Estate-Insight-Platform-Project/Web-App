@@ -1,0 +1,3651 @@
+{
+  "report_metadata": {
+    "generated_at": "2025-10-04T20:29:27.089Z",
+    "tool_version": "fe-config-test-1.0.0",
+    "total_configurations": 14,
+    "total_routes_tested": 16,
+    "authentication_enabled": "",
+    "test_user": ""
+  },
+  "summary": {
+    "passed": 14,
+    "partial": 0,
+    "failed": 0,
+    "success_rate": 100
+  },
+  "authentication_analysis": {
+    "total": 14,
+    "authenticated": 14,
+    "failed": 0
+  },
+  "route_analysis": {
+    "/": {
+      "total": 14,
+      "passed": 14,
+      "failed": 0,
+      "authRedirects": 0,
+      "authenticatedAccess": 14
+    },
+    "/auth/login": {
+      "total": 14,
+      "passed": 14,
+      "failed": 0,
+      "authRedirects": 0,
+      "authenticatedAccess": 14
+    },
+    "/auth/sign-up": {
+      "total": 14,
+      "passed": 14,
+      "failed": 0,
+      "authRedirects": 0,
+      "authenticatedAccess": 14
+    },
+    "/auth/sign-up-success": {
+      "total": 14,
+      "passed": 14,
+      "failed": 0,
+      "authRedirects": 0,
+      "authenticatedAccess": 14
+    },
+    "/dashboard": {
+      "total": 14,
+      "passed": 14,
+      "failed": 0,
+      "authRedirects": 0,
+      "authenticatedAccess": 14
+    },
+    "/dashboard/agent-finder": {
+      "total": 14,
+      "passed": 14,
+      "failed": 0,
+      "authRedirects": 0,
+      "authenticatedAccess": 14
+    },
+    "/dashboard/analysis": {
+      "total": 14,
+      "passed": 14,
+      "failed": 0,
+      "authRedirects": 0,
+      "authenticatedAccess": 14
+    },
+    "/dashboard/calculator": {
+      "total": 14,
+      "passed": 14,
+      "failed": 0,
+      "authRedirects": 0,
+      "authenticatedAccess": 14
+    },
+    "/dashboard/chat-assistant": {
+      "total": 14,
+      "passed": 14,
+      "failed": 0,
+      "authRedirects": 0,
+      "authenticatedAccess": 14
+    },
+    "/dashboard/favorites": {
+      "total": 14,
+      "passed": 14,
+      "failed": 0,
+      "authRedirects": 0,
+      "authenticatedAccess": 14
+    },
+    "/dashboard/market-insights": {
+      "total": 14,
+      "passed": 14,
+      "failed": 0,
+      "authRedirects": 0,
+      "authenticatedAccess": 14
+    },
+    "/dashboard/portfolio": {
+      "total": 14,
+      "passed": 14,
+      "failed": 0,
+      "authRedirects": 0,
+      "authenticatedAccess": 14
+    },
+    "/dashboard/profile": {
+      "total": 14,
+      "passed": 14,
+      "failed": 0,
+      "authRedirects": 0,
+      "authenticatedAccess": 14
+    },
+    "/dashboard/risk-map": {
+      "total": 14,
+      "passed": 14,
+      "failed": 0,
+      "authRedirects": 0,
+      "authenticatedAccess": 14
+    },
+    "/dashboard/search": {
+      "total": 14,
+      "passed": 14,
+      "failed": 0,
+      "authRedirects": 0,
+      "authenticatedAccess": 14
+    },
+    "/dashboard/settings": {
+      "total": 14,
+      "passed": 14,
+      "failed": 0,
+      "authRedirects": 0,
+      "authenticatedAccess": 14
+    }
+  },
+  "configurations": [
+    {
+      "config": {
+        "browser": "chromium",
+        "viewport": "1366x768",
+        "device": "none",
+        "net": "Good3G"
+      },
+      "timestamp": "2025-10-04T20:20:07.370Z",
+      "runs": [
+        {
+          "route": "/",
+          "url": "http://localhost:3000/",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1286,
+          "timing": {
+            "domContentLoaded": 1277.300000000745,
+            "loadEvent": 0,
+            "ttfb": 576.7000000029802
+          },
+          "actualUrl": "http://localhost:3000/",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/auth/login",
+          "url": "http://localhost:3000/auth/login",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1354,
+          "timing": {
+            "domContentLoaded": 1330.199999999255,
+            "loadEvent": 0,
+            "ttfb": 636
+          },
+          "actualUrl": "http://localhost:3000/auth/login",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/auth/sign-up",
+          "url": "http://localhost:3000/auth/sign-up",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1196,
+          "timing": {
+            "domContentLoaded": 1188.2999999970198,
+            "loadEvent": 0,
+            "ttfb": 449.3999999985099
+          },
+          "actualUrl": "http://localhost:3000/auth/sign-up",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/auth/sign-up-success",
+          "url": "http://localhost:3000/auth/sign-up-success",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1044,
+          "timing": {
+            "domContentLoaded": 1037.8999999985099,
+            "loadEvent": 0,
+            "ttfb": 423.69999999925494
+          },
+          "actualUrl": "http://localhost:3000/auth/sign-up-success",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard",
+          "url": "http://localhost:3000/dashboard",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 2426,
+          "timing": {
+            "domContentLoaded": 2404.300000000745,
+            "loadEvent": 0,
+            "ttfb": 1697.699999999255
+          },
+          "actualUrl": "http://localhost:3000/dashboard",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/agent-finder",
+          "url": "http://localhost:3000/dashboard/agent-finder",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 2039,
+          "timing": {
+            "domContentLoaded": 2030.199999999255,
+            "loadEvent": 0,
+            "ttfb": 1365.1000000014901
+          },
+          "actualUrl": "http://localhost:3000/dashboard/agent-finder",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/analysis",
+          "url": "http://localhost:3000/dashboard/analysis",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 2540,
+          "timing": {
+            "domContentLoaded": 2531.800000000745,
+            "loadEvent": 0,
+            "ttfb": 1825.8999999985099
+          },
+          "actualUrl": "http://localhost:3000/dashboard/analysis",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/calculator",
+          "url": "http://localhost:3000/dashboard/calculator",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1881,
+          "timing": {
+            "domContentLoaded": 1873.800000000745,
+            "loadEvent": 0,
+            "ttfb": 1151.4000000022352
+          },
+          "actualUrl": "http://localhost:3000/dashboard/calculator",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/chat-assistant",
+          "url": "http://localhost:3000/dashboard/chat-assistant",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1837,
+          "timing": {
+            "domContentLoaded": 1828.800000000745,
+            "loadEvent": 0,
+            "ttfb": 1084.4000000022352
+          },
+          "actualUrl": "http://localhost:3000/dashboard/chat-assistant",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/favorites",
+          "url": "http://localhost:3000/dashboard/favorites",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 2480,
+          "timing": {
+            "domContentLoaded": 2466.10000000149,
+            "loadEvent": 0,
+            "ttfb": 1745.199999999255
+          },
+          "actualUrl": "http://localhost:3000/dashboard/favorites",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/market-insights",
+          "url": "http://localhost:3000/dashboard/market-insights",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1763,
+          "timing": {
+            "domContentLoaded": 1751.6000000014901,
+            "loadEvent": 0,
+            "ttfb": 1061
+          },
+          "actualUrl": "http://localhost:3000/dashboard/market-insights",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/portfolio",
+          "url": "http://localhost:3000/dashboard/portfolio",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1944,
+          "timing": {
+            "domContentLoaded": 1926.8999999985099,
+            "loadEvent": 0,
+            "ttfb": 1194.5
+          },
+          "actualUrl": "http://localhost:3000/dashboard/portfolio",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/profile",
+          "url": "http://localhost:3000/dashboard/profile",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1617,
+          "timing": {
+            "domContentLoaded": 1605.5,
+            "loadEvent": 0,
+            "ttfb": 995.0999999977648
+          },
+          "actualUrl": "http://localhost:3000/dashboard/profile",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/risk-map",
+          "url": "http://localhost:3000/dashboard/risk-map",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1716,
+          "timing": {
+            "domContentLoaded": 1701.800000000745,
+            "loadEvent": 0,
+            "ttfb": 986.2999999970198
+          },
+          "actualUrl": "http://localhost:3000/dashboard/risk-map",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/search",
+          "url": "http://localhost:3000/dashboard/search",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1881,
+          "timing": {
+            "domContentLoaded": 1868.300000000745,
+            "loadEvent": 0,
+            "ttfb": 1106.2000000029802
+          },
+          "actualUrl": "http://localhost:3000/dashboard/search",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/settings",
+          "url": "http://localhost:3000/dashboard/settings",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 2186,
+          "timing": {
+            "domContentLoaded": 2160.699999999255,
+            "loadEvent": 0,
+            "ttfb": 1439.5
+          },
+          "actualUrl": "http://localhost:3000/dashboard/settings",
+          "isAuthRedirect": false
+        }
+      ],
+      "axe": {
+        "violationCount": 2,
+        "counts": {
+          "minor": 0,
+          "moderate": 2,
+          "serious": 0,
+          "critical": 0
+        },
+        "passes": 22,
+        "incomplete": 2
+      },
+      "lighthouse": {
+        "error": "Error: spawnSync lighthouse.cmd EINVAL"
+      },
+      "status": "passed",
+      "errors": [],
+      "authenticated": true
+    },
+    {
+      "config": {
+        "browser": "chromium",
+        "viewport": "1366x768",
+        "device": "none",
+        "net": "Regular4G"
+      },
+      "timestamp": "2025-10-04T20:21:02.263Z",
+      "runs": [
+        {
+          "route": "/",
+          "url": "http://localhost:3000/",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 616,
+          "timing": {
+            "domContentLoaded": 599.1999999992549,
+            "loadEvent": 0,
+            "ttfb": 435.30000000074506
+          },
+          "actualUrl": "http://localhost:3000/",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/auth/login",
+          "url": "http://localhost:3000/auth/login",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 549,
+          "timing": {
+            "domContentLoaded": 540,
+            "loadEvent": 0,
+            "ttfb": 404.5
+          },
+          "actualUrl": "http://localhost:3000/auth/login",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/auth/sign-up",
+          "url": "http://localhost:3000/auth/sign-up",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 589,
+          "timing": {
+            "domContentLoaded": 581.3000000007451,
+            "loadEvent": 0,
+            "ttfb": 392.29999999701977
+          },
+          "actualUrl": "http://localhost:3000/auth/sign-up",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/auth/sign-up-success",
+          "url": "http://localhost:3000/auth/sign-up-success",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 567,
+          "timing": {
+            "domContentLoaded": 554.1000000014901,
+            "loadEvent": 0,
+            "ttfb": 379.5
+          },
+          "actualUrl": "http://localhost:3000/auth/sign-up-success",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard",
+          "url": "http://localhost:3000/dashboard",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 2092,
+          "timing": {
+            "domContentLoaded": 2080.800000000745,
+            "loadEvent": 0,
+            "ttfb": 1834.5
+          },
+          "actualUrl": "http://localhost:3000/dashboard",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/agent-finder",
+          "url": "http://localhost:3000/dashboard/agent-finder",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1228,
+          "timing": {
+            "domContentLoaded": 1217.300000000745,
+            "loadEvent": 0,
+            "ttfb": 1139.800000000745
+          },
+          "actualUrl": "http://localhost:3000/dashboard/agent-finder",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/analysis",
+          "url": "http://localhost:3000/dashboard/analysis",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1488,
+          "timing": {
+            "domContentLoaded": 1479.5,
+            "loadEvent": 0,
+            "ttfb": 1239.1000000014901
+          },
+          "actualUrl": "http://localhost:3000/dashboard/analysis",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/calculator",
+          "url": "http://localhost:3000/dashboard/calculator",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1320,
+          "timing": {
+            "domContentLoaded": 1308.800000000745,
+            "loadEvent": 0,
+            "ttfb": 1093.6000000014901
+          },
+          "actualUrl": "http://localhost:3000/dashboard/calculator",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/chat-assistant",
+          "url": "http://localhost:3000/dashboard/chat-assistant",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1244,
+          "timing": {
+            "domContentLoaded": 1234.1000000014901,
+            "loadEvent": 0,
+            "ttfb": 1166.300000000745
+          },
+          "actualUrl": "http://localhost:3000/dashboard/chat-assistant",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/favorites",
+          "url": "http://localhost:3000/dashboard/favorites",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1297,
+          "timing": {
+            "domContentLoaded": 1277.5,
+            "loadEvent": 0,
+            "ttfb": 1122.2999999970198
+          },
+          "actualUrl": "http://localhost:3000/dashboard/favorites",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/market-insights",
+          "url": "http://localhost:3000/dashboard/market-insights",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1286,
+          "timing": {
+            "domContentLoaded": 1273.800000000745,
+            "loadEvent": 0,
+            "ttfb": 1068.5
+          },
+          "actualUrl": "http://localhost:3000/dashboard/market-insights",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/portfolio",
+          "url": "http://localhost:3000/dashboard/portfolio",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1029,
+          "timing": {
+            "domContentLoaded": 1011.8000000007451,
+            "loadEvent": 0,
+            "ttfb": 943.5999999977648
+          },
+          "actualUrl": "http://localhost:3000/dashboard/portfolio",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/profile",
+          "url": "http://localhost:3000/dashboard/profile",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1347,
+          "timing": {
+            "domContentLoaded": 1327.2999999970198,
+            "loadEvent": 0,
+            "ttfb": 1172.9000000022352
+          },
+          "actualUrl": "http://localhost:3000/dashboard/profile",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/risk-map",
+          "url": "http://localhost:3000/dashboard/risk-map",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1306,
+          "timing": {
+            "domContentLoaded": 1293.2000000029802,
+            "loadEvent": 0,
+            "ttfb": 1106.300000000745
+          },
+          "actualUrl": "http://localhost:3000/dashboard/risk-map",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/search",
+          "url": "http://localhost:3000/dashboard/search",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1221,
+          "timing": {
+            "domContentLoaded": 1211.199999999255,
+            "loadEvent": 0,
+            "ttfb": 1011.1999999992549
+          },
+          "actualUrl": "http://localhost:3000/dashboard/search",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/settings",
+          "url": "http://localhost:3000/dashboard/settings",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1226,
+          "timing": {
+            "domContentLoaded": 1201.300000000745,
+            "loadEvent": 0,
+            "ttfb": 1127.9000000022352
+          },
+          "actualUrl": "http://localhost:3000/dashboard/settings",
+          "isAuthRedirect": false
+        }
+      ],
+      "axe": {
+        "violationCount": 2,
+        "counts": {
+          "minor": 0,
+          "moderate": 2,
+          "serious": 0,
+          "critical": 0
+        },
+        "passes": 22,
+        "incomplete": 2
+      },
+      "lighthouse": {
+        "error": "Error: spawnSync lighthouse.cmd EINVAL"
+      },
+      "status": "passed",
+      "errors": [],
+      "authenticated": true
+    },
+    {
+      "config": {
+        "browser": "chromium",
+        "viewport": "1920x1080",
+        "device": "none",
+        "net": "Good3G"
+      },
+      "timestamp": "2025-10-04T20:21:32.256Z",
+      "runs": [
+        {
+          "route": "/",
+          "url": "http://localhost:3000/",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1388,
+          "timing": {
+            "domContentLoaded": 1374,
+            "loadEvent": 0,
+            "ttfb": 648.6000000014901
+          },
+          "actualUrl": "http://localhost:3000/",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/auth/login",
+          "url": "http://localhost:3000/auth/login",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1103,
+          "timing": {
+            "domContentLoaded": 1096.3999999985099,
+            "loadEvent": 0,
+            "ttfb": 391.0999999977648
+          },
+          "actualUrl": "http://localhost:3000/auth/login",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/auth/sign-up",
+          "url": "http://localhost:3000/auth/sign-up",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1797,
+          "timing": {
+            "domContentLoaded": 1790,
+            "loadEvent": 0,
+            "ttfb": 838.7999999970198
+          },
+          "actualUrl": "http://localhost:3000/auth/sign-up",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/auth/sign-up-success",
+          "url": "http://localhost:3000/auth/sign-up-success",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1100,
+          "timing": {
+            "domContentLoaded": 1086.6000000014901,
+            "loadEvent": 0,
+            "ttfb": 425.5
+          },
+          "actualUrl": "http://localhost:3000/auth/sign-up-success",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard",
+          "url": "http://localhost:3000/dashboard",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 2842,
+          "timing": {
+            "domContentLoaded": 2831.10000000149,
+            "loadEvent": 0,
+            "ttfb": 2105.699999999255
+          },
+          "actualUrl": "http://localhost:3000/dashboard",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/agent-finder",
+          "url": "http://localhost:3000/dashboard/agent-finder",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1798,
+          "timing": {
+            "domContentLoaded": 1790.7999999970198,
+            "loadEvent": 0,
+            "ttfb": 1056.199999999255
+          },
+          "actualUrl": "http://localhost:3000/dashboard/agent-finder",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/analysis",
+          "url": "http://localhost:3000/dashboard/analysis",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1895,
+          "timing": {
+            "domContentLoaded": 1886.300000000745,
+            "loadEvent": 0,
+            "ttfb": 1151
+          },
+          "actualUrl": "http://localhost:3000/dashboard/analysis",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/calculator",
+          "url": "http://localhost:3000/dashboard/calculator",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1954,
+          "timing": {
+            "domContentLoaded": 1943.6000000014901,
+            "loadEvent": 0,
+            "ttfb": 1222
+          },
+          "actualUrl": "http://localhost:3000/dashboard/calculator",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/chat-assistant",
+          "url": "http://localhost:3000/dashboard/chat-assistant",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1661,
+          "timing": {
+            "domContentLoaded": 1652.199999999255,
+            "loadEvent": 0,
+            "ttfb": 949.4000000022352
+          },
+          "actualUrl": "http://localhost:3000/dashboard/chat-assistant",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/favorites",
+          "url": "http://localhost:3000/dashboard/favorites",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1828,
+          "timing": {
+            "domContentLoaded": 1810.699999999255,
+            "loadEvent": 0,
+            "ttfb": 1105.199999999255
+          },
+          "actualUrl": "http://localhost:3000/dashboard/favorites",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/market-insights",
+          "url": "http://localhost:3000/dashboard/market-insights",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1848,
+          "timing": {
+            "domContentLoaded": 1833,
+            "loadEvent": 0,
+            "ttfb": 1141.4000000022352
+          },
+          "actualUrl": "http://localhost:3000/dashboard/market-insights",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/portfolio",
+          "url": "http://localhost:3000/dashboard/portfolio",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1859,
+          "timing": {
+            "domContentLoaded": 1847.199999999255,
+            "loadEvent": 0,
+            "ttfb": 1146
+          },
+          "actualUrl": "http://localhost:3000/dashboard/portfolio",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/profile",
+          "url": "http://localhost:3000/dashboard/profile",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 2179,
+          "timing": {
+            "domContentLoaded": 2166.2999999970198,
+            "loadEvent": 0,
+            "ttfb": 1444.1000000014901
+          },
+          "actualUrl": "http://localhost:3000/dashboard/profile",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/risk-map",
+          "url": "http://localhost:3000/dashboard/risk-map",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1945,
+          "timing": {
+            "domContentLoaded": 1929,
+            "loadEvent": 0,
+            "ttfb": 1170.5
+          },
+          "actualUrl": "http://localhost:3000/dashboard/risk-map",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/search",
+          "url": "http://localhost:3000/dashboard/search",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1794,
+          "timing": {
+            "domContentLoaded": 1774.5,
+            "loadEvent": 0,
+            "ttfb": 1052
+          },
+          "actualUrl": "http://localhost:3000/dashboard/search",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/settings",
+          "url": "http://localhost:3000/dashboard/settings",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1941,
+          "timing": {
+            "domContentLoaded": 1915.5999999977648,
+            "loadEvent": 0,
+            "ttfb": 1212.199999999255
+          },
+          "actualUrl": "http://localhost:3000/dashboard/settings",
+          "isAuthRedirect": false
+        }
+      ],
+      "axe": {
+        "violationCount": 2,
+        "counts": {
+          "minor": 0,
+          "moderate": 2,
+          "serious": 0,
+          "critical": 0
+        },
+        "passes": 22,
+        "incomplete": 2
+      },
+      "lighthouse": {
+        "error": "Error: spawnSync lighthouse.cmd EINVAL"
+      },
+      "status": "passed",
+      "errors": [],
+      "authenticated": true
+    },
+    {
+      "config": {
+        "browser": "chromium",
+        "viewport": "1920x1080",
+        "device": "none",
+        "net": "Regular4G"
+      },
+      "timestamp": "2025-10-04T20:22:25.170Z",
+      "runs": [
+        {
+          "route": "/",
+          "url": "http://localhost:3000/",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 588,
+          "timing": {
+            "domContentLoaded": 578.1999999992549,
+            "loadEvent": 0,
+            "ttfb": 409.3999999985099
+          },
+          "actualUrl": "http://localhost:3000/",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/auth/login",
+          "url": "http://localhost:3000/auth/login",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 608,
+          "timing": {
+            "domContentLoaded": 600.1999999992549,
+            "loadEvent": 0,
+            "ttfb": 423.69999999925494
+          },
+          "actualUrl": "http://localhost:3000/auth/login",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/auth/sign-up",
+          "url": "http://localhost:3000/auth/sign-up",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 646,
+          "timing": {
+            "domContentLoaded": 634.5,
+            "loadEvent": 0,
+            "ttfb": 463.6000000014901
+          },
+          "actualUrl": "http://localhost:3000/auth/sign-up",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/auth/sign-up-success",
+          "url": "http://localhost:3000/auth/sign-up-success",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 557,
+          "timing": {
+            "domContentLoaded": 543.8999999985099,
+            "loadEvent": 0,
+            "ttfb": 379.0999999977648
+          },
+          "actualUrl": "http://localhost:3000/auth/sign-up-success",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard",
+          "url": "http://localhost:3000/dashboard",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 2085,
+          "timing": {
+            "domContentLoaded": 2074.7000000029802,
+            "loadEvent": 0,
+            "ttfb": 1686.1000000014901
+          },
+          "actualUrl": "http://localhost:3000/dashboard",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/agent-finder",
+          "url": "http://localhost:3000/dashboard/agent-finder",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1365,
+          "timing": {
+            "domContentLoaded": 1357.800000000745,
+            "loadEvent": 0,
+            "ttfb": 1278
+          },
+          "actualUrl": "http://localhost:3000/dashboard/agent-finder",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/analysis",
+          "url": "http://localhost:3000/dashboard/analysis",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1293,
+          "timing": {
+            "domContentLoaded": 1279.1000000014901,
+            "loadEvent": 0,
+            "ttfb": 1127.199999999255
+          },
+          "actualUrl": "http://localhost:3000/dashboard/analysis",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/calculator",
+          "url": "http://localhost:3000/dashboard/calculator",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1304,
+          "timing": {
+            "domContentLoaded": 1295.8999999985099,
+            "loadEvent": 0,
+            "ttfb": 1140.800000000745
+          },
+          "actualUrl": "http://localhost:3000/dashboard/calculator",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/chat-assistant",
+          "url": "http://localhost:3000/dashboard/chat-assistant",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1223,
+          "timing": {
+            "domContentLoaded": 1212.7000000029802,
+            "loadEvent": 0,
+            "ttfb": 1042.0999999977648
+          },
+          "actualUrl": "http://localhost:3000/dashboard/chat-assistant",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/favorites",
+          "url": "http://localhost:3000/dashboard/favorites",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1406,
+          "timing": {
+            "domContentLoaded": 1385.6000000014901,
+            "loadEvent": 0,
+            "ttfb": 1122.300000000745
+          },
+          "actualUrl": "http://localhost:3000/dashboard/favorites",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/market-insights",
+          "url": "http://localhost:3000/dashboard/market-insights",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 2129,
+          "timing": {
+            "domContentLoaded": 2114.89999999851,
+            "loadEvent": 0,
+            "ttfb": 1945
+          },
+          "actualUrl": "http://localhost:3000/dashboard/market-insights",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/portfolio",
+          "url": "http://localhost:3000/dashboard/portfolio",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1268,
+          "timing": {
+            "domContentLoaded": 1251.699999999255,
+            "loadEvent": 0,
+            "ttfb": 1090.5
+          },
+          "actualUrl": "http://localhost:3000/dashboard/portfolio",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/profile",
+          "url": "http://localhost:3000/dashboard/profile",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1166,
+          "timing": {
+            "domContentLoaded": 1151.4000000022352,
+            "loadEvent": 0,
+            "ttfb": 983.6000000014901
+          },
+          "actualUrl": "http://localhost:3000/dashboard/profile",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/risk-map",
+          "url": "http://localhost:3000/dashboard/risk-map",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1169,
+          "timing": {
+            "domContentLoaded": 1156.0999999977648,
+            "loadEvent": 0,
+            "ttfb": 1063.199999999255
+          },
+          "actualUrl": "http://localhost:3000/dashboard/risk-map",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/search",
+          "url": "http://localhost:3000/dashboard/search",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1498,
+          "timing": {
+            "domContentLoaded": 1471.2000000029802,
+            "loadEvent": 0,
+            "ttfb": 1237.0999999977648
+          },
+          "actualUrl": "http://localhost:3000/dashboard/search",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/settings",
+          "url": "http://localhost:3000/dashboard/settings",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1362,
+          "timing": {
+            "domContentLoaded": 1338.5,
+            "loadEvent": 0,
+            "ttfb": 1154.4000000022352
+          },
+          "actualUrl": "http://localhost:3000/dashboard/settings",
+          "isAuthRedirect": false
+        }
+      ],
+      "axe": {
+        "violationCount": 2,
+        "counts": {
+          "minor": 0,
+          "moderate": 2,
+          "serious": 0,
+          "critical": 0
+        },
+        "passes": 22,
+        "incomplete": 2
+      },
+      "lighthouse": {
+        "error": "Error: spawnSync lighthouse.cmd EINVAL"
+      },
+      "status": "passed",
+      "errors": [],
+      "authenticated": true
+    },
+    {
+      "config": {
+        "browser": "chromium",
+        "viewport": "iPhone 12",
+        "device": "iPhone 12",
+        "net": "Good3G",
+        "mobile": true
+      },
+      "timestamp": "2025-10-04T20:22:56.480Z",
+      "runs": [
+        {
+          "route": "/",
+          "url": "http://localhost:3000/",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1323,
+          "timing": {
+            "domContentLoaded": 1313.199999999255,
+            "loadEvent": 0,
+            "ttfb": 592.3999999985099
+          },
+          "actualUrl": "http://localhost:3000/",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/auth/login",
+          "url": "http://localhost:3000/auth/login",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1201,
+          "timing": {
+            "domContentLoaded": 1190.5,
+            "loadEvent": 0,
+            "ttfb": 452.6000000014901
+          },
+          "actualUrl": "http://localhost:3000/auth/login",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/auth/sign-up",
+          "url": "http://localhost:3000/auth/sign-up",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1125,
+          "timing": {
+            "domContentLoaded": 1117.800000000745,
+            "loadEvent": 0,
+            "ttfb": 407.8999999985099
+          },
+          "actualUrl": "http://localhost:3000/auth/sign-up",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/auth/sign-up-success",
+          "url": "http://localhost:3000/auth/sign-up-success",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1020,
+          "timing": {
+            "domContentLoaded": 1009.9000000022352,
+            "loadEvent": 0,
+            "ttfb": 381.79999999701977
+          },
+          "actualUrl": "http://localhost:3000/auth/sign-up-success",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard",
+          "url": "http://localhost:3000/dashboard",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 2431,
+          "timing": {
+            "domContentLoaded": 2422.60000000149,
+            "loadEvent": 0,
+            "ttfb": 1735.4000000022352
+          },
+          "actualUrl": "http://localhost:3000/dashboard",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/agent-finder",
+          "url": "http://localhost:3000/dashboard/agent-finder",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1886,
+          "timing": {
+            "domContentLoaded": 1878,
+            "loadEvent": 0,
+            "ttfb": 1167.2000000029802
+          },
+          "actualUrl": "http://localhost:3000/dashboard/agent-finder",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/analysis",
+          "url": "http://localhost:3000/dashboard/analysis",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1867,
+          "timing": {
+            "domContentLoaded": 1855.1000000014901,
+            "loadEvent": 0,
+            "ttfb": 1125.8999999985099
+          },
+          "actualUrl": "http://localhost:3000/dashboard/analysis",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/calculator",
+          "url": "http://localhost:3000/dashboard/calculator",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 2712,
+          "timing": {
+            "domContentLoaded": 2704.599999997765,
+            "loadEvent": 0,
+            "ttfb": 1987.5999999977648
+          },
+          "actualUrl": "http://localhost:3000/dashboard/calculator",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/chat-assistant",
+          "url": "http://localhost:3000/dashboard/chat-assistant",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 2013,
+          "timing": {
+            "domContentLoaded": 1998.0999999977648,
+            "loadEvent": 0,
+            "ttfb": 1261.800000000745
+          },
+          "actualUrl": "http://localhost:3000/dashboard/chat-assistant",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/favorites",
+          "url": "http://localhost:3000/dashboard/favorites",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1921,
+          "timing": {
+            "domContentLoaded": 1906.8999999985099,
+            "loadEvent": 0,
+            "ttfb": 1198.9000000022352
+          },
+          "actualUrl": "http://localhost:3000/dashboard/favorites",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/market-insights",
+          "url": "http://localhost:3000/dashboard/market-insights",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1859,
+          "timing": {
+            "domContentLoaded": 1843.699999999255,
+            "loadEvent": 0,
+            "ttfb": 1137.5
+          },
+          "actualUrl": "http://localhost:3000/dashboard/market-insights",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/portfolio",
+          "url": "http://localhost:3000/dashboard/portfolio",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1725,
+          "timing": {
+            "domContentLoaded": 1715.1000000014901,
+            "loadEvent": 0,
+            "ttfb": 982.3000000007451
+          },
+          "actualUrl": "http://localhost:3000/dashboard/portfolio",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/profile",
+          "url": "http://localhost:3000/dashboard/profile",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1655,
+          "timing": {
+            "domContentLoaded": 1640.2999999970198,
+            "loadEvent": 0,
+            "ttfb": 982.0999999977648
+          },
+          "actualUrl": "http://localhost:3000/dashboard/profile",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/risk-map",
+          "url": "http://localhost:3000/dashboard/risk-map",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1751,
+          "timing": {
+            "domContentLoaded": 1740.199999999255,
+            "loadEvent": 0,
+            "ttfb": 975.2000000029802
+          },
+          "actualUrl": "http://localhost:3000/dashboard/risk-map",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/search",
+          "url": "http://localhost:3000/dashboard/search",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 2090,
+          "timing": {
+            "domContentLoaded": 2058.199999999255,
+            "loadEvent": 0,
+            "ttfb": 1309.5999999977648
+          },
+          "actualUrl": "http://localhost:3000/dashboard/search",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/settings",
+          "url": "http://localhost:3000/dashboard/settings",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1991,
+          "timing": {
+            "domContentLoaded": 1964.2999999970198,
+            "loadEvent": 0,
+            "ttfb": 1304.2999999970198
+          },
+          "actualUrl": "http://localhost:3000/dashboard/settings",
+          "isAuthRedirect": false
+        }
+      ],
+      "axe": {
+        "violationCount": 2,
+        "counts": {
+          "minor": 0,
+          "moderate": 2,
+          "serious": 0,
+          "critical": 0
+        },
+        "passes": 22,
+        "incomplete": 2
+      },
+      "lighthouse": {
+        "error": "Error: spawnSync lighthouse.cmd EINVAL"
+      },
+      "status": "passed",
+      "errors": [],
+      "authenticated": true
+    },
+    {
+      "config": {
+        "browser": "chromium",
+        "viewport": "iPhone 12",
+        "device": "iPhone 12",
+        "net": "Regular4G",
+        "mobile": true
+      },
+      "timestamp": "2025-10-04T20:23:50.095Z",
+      "runs": [
+        {
+          "route": "/",
+          "url": "http://localhost:3000/",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 620,
+          "timing": {
+            "domContentLoaded": 612.3000000007451,
+            "loadEvent": 0,
+            "ttfb": 444.19999999925494
+          },
+          "actualUrl": "http://localhost:3000/",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/auth/login",
+          "url": "http://localhost:3000/auth/login",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 549,
+          "timing": {
+            "domContentLoaded": 538.5999999977648,
+            "loadEvent": 0,
+            "ttfb": 356.6000000014901
+          },
+          "actualUrl": "http://localhost:3000/auth/login",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/auth/sign-up",
+          "url": "http://localhost:3000/auth/sign-up",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1210,
+          "timing": {
+            "domContentLoaded": 1112.300000000745,
+            "loadEvent": 0,
+            "ttfb": 412.0999999977648
+          },
+          "actualUrl": "http://localhost:3000/auth/sign-up",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/auth/sign-up-success",
+          "url": "http://localhost:3000/auth/sign-up-success",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 890,
+          "timing": {
+            "domContentLoaded": 842.4000000022352,
+            "loadEvent": 0,
+            "ttfb": 695
+          },
+          "actualUrl": "http://localhost:3000/auth/sign-up-success",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard",
+          "url": "http://localhost:3000/dashboard",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1728,
+          "timing": {
+            "domContentLoaded": 1721.5,
+            "loadEvent": 0,
+            "ttfb": 1540.7999999970198
+          },
+          "actualUrl": "http://localhost:3000/dashboard",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/agent-finder",
+          "url": "http://localhost:3000/dashboard/agent-finder",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1107,
+          "timing": {
+            "domContentLoaded": 1099.5,
+            "loadEvent": 0,
+            "ttfb": 941.3000000007451
+          },
+          "actualUrl": "http://localhost:3000/dashboard/agent-finder",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/analysis",
+          "url": "http://localhost:3000/dashboard/analysis",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1213,
+          "timing": {
+            "domContentLoaded": 1204.199999999255,
+            "loadEvent": 0,
+            "ttfb": 1066.5
+          },
+          "actualUrl": "http://localhost:3000/dashboard/analysis",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/calculator",
+          "url": "http://localhost:3000/dashboard/calculator",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1106,
+          "timing": {
+            "domContentLoaded": 1096.699999999255,
+            "loadEvent": 0,
+            "ttfb": 993
+          },
+          "actualUrl": "http://localhost:3000/dashboard/calculator",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/chat-assistant",
+          "url": "http://localhost:3000/dashboard/chat-assistant",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1290,
+          "timing": {
+            "domContentLoaded": 1281.4000000022352,
+            "loadEvent": 0,
+            "ttfb": 1037.5
+          },
+          "actualUrl": "http://localhost:3000/dashboard/chat-assistant",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/favorites",
+          "url": "http://localhost:3000/dashboard/favorites",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1187,
+          "timing": {
+            "domContentLoaded": 1175.300000000745,
+            "loadEvent": 0,
+            "ttfb": 985.0999999977648
+          },
+          "actualUrl": "http://localhost:3000/dashboard/favorites",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/market-insights",
+          "url": "http://localhost:3000/dashboard/market-insights",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1010,
+          "timing": {
+            "domContentLoaded": 999,
+            "loadEvent": 0,
+            "ttfb": 915.7999999970198
+          },
+          "actualUrl": "http://localhost:3000/dashboard/market-insights",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/portfolio",
+          "url": "http://localhost:3000/dashboard/portfolio",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1130,
+          "timing": {
+            "domContentLoaded": 1111.300000000745,
+            "loadEvent": 0,
+            "ttfb": 993.5
+          },
+          "actualUrl": "http://localhost:3000/dashboard/portfolio",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/profile",
+          "url": "http://localhost:3000/dashboard/profile",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1162,
+          "timing": {
+            "domContentLoaded": 1151.699999999255,
+            "loadEvent": 0,
+            "ttfb": 940.7000000029802
+          },
+          "actualUrl": "http://localhost:3000/dashboard/profile",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/risk-map",
+          "url": "http://localhost:3000/dashboard/risk-map",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1238,
+          "timing": {
+            "domContentLoaded": 1225.199999999255,
+            "loadEvent": 0,
+            "ttfb": 1065.3999999985099
+          },
+          "actualUrl": "http://localhost:3000/dashboard/risk-map",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/search",
+          "url": "http://localhost:3000/dashboard/search",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1068,
+          "timing": {
+            "domContentLoaded": 1057.6000000014901,
+            "loadEvent": 0,
+            "ttfb": 951.5999999977648
+          },
+          "actualUrl": "http://localhost:3000/dashboard/search",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/settings",
+          "url": "http://localhost:3000/dashboard/settings",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1266,
+          "timing": {
+            "domContentLoaded": 1249.800000000745,
+            "loadEvent": 0,
+            "ttfb": 1060.5999999977648
+          },
+          "actualUrl": "http://localhost:3000/dashboard/settings",
+          "isAuthRedirect": false
+        }
+      ],
+      "axe": {
+        "violationCount": 2,
+        "counts": {
+          "minor": 0,
+          "moderate": 2,
+          "serious": 0,
+          "critical": 0
+        },
+        "passes": 22,
+        "incomplete": 2
+      },
+      "lighthouse": {
+        "error": "Error: spawnSync lighthouse.cmd EINVAL"
+      },
+      "status": "passed",
+      "errors": [],
+      "authenticated": true
+    },
+    {
+      "config": {
+        "browser": "firefox",
+        "viewport": "1366x768",
+        "device": "none",
+        "net": "Good3G"
+      },
+      "timestamp": "2025-10-04T20:24:30.822Z",
+      "runs": [
+        {
+          "route": "/",
+          "url": "http://localhost:3000/",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 569,
+          "timing": {
+            "domContentLoaded": 548,
+            "loadEvent": 0,
+            "ttfb": 347
+          },
+          "actualUrl": "http://localhost:3000/",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/auth/login",
+          "url": "http://localhost:3000/auth/login",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 550,
+          "timing": {
+            "domContentLoaded": 524,
+            "loadEvent": 0,
+            "ttfb": 356
+          },
+          "actualUrl": "http://localhost:3000/auth/login",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/auth/sign-up",
+          "url": "http://localhost:3000/auth/sign-up",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 709,
+          "timing": {
+            "domContentLoaded": 646,
+            "loadEvent": 0,
+            "ttfb": 497
+          },
+          "actualUrl": "http://localhost:3000/auth/sign-up",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/auth/sign-up-success",
+          "url": "http://localhost:3000/auth/sign-up-success",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 621,
+          "timing": {
+            "domContentLoaded": 600,
+            "loadEvent": 0,
+            "ttfb": 424
+          },
+          "actualUrl": "http://localhost:3000/auth/sign-up-success",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard",
+          "url": "http://localhost:3000/dashboard",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1856,
+          "timing": {
+            "domContentLoaded": 1841,
+            "loadEvent": 0,
+            "ttfb": 1634
+          },
+          "actualUrl": "http://localhost:3000/dashboard",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/agent-finder",
+          "url": "http://localhost:3000/dashboard/agent-finder",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1146,
+          "timing": {
+            "domContentLoaded": 1110,
+            "loadEvent": 0,
+            "ttfb": 922
+          },
+          "actualUrl": "http://localhost:3000/dashboard/agent-finder",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/analysis",
+          "url": "http://localhost:3000/dashboard/analysis",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1356,
+          "timing": {
+            "domContentLoaded": 1251,
+            "loadEvent": 0,
+            "ttfb": 1018
+          },
+          "actualUrl": "http://localhost:3000/dashboard/analysis",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/calculator",
+          "url": "http://localhost:3000/dashboard/calculator",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1653,
+          "timing": {
+            "domContentLoaded": 1603,
+            "loadEvent": 0,
+            "ttfb": 1348
+          },
+          "actualUrl": "http://localhost:3000/dashboard/calculator",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/chat-assistant",
+          "url": "http://localhost:3000/dashboard/chat-assistant",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1530,
+          "timing": {
+            "domContentLoaded": 1306,
+            "loadEvent": 0,
+            "ttfb": 1074
+          },
+          "actualUrl": "http://localhost:3000/dashboard/chat-assistant",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/favorites",
+          "url": "http://localhost:3000/dashboard/favorites",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1738,
+          "timing": {
+            "domContentLoaded": 1658,
+            "loadEvent": 0,
+            "ttfb": 1344
+          },
+          "actualUrl": "http://localhost:3000/dashboard/favorites",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/market-insights",
+          "url": "http://localhost:3000/dashboard/market-insights",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1279,
+          "timing": {
+            "domContentLoaded": 1218,
+            "loadEvent": 0,
+            "ttfb": 983
+          },
+          "actualUrl": "http://localhost:3000/dashboard/market-insights",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/portfolio",
+          "url": "http://localhost:3000/dashboard/portfolio",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1367,
+          "timing": {
+            "domContentLoaded": 1212,
+            "loadEvent": 0,
+            "ttfb": 1025
+          },
+          "actualUrl": "http://localhost:3000/dashboard/portfolio",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/profile",
+          "url": "http://localhost:3000/dashboard/profile",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1778,
+          "timing": {
+            "domContentLoaded": 1582,
+            "loadEvent": 0,
+            "ttfb": 1325
+          },
+          "actualUrl": "http://localhost:3000/dashboard/profile",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/risk-map",
+          "url": "http://localhost:3000/dashboard/risk-map",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1550,
+          "timing": {
+            "domContentLoaded": 1323,
+            "loadEvent": 0,
+            "ttfb": 1135
+          },
+          "actualUrl": "http://localhost:3000/dashboard/risk-map",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/search",
+          "url": "http://localhost:3000/dashboard/search",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1720,
+          "timing": {
+            "domContentLoaded": 937,
+            "loadEvent": 0,
+            "ttfb": 1008
+          },
+          "actualUrl": "http://localhost:3000/dashboard/search",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/settings",
+          "url": "http://localhost:3000/dashboard/settings",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 3086,
+          "timing": {
+            "domContentLoaded": 2962,
+            "loadEvent": 0,
+            "ttfb": 2602
+          },
+          "actualUrl": "http://localhost:3000/dashboard/settings",
+          "isAuthRedirect": false
+        }
+      ],
+      "axe": {
+        "violationCount": 2,
+        "counts": {
+          "minor": 0,
+          "moderate": 2,
+          "serious": 0,
+          "critical": 0
+        },
+        "passes": 21,
+        "incomplete": 2
+      },
+      "lighthouse": {},
+      "status": "passed",
+      "errors": [],
+      "authenticated": true
+    },
+    {
+      "config": {
+        "browser": "firefox",
+        "viewport": "1366x768",
+        "device": "none",
+        "net": "Regular4G"
+      },
+      "timestamp": "2025-10-04T20:25:08.077Z",
+      "runs": [
+        {
+          "route": "/",
+          "url": "http://localhost:3000/",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 709,
+          "timing": {
+            "domContentLoaded": 693,
+            "loadEvent": 0,
+            "ttfb": 452
+          },
+          "actualUrl": "http://localhost:3000/",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/auth/login",
+          "url": "http://localhost:3000/auth/login",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 758,
+          "timing": {
+            "domContentLoaded": 701,
+            "loadEvent": 0,
+            "ttfb": 450
+          },
+          "actualUrl": "http://localhost:3000/auth/login",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/auth/sign-up",
+          "url": "http://localhost:3000/auth/sign-up",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 544,
+          "timing": {
+            "domContentLoaded": 522,
+            "loadEvent": 0,
+            "ttfb": 361
+          },
+          "actualUrl": "http://localhost:3000/auth/sign-up",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/auth/sign-up-success",
+          "url": "http://localhost:3000/auth/sign-up-success",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 575,
+          "timing": {
+            "domContentLoaded": 548,
+            "loadEvent": 0,
+            "ttfb": 381
+          },
+          "actualUrl": "http://localhost:3000/auth/sign-up-success",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard",
+          "url": "http://localhost:3000/dashboard",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 2042,
+          "timing": {
+            "domContentLoaded": 1973,
+            "loadEvent": 0,
+            "ttfb": 1838
+          },
+          "actualUrl": "http://localhost:3000/dashboard",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/agent-finder",
+          "url": "http://localhost:3000/dashboard/agent-finder",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1253,
+          "timing": {
+            "domContentLoaded": 1210,
+            "loadEvent": 0,
+            "ttfb": 1078
+          },
+          "actualUrl": "http://localhost:3000/dashboard/agent-finder",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/analysis",
+          "url": "http://localhost:3000/dashboard/analysis",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1442,
+          "timing": {
+            "domContentLoaded": 1264,
+            "loadEvent": 0,
+            "ttfb": 1115
+          },
+          "actualUrl": "http://localhost:3000/dashboard/analysis",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/calculator",
+          "url": "http://localhost:3000/dashboard/calculator",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1490,
+          "timing": {
+            "domContentLoaded": 1457,
+            "loadEvent": 0,
+            "ttfb": 1190
+          },
+          "actualUrl": "http://localhost:3000/dashboard/calculator",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/chat-assistant",
+          "url": "http://localhost:3000/dashboard/chat-assistant",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1496,
+          "timing": {
+            "domContentLoaded": 1443,
+            "loadEvent": 0,
+            "ttfb": 1277
+          },
+          "actualUrl": "http://localhost:3000/dashboard/chat-assistant",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/favorites",
+          "url": "http://localhost:3000/dashboard/favorites",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1460,
+          "timing": {
+            "domContentLoaded": 1349,
+            "loadEvent": 0,
+            "ttfb": 1157
+          },
+          "actualUrl": "http://localhost:3000/dashboard/favorites",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/market-insights",
+          "url": "http://localhost:3000/dashboard/market-insights",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 2464,
+          "timing": {
+            "domContentLoaded": 2441,
+            "loadEvent": 0,
+            "ttfb": 2271
+          },
+          "actualUrl": "http://localhost:3000/dashboard/market-insights",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/portfolio",
+          "url": "http://localhost:3000/dashboard/portfolio",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1804,
+          "timing": {
+            "domContentLoaded": 1783,
+            "loadEvent": 0,
+            "ttfb": 1599
+          },
+          "actualUrl": "http://localhost:3000/dashboard/portfolio",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/profile",
+          "url": "http://localhost:3000/dashboard/profile",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 5567,
+          "timing": {
+            "domContentLoaded": 5422,
+            "loadEvent": 0,
+            "ttfb": 1415
+          },
+          "actualUrl": "http://localhost:3000/dashboard/profile",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/risk-map",
+          "url": "http://localhost:3000/dashboard/risk-map",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 3160,
+          "timing": {
+            "domContentLoaded": 3030,
+            "loadEvent": 0,
+            "ttfb": 2941
+          },
+          "actualUrl": "http://localhost:3000/dashboard/risk-map",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/search",
+          "url": "http://localhost:3000/dashboard/search",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 2325,
+          "timing": {
+            "domContentLoaded": 1383,
+            "loadEvent": 0,
+            "ttfb": 1228
+          },
+          "actualUrl": "http://localhost:3000/dashboard/search",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/settings",
+          "url": "http://localhost:3000/dashboard/settings",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1791,
+          "timing": {
+            "domContentLoaded": 1325,
+            "loadEvent": 0,
+            "ttfb": 1301
+          },
+          "actualUrl": "http://localhost:3000/dashboard/settings",
+          "isAuthRedirect": false
+        }
+      ],
+      "axe": {
+        "violationCount": 2,
+        "counts": {
+          "minor": 0,
+          "moderate": 2,
+          "serious": 0,
+          "critical": 0
+        },
+        "passes": 21,
+        "incomplete": 2
+      },
+      "lighthouse": {},
+      "status": "passed",
+      "errors": [],
+      "authenticated": true
+    },
+    {
+      "config": {
+        "browser": "firefox",
+        "viewport": "1920x1080",
+        "device": "none",
+        "net": "Good3G"
+      },
+      "timestamp": "2025-10-04T20:25:50.257Z",
+      "runs": [
+        {
+          "route": "/",
+          "url": "http://localhost:3000/",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1059,
+          "timing": {
+            "domContentLoaded": 1045,
+            "loadEvent": 0,
+            "ttfb": 813
+          },
+          "actualUrl": "http://localhost:3000/",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/auth/login",
+          "url": "http://localhost:3000/auth/login",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 642,
+          "timing": {
+            "domContentLoaded": 615,
+            "loadEvent": 0,
+            "ttfb": 435
+          },
+          "actualUrl": "http://localhost:3000/auth/login",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/auth/sign-up",
+          "url": "http://localhost:3000/auth/sign-up",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 595,
+          "timing": {
+            "domContentLoaded": 571,
+            "loadEvent": 0,
+            "ttfb": 379
+          },
+          "actualUrl": "http://localhost:3000/auth/sign-up",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/auth/sign-up-success",
+          "url": "http://localhost:3000/auth/sign-up-success",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 654,
+          "timing": {
+            "domContentLoaded": 619,
+            "loadEvent": 0,
+            "ttfb": 460
+          },
+          "actualUrl": "http://localhost:3000/auth/sign-up-success",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard",
+          "url": "http://localhost:3000/dashboard",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 2664,
+          "timing": {
+            "domContentLoaded": 2548,
+            "loadEvent": 0,
+            "ttfb": 2372
+          },
+          "actualUrl": "http://localhost:3000/dashboard",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/agent-finder",
+          "url": "http://localhost:3000/dashboard/agent-finder",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1785,
+          "timing": {
+            "domContentLoaded": 1701,
+            "loadEvent": 0,
+            "ttfb": 1472
+          },
+          "actualUrl": "http://localhost:3000/dashboard/agent-finder",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/analysis",
+          "url": "http://localhost:3000/dashboard/analysis",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1604,
+          "timing": {
+            "domContentLoaded": 1484,
+            "loadEvent": 0,
+            "ttfb": 1120
+          },
+          "actualUrl": "http://localhost:3000/dashboard/analysis",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/calculator",
+          "url": "http://localhost:3000/dashboard/calculator",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1601,
+          "timing": {
+            "domContentLoaded": 1552,
+            "loadEvent": 0,
+            "ttfb": 1248
+          },
+          "actualUrl": "http://localhost:3000/dashboard/calculator",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/chat-assistant",
+          "url": "http://localhost:3000/dashboard/chat-assistant",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1449,
+          "timing": {
+            "domContentLoaded": 1388,
+            "loadEvent": 0,
+            "ttfb": 1132
+          },
+          "actualUrl": "http://localhost:3000/dashboard/chat-assistant",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/favorites",
+          "url": "http://localhost:3000/dashboard/favorites",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 2008,
+          "timing": {
+            "domContentLoaded": 1776,
+            "loadEvent": 0,
+            "ttfb": 1622
+          },
+          "actualUrl": "http://localhost:3000/dashboard/favorites",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/market-insights",
+          "url": "http://localhost:3000/dashboard/market-insights",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1646,
+          "timing": {
+            "domContentLoaded": 1424,
+            "loadEvent": 0,
+            "ttfb": 1289
+          },
+          "actualUrl": "http://localhost:3000/dashboard/market-insights",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/portfolio",
+          "url": "http://localhost:3000/dashboard/portfolio",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1508,
+          "timing": {
+            "domContentLoaded": 1431,
+            "loadEvent": 0,
+            "ttfb": 1271
+          },
+          "actualUrl": "http://localhost:3000/dashboard/portfolio",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/profile",
+          "url": "http://localhost:3000/dashboard/profile",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1393,
+          "timing": {
+            "domContentLoaded": 1226,
+            "loadEvent": 0,
+            "ttfb": 1014
+          },
+          "actualUrl": "http://localhost:3000/dashboard/profile",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/risk-map",
+          "url": "http://localhost:3000/dashboard/risk-map",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1746,
+          "timing": {
+            "domContentLoaded": 1694,
+            "loadEvent": 0,
+            "ttfb": 1538
+          },
+          "actualUrl": "http://localhost:3000/dashboard/risk-map",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/search",
+          "url": "http://localhost:3000/dashboard/search",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1394,
+          "timing": {
+            "domContentLoaded": 1220,
+            "loadEvent": 0,
+            "ttfb": 1065
+          },
+          "actualUrl": "http://localhost:3000/dashboard/search",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/settings",
+          "url": "http://localhost:3000/dashboard/settings",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1462,
+          "timing": {
+            "domContentLoaded": 1401,
+            "loadEvent": 0,
+            "ttfb": 1111
+          },
+          "actualUrl": "http://localhost:3000/dashboard/settings",
+          "isAuthRedirect": false
+        }
+      ],
+      "axe": {
+        "violationCount": 2,
+        "counts": {
+          "minor": 0,
+          "moderate": 2,
+          "serious": 0,
+          "critical": 0
+        },
+        "passes": 21,
+        "incomplete": 2
+      },
+      "lighthouse": {},
+      "status": "passed",
+      "errors": [],
+      "authenticated": true
+    },
+    {
+      "config": {
+        "browser": "firefox",
+        "viewport": "1920x1080",
+        "device": "none",
+        "net": "Regular4G"
+      },
+      "timestamp": "2025-10-04T20:26:28.145Z",
+      "runs": [
+        {
+          "route": "/",
+          "url": "http://localhost:3000/",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 610,
+          "timing": {
+            "domContentLoaded": 592,
+            "loadEvent": 0,
+            "ttfb": 407
+          },
+          "actualUrl": "http://localhost:3000/",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/auth/login",
+          "url": "http://localhost:3000/auth/login",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 542,
+          "timing": {
+            "domContentLoaded": 520,
+            "loadEvent": 0,
+            "ttfb": 367
+          },
+          "actualUrl": "http://localhost:3000/auth/login",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/auth/sign-up",
+          "url": "http://localhost:3000/auth/sign-up",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 524,
+          "timing": {
+            "domContentLoaded": 493,
+            "loadEvent": 0,
+            "ttfb": 345
+          },
+          "actualUrl": "http://localhost:3000/auth/sign-up",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/auth/sign-up-success",
+          "url": "http://localhost:3000/auth/sign-up-success",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 536,
+          "timing": {
+            "domContentLoaded": 505,
+            "loadEvent": 0,
+            "ttfb": 370
+          },
+          "actualUrl": "http://localhost:3000/auth/sign-up-success",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard",
+          "url": "http://localhost:3000/dashboard",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 2043,
+          "timing": {
+            "domContentLoaded": 2007,
+            "loadEvent": 0,
+            "ttfb": 1818
+          },
+          "actualUrl": "http://localhost:3000/dashboard",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/agent-finder",
+          "url": "http://localhost:3000/dashboard/agent-finder",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1395,
+          "timing": {
+            "domContentLoaded": 1309,
+            "loadEvent": 0,
+            "ttfb": 1126
+          },
+          "actualUrl": "http://localhost:3000/dashboard/agent-finder",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/analysis",
+          "url": "http://localhost:3000/dashboard/analysis",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1285,
+          "timing": {
+            "domContentLoaded": 1157,
+            "loadEvent": 0,
+            "ttfb": 1000
+          },
+          "actualUrl": "http://localhost:3000/dashboard/analysis",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/calculator",
+          "url": "http://localhost:3000/dashboard/calculator",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1349,
+          "timing": {
+            "domContentLoaded": 1257,
+            "loadEvent": 0,
+            "ttfb": 1052
+          },
+          "actualUrl": "http://localhost:3000/dashboard/calculator",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/chat-assistant",
+          "url": "http://localhost:3000/dashboard/chat-assistant",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1342,
+          "timing": {
+            "domContentLoaded": 1273,
+            "loadEvent": 0,
+            "ttfb": 1042
+          },
+          "actualUrl": "http://localhost:3000/dashboard/chat-assistant",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/favorites",
+          "url": "http://localhost:3000/dashboard/favorites",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1235,
+          "timing": {
+            "domContentLoaded": 1112,
+            "loadEvent": 0,
+            "ttfb": 949
+          },
+          "actualUrl": "http://localhost:3000/dashboard/favorites",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/market-insights",
+          "url": "http://localhost:3000/dashboard/market-insights",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1372,
+          "timing": {
+            "domContentLoaded": 1201,
+            "loadEvent": 0,
+            "ttfb": 1120
+          },
+          "actualUrl": "http://localhost:3000/dashboard/market-insights",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/portfolio",
+          "url": "http://localhost:3000/dashboard/portfolio",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1208,
+          "timing": {
+            "domContentLoaded": 1144,
+            "loadEvent": 0,
+            "ttfb": 1009
+          },
+          "actualUrl": "http://localhost:3000/dashboard/portfolio",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/profile",
+          "url": "http://localhost:3000/dashboard/profile",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1414,
+          "timing": {
+            "domContentLoaded": 1238,
+            "loadEvent": 0,
+            "ttfb": 1070
+          },
+          "actualUrl": "http://localhost:3000/dashboard/profile",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/risk-map",
+          "url": "http://localhost:3000/dashboard/risk-map",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1248,
+          "timing": {
+            "domContentLoaded": 1175,
+            "loadEvent": 0,
+            "ttfb": 1056
+          },
+          "actualUrl": "http://localhost:3000/dashboard/risk-map",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/search",
+          "url": "http://localhost:3000/dashboard/search",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1295,
+          "timing": {
+            "domContentLoaded": 1209,
+            "loadEvent": 0,
+            "ttfb": 1096
+          },
+          "actualUrl": "http://localhost:3000/dashboard/search",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/settings",
+          "url": "http://localhost:3000/dashboard/settings",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1551,
+          "timing": {
+            "domContentLoaded": 1434,
+            "loadEvent": 0,
+            "ttfb": 1229
+          },
+          "actualUrl": "http://localhost:3000/dashboard/settings",
+          "isAuthRedirect": false
+        }
+      ],
+      "axe": {
+        "violationCount": 2,
+        "counts": {
+          "minor": 0,
+          "moderate": 2,
+          "serious": 0,
+          "critical": 0
+        },
+        "passes": 21,
+        "incomplete": 2
+      },
+      "lighthouse": {},
+      "status": "passed",
+      "errors": [],
+      "authenticated": true
+    },
+    {
+      "config": {
+        "browser": "webkit",
+        "viewport": "1366x768",
+        "device": "none",
+        "net": "Good3G"
+      },
+      "timestamp": "2025-10-04T20:27:06.185Z",
+      "runs": [
+        {
+          "route": "/",
+          "url": "http://localhost:3000/",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 652,
+          "timing": {
+            "domContentLoaded": 622,
+            "loadEvent": 0,
+            "ttfb": 468
+          },
+          "actualUrl": "http://localhost:3000/",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/auth/login",
+          "url": "http://localhost:3000/auth/login",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 637,
+          "timing": {
+            "domContentLoaded": 580,
+            "loadEvent": 0,
+            "ttfb": 367
+          },
+          "actualUrl": "http://localhost:3000/auth/login",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/auth/sign-up",
+          "url": "http://localhost:3000/auth/sign-up",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 588,
+          "timing": {
+            "domContentLoaded": 571.0000000000001,
+            "loadEvent": 0,
+            "ttfb": 389
+          },
+          "actualUrl": "http://localhost:3000/auth/sign-up",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/auth/sign-up-success",
+          "url": "http://localhost:3000/auth/sign-up-success",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 558,
+          "timing": {
+            "domContentLoaded": 526,
+            "loadEvent": 0,
+            "ttfb": 368
+          },
+          "actualUrl": "http://localhost:3000/auth/sign-up-success",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard",
+          "url": "http://localhost:3000/dashboard",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 2086,
+          "timing": {
+            "domContentLoaded": 2050,
+            "loadEvent": 0,
+            "ttfb": 1834.0000000000002
+          },
+          "actualUrl": "http://localhost:3000/dashboard",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/agent-finder",
+          "url": "http://localhost:3000/dashboard/agent-finder",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1485,
+          "timing": {
+            "domContentLoaded": 1451,
+            "loadEvent": 0,
+            "ttfb": 1182
+          },
+          "actualUrl": "http://localhost:3000/dashboard/agent-finder",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/analysis",
+          "url": "http://localhost:3000/dashboard/analysis",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1589,
+          "timing": {
+            "domContentLoaded": 1552,
+            "loadEvent": 0,
+            "ttfb": 1400
+          },
+          "actualUrl": "http://localhost:3000/dashboard/analysis",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/calculator",
+          "url": "http://localhost:3000/dashboard/calculator",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 2025,
+          "timing": {
+            "domContentLoaded": 1946,
+            "loadEvent": 0,
+            "ttfb": 1700
+          },
+          "actualUrl": "http://localhost:3000/dashboard/calculator",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/chat-assistant",
+          "url": "http://localhost:3000/dashboard/chat-assistant",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1242,
+          "timing": {
+            "domContentLoaded": 1161,
+            "loadEvent": 0,
+            "ttfb": 999
+          },
+          "actualUrl": "http://localhost:3000/dashboard/chat-assistant",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/favorites",
+          "url": "http://localhost:3000/dashboard/favorites",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1266,
+          "timing": {
+            "domContentLoaded": 1176,
+            "loadEvent": 0,
+            "ttfb": 1002
+          },
+          "actualUrl": "http://localhost:3000/dashboard/favorites",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/market-insights",
+          "url": "http://localhost:3000/dashboard/market-insights",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1148,
+          "timing": {
+            "domContentLoaded": 1069,
+            "loadEvent": 0,
+            "ttfb": 904
+          },
+          "actualUrl": "http://localhost:3000/dashboard/market-insights",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/portfolio",
+          "url": "http://localhost:3000/dashboard/portfolio",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1271,
+          "timing": {
+            "domContentLoaded": 1221,
+            "loadEvent": 0,
+            "ttfb": 970
+          },
+          "actualUrl": "http://localhost:3000/dashboard/portfolio",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/profile",
+          "url": "http://localhost:3000/dashboard/profile",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1209,
+          "timing": {
+            "domContentLoaded": 1129,
+            "loadEvent": 0,
+            "ttfb": 972.0000000000001
+          },
+          "actualUrl": "http://localhost:3000/dashboard/profile",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/risk-map",
+          "url": "http://localhost:3000/dashboard/risk-map",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1234,
+          "timing": {
+            "domContentLoaded": 1204,
+            "loadEvent": 0,
+            "ttfb": 1048
+          },
+          "actualUrl": "http://localhost:3000/dashboard/risk-map",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/search",
+          "url": "http://localhost:3000/dashboard/search",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1282,
+          "timing": {
+            "domContentLoaded": 1225,
+            "loadEvent": 0,
+            "ttfb": 1046
+          },
+          "actualUrl": "http://localhost:3000/dashboard/search",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/settings",
+          "url": "http://localhost:3000/dashboard/settings",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1432,
+          "timing": {
+            "domContentLoaded": 1349,
+            "loadEvent": 0,
+            "ttfb": 1170
+          },
+          "actualUrl": "http://localhost:3000/dashboard/settings",
+          "isAuthRedirect": false
+        }
+      ],
+      "axe": {
+        "violationCount": 2,
+        "counts": {
+          "minor": 0,
+          "moderate": 2,
+          "serious": 0,
+          "critical": 0
+        },
+        "passes": 22,
+        "incomplete": 2
+      },
+      "lighthouse": {},
+      "status": "passed",
+      "errors": [],
+      "authenticated": true
+    },
+    {
+      "config": {
+        "browser": "webkit",
+        "viewport": "1366x768",
+        "device": "none",
+        "net": "Regular4G"
+      },
+      "timestamp": "2025-10-04T20:27:36.436Z",
+      "runs": [
+        {
+          "route": "/",
+          "url": "http://localhost:3000/",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 494,
+          "timing": {
+            "domContentLoaded": 468,
+            "loadEvent": 0,
+            "ttfb": 349
+          },
+          "actualUrl": "http://localhost:3000/",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/auth/login",
+          "url": "http://localhost:3000/auth/login",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 600,
+          "timing": {
+            "domContentLoaded": 575.0000000000001,
+            "loadEvent": 0,
+            "ttfb": 428
+          },
+          "actualUrl": "http://localhost:3000/auth/login",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/auth/sign-up",
+          "url": "http://localhost:3000/auth/sign-up",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 558,
+          "timing": {
+            "domContentLoaded": 542,
+            "loadEvent": 0,
+            "ttfb": 357
+          },
+          "actualUrl": "http://localhost:3000/auth/sign-up",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/auth/sign-up-success",
+          "url": "http://localhost:3000/auth/sign-up-success",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 564,
+          "timing": {
+            "domContentLoaded": 549,
+            "loadEvent": 0,
+            "ttfb": 434.00000000000006
+          },
+          "actualUrl": "http://localhost:3000/auth/sign-up-success",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard",
+          "url": "http://localhost:3000/dashboard",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1890,
+          "timing": {
+            "domContentLoaded": 1860,
+            "loadEvent": 0,
+            "ttfb": 1709
+          },
+          "actualUrl": "http://localhost:3000/dashboard",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/agent-finder",
+          "url": "http://localhost:3000/dashboard/agent-finder",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1106,
+          "timing": {
+            "domContentLoaded": 1065,
+            "loadEvent": 0,
+            "ttfb": 948
+          },
+          "actualUrl": "http://localhost:3000/dashboard/agent-finder",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/analysis",
+          "url": "http://localhost:3000/dashboard/analysis",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1244,
+          "timing": {
+            "domContentLoaded": 1197,
+            "loadEvent": 0,
+            "ttfb": 1059
+          },
+          "actualUrl": "http://localhost:3000/dashboard/analysis",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/calculator",
+          "url": "http://localhost:3000/dashboard/calculator",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1290,
+          "timing": {
+            "domContentLoaded": 1253,
+            "loadEvent": 0,
+            "ttfb": 1124
+          },
+          "actualUrl": "http://localhost:3000/dashboard/calculator",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/chat-assistant",
+          "url": "http://localhost:3000/dashboard/chat-assistant",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1077,
+          "timing": {
+            "domContentLoaded": 1039,
+            "loadEvent": 0,
+            "ttfb": 925.0000000000001
+          },
+          "actualUrl": "http://localhost:3000/dashboard/chat-assistant",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/favorites",
+          "url": "http://localhost:3000/dashboard/favorites",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1270,
+          "timing": {
+            "domContentLoaded": 1186,
+            "loadEvent": 0,
+            "ttfb": 1063
+          },
+          "actualUrl": "http://localhost:3000/dashboard/favorites",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/market-insights",
+          "url": "http://localhost:3000/dashboard/market-insights",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1235,
+          "timing": {
+            "domContentLoaded": 1126,
+            "loadEvent": 0,
+            "ttfb": 994
+          },
+          "actualUrl": "http://localhost:3000/dashboard/market-insights",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/portfolio",
+          "url": "http://localhost:3000/dashboard/portfolio",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1306,
+          "timing": {
+            "domContentLoaded": 1272,
+            "loadEvent": 0,
+            "ttfb": 1147
+          },
+          "actualUrl": "http://localhost:3000/dashboard/portfolio",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/profile",
+          "url": "http://localhost:3000/dashboard/profile",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1503,
+          "timing": {
+            "domContentLoaded": 1398.0000000000002,
+            "loadEvent": 0,
+            "ttfb": 906
+          },
+          "actualUrl": "http://localhost:3000/dashboard/profile",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/risk-map",
+          "url": "http://localhost:3000/dashboard/risk-map",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1328,
+          "timing": {
+            "domContentLoaded": 1273.0000000000002,
+            "loadEvent": 0,
+            "ttfb": 1128
+          },
+          "actualUrl": "http://localhost:3000/dashboard/risk-map",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/search",
+          "url": "http://localhost:3000/dashboard/search",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 2671,
+          "timing": {
+            "domContentLoaded": 1697,
+            "loadEvent": 0,
+            "ttfb": 1502
+          },
+          "actualUrl": "http://localhost:3000/dashboard/search",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/settings",
+          "url": "http://localhost:3000/dashboard/settings",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1335,
+          "timing": {
+            "domContentLoaded": 1228,
+            "loadEvent": 0,
+            "ttfb": 1103.0000000000002
+          },
+          "actualUrl": "http://localhost:3000/dashboard/settings",
+          "isAuthRedirect": false
+        }
+      ],
+      "axe": {
+        "violationCount": 2,
+        "counts": {
+          "minor": 0,
+          "moderate": 2,
+          "serious": 0,
+          "critical": 0
+        },
+        "passes": 22,
+        "incomplete": 2
+      },
+      "lighthouse": {},
+      "status": "passed",
+      "errors": [],
+      "authenticated": true
+    },
+    {
+      "config": {
+        "browser": "webkit",
+        "viewport": "1920x1080",
+        "device": "none",
+        "net": "Good3G"
+      },
+      "timestamp": "2025-10-04T20:28:06.389Z",
+      "runs": [
+        {
+          "route": "/",
+          "url": "http://localhost:3000/",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 668,
+          "timing": {
+            "domContentLoaded": 637,
+            "loadEvent": 0,
+            "ttfb": 486
+          },
+          "actualUrl": "http://localhost:3000/",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/auth/login",
+          "url": "http://localhost:3000/auth/login",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 603,
+          "timing": {
+            "domContentLoaded": 583,
+            "loadEvent": 0,
+            "ttfb": 420.00000000000006
+          },
+          "actualUrl": "http://localhost:3000/auth/login",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/auth/sign-up",
+          "url": "http://localhost:3000/auth/sign-up",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 811,
+          "timing": {
+            "domContentLoaded": 797,
+            "loadEvent": 0,
+            "ttfb": 376
+          },
+          "actualUrl": "http://localhost:3000/auth/sign-up",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/auth/sign-up-success",
+          "url": "http://localhost:3000/auth/sign-up-success",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 519,
+          "timing": {
+            "domContentLoaded": 508,
+            "loadEvent": 0,
+            "ttfb": 356
+          },
+          "actualUrl": "http://localhost:3000/auth/sign-up-success",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard",
+          "url": "http://localhost:3000/dashboard",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 2181,
+          "timing": {
+            "domContentLoaded": 2160,
+            "loadEvent": 0,
+            "ttfb": 1927
+          },
+          "actualUrl": "http://localhost:3000/dashboard",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/agent-finder",
+          "url": "http://localhost:3000/dashboard/agent-finder",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1321,
+          "timing": {
+            "domContentLoaded": 1244,
+            "loadEvent": 0,
+            "ttfb": 1062
+          },
+          "actualUrl": "http://localhost:3000/dashboard/agent-finder",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/analysis",
+          "url": "http://localhost:3000/dashboard/analysis",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1375,
+          "timing": {
+            "domContentLoaded": 1297,
+            "loadEvent": 0,
+            "ttfb": 1038
+          },
+          "actualUrl": "http://localhost:3000/dashboard/analysis",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/calculator",
+          "url": "http://localhost:3000/dashboard/calculator",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1324,
+          "timing": {
+            "domContentLoaded": 1249,
+            "loadEvent": 0,
+            "ttfb": 1084.0000000000002
+          },
+          "actualUrl": "http://localhost:3000/dashboard/calculator",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/chat-assistant",
+          "url": "http://localhost:3000/dashboard/chat-assistant",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1219,
+          "timing": {
+            "domContentLoaded": 1172,
+            "loadEvent": 0,
+            "ttfb": 985
+          },
+          "actualUrl": "http://localhost:3000/dashboard/chat-assistant",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/favorites",
+          "url": "http://localhost:3000/dashboard/favorites",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1184,
+          "timing": {
+            "domContentLoaded": 1131,
+            "loadEvent": 0,
+            "ttfb": 979
+          },
+          "actualUrl": "http://localhost:3000/dashboard/favorites",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/market-insights",
+          "url": "http://localhost:3000/dashboard/market-insights",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1396,
+          "timing": {
+            "domContentLoaded": 1271.0000000000002,
+            "loadEvent": 0,
+            "ttfb": 1063
+          },
+          "actualUrl": "http://localhost:3000/dashboard/market-insights",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/portfolio",
+          "url": "http://localhost:3000/dashboard/portfolio",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1389,
+          "timing": {
+            "domContentLoaded": 1341,
+            "loadEvent": 0,
+            "ttfb": 1185
+          },
+          "actualUrl": "http://localhost:3000/dashboard/portfolio",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/profile",
+          "url": "http://localhost:3000/dashboard/profile",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1297,
+          "timing": {
+            "domContentLoaded": 1256,
+            "loadEvent": 0,
+            "ttfb": 1097
+          },
+          "actualUrl": "http://localhost:3000/dashboard/profile",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/risk-map",
+          "url": "http://localhost:3000/dashboard/risk-map",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1309,
+          "timing": {
+            "domContentLoaded": 1244,
+            "loadEvent": 0,
+            "ttfb": 1072
+          },
+          "actualUrl": "http://localhost:3000/dashboard/risk-map",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/search",
+          "url": "http://localhost:3000/dashboard/search",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1536,
+          "timing": {
+            "domContentLoaded": 1456,
+            "loadEvent": 0,
+            "ttfb": 1263
+          },
+          "actualUrl": "http://localhost:3000/dashboard/search",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/settings",
+          "url": "http://localhost:3000/dashboard/settings",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1437,
+          "timing": {
+            "domContentLoaded": 1354,
+            "loadEvent": 0,
+            "ttfb": 1180
+          },
+          "actualUrl": "http://localhost:3000/dashboard/settings",
+          "isAuthRedirect": false
+        }
+      ],
+      "axe": {
+        "violationCount": 2,
+        "counts": {
+          "minor": 0,
+          "moderate": 2,
+          "serious": 0,
+          "critical": 0
+        },
+        "passes": 22,
+        "incomplete": 2
+      },
+      "lighthouse": {},
+      "status": "passed",
+      "errors": [],
+      "authenticated": true
+    },
+    {
+      "config": {
+        "browser": "webkit",
+        "viewport": "1920x1080",
+        "device": "none",
+        "net": "Regular4G"
+      },
+      "timestamp": "2025-10-04T20:28:36.898Z",
+      "runs": [
+        {
+          "route": "/",
+          "url": "http://localhost:3000/",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 604,
+          "timing": {
+            "domContentLoaded": 563,
+            "loadEvent": 0,
+            "ttfb": 429.00000000000006
+          },
+          "actualUrl": "http://localhost:3000/",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/auth/login",
+          "url": "http://localhost:3000/auth/login",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 558,
+          "timing": {
+            "domContentLoaded": 498,
+            "loadEvent": 0,
+            "ttfb": 367
+          },
+          "actualUrl": "http://localhost:3000/auth/login",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/auth/sign-up",
+          "url": "http://localhost:3000/auth/sign-up",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 652,
+          "timing": {
+            "domContentLoaded": 594,
+            "loadEvent": 0,
+            "ttfb": 486
+          },
+          "actualUrl": "http://localhost:3000/auth/sign-up",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/auth/sign-up-success",
+          "url": "http://localhost:3000/auth/sign-up-success",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 645,
+          "timing": {
+            "domContentLoaded": 616,
+            "loadEvent": 0,
+            "ttfb": 422
+          },
+          "actualUrl": "http://localhost:3000/auth/sign-up-success",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard",
+          "url": "http://localhost:3000/dashboard",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 3382,
+          "timing": {
+            "domContentLoaded": 3129,
+            "loadEvent": 0,
+            "ttfb": 2471
+          },
+          "actualUrl": "http://localhost:3000/dashboard",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/agent-finder",
+          "url": "http://localhost:3000/dashboard/agent-finder",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 2792,
+          "timing": {
+            "domContentLoaded": 2571,
+            "loadEvent": 0,
+            "ttfb": 2416
+          },
+          "actualUrl": "http://localhost:3000/dashboard/agent-finder",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/analysis",
+          "url": "http://localhost:3000/dashboard/analysis",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1344,
+          "timing": {
+            "domContentLoaded": 1299,
+            "loadEvent": 0,
+            "ttfb": 1175
+          },
+          "actualUrl": "http://localhost:3000/dashboard/analysis",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/calculator",
+          "url": "http://localhost:3000/dashboard/calculator",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1588,
+          "timing": {
+            "domContentLoaded": 1409,
+            "loadEvent": 0,
+            "ttfb": 1224
+          },
+          "actualUrl": "http://localhost:3000/dashboard/calculator",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/chat-assistant",
+          "url": "http://localhost:3000/dashboard/chat-assistant",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1402,
+          "timing": {
+            "domContentLoaded": 1313,
+            "loadEvent": 0,
+            "ttfb": 1134
+          },
+          "actualUrl": "http://localhost:3000/dashboard/chat-assistant",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/favorites",
+          "url": "http://localhost:3000/dashboard/favorites",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 1798,
+          "timing": {
+            "domContentLoaded": 1659,
+            "loadEvent": 0,
+            "ttfb": 1325
+          },
+          "actualUrl": "http://localhost:3000/dashboard/favorites",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/market-insights",
+          "url": "http://localhost:3000/dashboard/market-insights",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 4267,
+          "timing": {
+            "domContentLoaded": 3237,
+            "loadEvent": 0,
+            "ttfb": 3123
+          },
+          "actualUrl": "http://localhost:3000/dashboard/market-insights",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/portfolio",
+          "url": "http://localhost:3000/dashboard/portfolio",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 2548,
+          "timing": {
+            "domContentLoaded": 2517,
+            "loadEvent": 0,
+            "ttfb": 2404
+          },
+          "actualUrl": "http://localhost:3000/dashboard/portfolio",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/profile",
+          "url": "http://localhost:3000/dashboard/profile",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 2210,
+          "timing": {
+            "domContentLoaded": 2182,
+            "loadEvent": 0,
+            "ttfb": 2063
+          },
+          "actualUrl": "http://localhost:3000/dashboard/profile",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/risk-map",
+          "url": "http://localhost:3000/dashboard/risk-map",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 5391,
+          "timing": {
+            "domContentLoaded": 5332,
+            "loadEvent": 0,
+            "ttfb": 5195
+          },
+          "actualUrl": "http://localhost:3000/dashboard/risk-map",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/search",
+          "url": "http://localhost:3000/dashboard/search",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 2599,
+          "timing": {
+            "domContentLoaded": 2557,
+            "loadEvent": 0,
+            "ttfb": 2322
+          },
+          "actualUrl": "http://localhost:3000/dashboard/search",
+          "isAuthRedirect": false
+        },
+        {
+          "route": "/dashboard/settings",
+          "url": "http://localhost:3000/dashboard/settings",
+          "httpStatus": 200,
+          "ok": true,
+          "responseTimeMs": 2429,
+          "timing": {
+            "domContentLoaded": 2394,
+            "loadEvent": 0,
+            "ttfb": 2245
+          },
+          "actualUrl": "http://localhost:3000/dashboard/settings",
+          "isAuthRedirect": false
+        }
+      ],
+      "axe": {
+        "violationCount": 2,
+        "counts": {
+          "minor": 0,
+          "moderate": 2,
+          "serious": 0,
+          "critical": 0
+        },
+        "passes": 22,
+        "incomplete": 2
+      },
+      "lighthouse": {},
+      "status": "passed",
+      "errors": [],
+      "authenticated": true
+    }
+  ]
+}
