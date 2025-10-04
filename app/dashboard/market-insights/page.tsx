@@ -22,7 +22,6 @@ import {
 interface MarketData {
   year: number
   month: number
-  state: string
   median_listing_price: number
   average_listing_price: number
   median_listing_price_per_square_foot: number
@@ -67,22 +66,36 @@ export default function MarketInsightsPage() {
       .order("year", { ascending: true })
       .order("month", { ascending: true })
 
-    // Fetch historical data
+    // First, fetch the state ID from the state_lookup table
+    const { data: stateData, error: stateError } = await supabase
+      .from("state_lookup")
+      .select("state_id")
+      .eq("state", selectedCity)
+      .single();
+
+    if (stateError) {
+      console.error("Error fetching state ID:", stateError);
+      return;
+    }
+
+    const stateID = stateData?.state_id;
+
+    // Then fetch historical data using the state ID
     const { data: historicalData, error: historicalError } = await supabase
       .from("state_market")
       .select(`
-        year,
-        month,
-        state,
-        median_listing_price,
-        average_listing_price,
-        median_listing_price_per_square_foot,
-        total_listing_count,
-        median_days_on_market
+      year,
+      month,
+      state_id,
+      median_listing_price,
+      average_listing_price,
+      median_listing_price_per_square_foot,
+      total_listing_count,
+      median_days_on_market
       `)
-      .eq("state", selectedCity)
+      .eq("state_id", stateID)
       .order("year", { ascending: true })
-      .order("month", { ascending: true })
+      .order("month", { ascending: true });
 
     if (predictionError) {
       console.error("Error fetching prediction data:", predictionError)
