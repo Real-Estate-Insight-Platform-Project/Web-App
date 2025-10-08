@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge"
 import { Heart, MapPin, Bed, Bath, Square, Calendar, ExternalLink, ArrowLeft } from "lucide-react"
 import Image from "next/image"
 import { PropertyDetailProps } from "../types"
+import dynamic from "next/dynamic"
 
 export default function PropertyDetailView({
   property,
@@ -15,6 +16,10 @@ export default function PropertyDetailView({
   onViewDetails
 }: PropertyDetailProps) {
 
+  const PropertyLocationMap = dynamic(() => import('./PropertyLocationMap.tsx'), {
+  ssr: false, // This line is crucial
+  loading: () => <p>Loading map...</p>
+});
   const formatUrl = (url: string | null) => {
     if (!url) return null;
     
@@ -43,22 +48,38 @@ export default function PropertyDetailView({
       <Card className="overflow-hidden">
         {/* Property Image */}
         <div className="relative h-80 w-full">
-          {property.property_image ? (
-            <Image
-              src={property.property_image}
-              alt={property.title}
-              fill
-              className="object-cover"
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 70vw"
-            />
-          ) : (
-            <div className="h-full bg-gradient-to-br from-red-100 to-red-200 flex items-center justify-center">
-              <div className="text-center text-muted-foreground">
-                <MapPin className="h-12 w-12 mx-auto mb-2" />
-                <p className="text-lg">No Image Available</p>
-              </div>
+          <div className="flex h-96 w-full">
+
+            <div className="relative w-[70%]">
+
+              {property.property_image ? (
+                <Image
+                  src={property.property_image}
+                  alt={property.title}
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 70vw"
+                />
+              ) : (
+                <div className="h-full bg-gradient-to-br from-red-100 to-red-200 flex items-center justify-center">
+                  <div className="text-center text-muted-foreground">
+                    <MapPin className="h-12 w-12 mx-auto mb-2" />
+                    <p className="text-lg">No Image Available</p>
+                  </div>
+                </div>
+              )}
             </div>
-          )}
+            <div className="w-[30%] h-full">
+                {property.latitude_coordinates && property.longitude_coordinates ? (
+                  <PropertyLocationMap 
+                    latitude={property.latitude_coordinates} 
+                    longitude={property.longitude_coordinates} 
+                  />
+                ) : (
+                  <div>Location not available</div>
+                )}
+            </div>
+          </div>
           
           {/* Favorite Button */}
           <Button
