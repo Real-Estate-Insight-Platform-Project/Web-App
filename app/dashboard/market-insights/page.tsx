@@ -58,18 +58,10 @@ export default function MarketInsightsPage() {
   const fetchMarketData = async () => {
     setLoading(true)
     
-    // Fetch all predictions for the selected state
-    const { data: predictionData, error: predictionError } = await supabase
-      .from("predictions")
-      .select("*")
-      .eq("state", selectedCity)
-      .order("year", { ascending: true })
-      .order("month", { ascending: true })
-
     // First, fetch the state ID from the state_lookup table
     const { data: stateData, error: stateError } = await supabase
       .from("state_lookup")
-      .select("state_id")
+      .select("state_id, state_num")
       .eq("state", selectedCity)
       .single();
 
@@ -79,6 +71,15 @@ export default function MarketInsightsPage() {
     }
 
     const stateID = stateData?.state_id;
+    const stateNum = stateData?.state_num;
+
+    // Fetch all predictions for the selected state
+    const { data: predictionData, error: predictionError } = await supabase
+      .from("predictions")
+      .select("*")
+      .eq("state_num", stateNum)
+      .order("year", { ascending: true })
+      .order("month", { ascending: true })
 
     // Then fetch historical data using the state ID
     const { data: historicalData, error: historicalError } = await supabase
@@ -86,14 +87,14 @@ export default function MarketInsightsPage() {
       .select(`
       year,
       month,
-      state_id,
+      state_num,
       median_listing_price,
       average_listing_price,
       median_listing_price_per_square_foot,
       total_listing_count,
       median_days_on_market
       `)
-      .eq("state_id", stateID)
+      .eq("state_num", stateNum)
       .order("year", { ascending: true })
       .order("month", { ascending: true });
 
