@@ -14,8 +14,8 @@ export interface Property {
   listing_status: string
   property_image: string | null
   property_hyperlink: string | null
-  latitude?: number
-  longitude?: number
+  latitude_coordinates?: number
+  longitude_coordinates?: number
   similarity_score?: number
 }
 
