@@ -1,5 +1,23 @@
 const RECOMMENDATION_API_URL = process.env.NEXT_PUBLIC_RECOMMENDATION_API_URL || 'http://localhost:8000';
 
+// It's a good practice to define the structure of your property object
+// This should match the structure of the data you get from your Supabase table
+export interface Property {
+  id: string;
+  address: string;
+  city: string;
+  state: string;
+  zip_code: string;
+  price: number;
+  bedrooms: number;
+  bathrooms: number;
+  square_feet: number;
+  property_type: string;
+  property_image: string | null;
+  // Add any other fields you have for a property
+}
+
+
 export interface RecommendationRequest {
   property_id: string;
   filters?: {
@@ -14,14 +32,14 @@ export interface RecommendationRequest {
 }
 
 export interface RecommendationResponse {
-  target_property: any;
-  similar_properties: any[];
+  target_property: Property;
+  similar_properties: Property[];
   total_recommendations: number;
 }
 
 export async function getSimilarProperties(
-  propertyId: string, 
-  filters?: any, 
+  propertyId: string,
+  filters?: any,
   limit: number = 6
 ): Promise<RecommendationResponse> {
   try {
