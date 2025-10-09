@@ -75,7 +75,7 @@ export default function MarketInsightsPage() {
 
     // Fetch all predictions for the selected state
     const { data: predictionData, error: predictionError } = await supabase
-      .from("predictions")
+      .from("state_predictions")
       .select("*")
       .eq("state_num", stateNum)
       .order("year", { ascending: true })
