@@ -4,7 +4,6 @@ import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { createClient } from "@/lib/supabase/client"
 import { TrendingUp, TrendingDown, Minus, BarChart3, Home, DollarSign, Calendar } from "lucide-react"
 import { 
   LineChart, 
@@ -49,8 +48,6 @@ export default function MarketInsightsPage() {
   const [selectedCity, setSelectedCity] = useState("Alaska")
   const [loading, setLoading] = useState(true)
 
-  const supabase = createClient()
-
   useEffect(() => {
     fetchMarketData()
   }, [selectedCity])
@@ -58,115 +55,25 @@ export default function MarketInsightsPage() {
   const fetchMarketData = async () => {
     setLoading(true)
     
-    // First, fetch the state ID from the state_lookup table
-    const { data: stateData, error: stateError } = await supabase
-      .from("state_lookup")
-      .select("state_id, state_num")
-      .eq("state", selectedCity)
-      .single();
-
-    if (stateError) {
-      console.error("Error fetching state ID:", stateError);
-      return;
-    }
-
-    const stateID = stateData?.state_id;
-    const stateNum = stateData?.state_num;
-
-    // Fetch all predictions for the selected state
-    const { data: predictionData, error: predictionError } = await supabase
-      .from("state_predictions")
-      .select("*")
-      .eq("state_num", stateNum)
-      .order("year", { ascending: true })
-      .order("month", { ascending: true })
-
-    // Then fetch historical data using the state ID
-    const { data: historicalData, error: historicalError } = await supabase
-      .from("state_market")
-      .select(`
-      year,
-      month,
-      state_num,
-      median_listing_price,
-      average_listing_price,
-      median_listing_price_per_square_foot,
-      total_listing_count,
-      median_days_on_market
-      `)
-      .eq("state_num", stateNum)
-      .order("year", { ascending: true })
-      .order("month", { ascending: true });
-
-    if (predictionError) {
-      console.error("Error fetching prediction data:", predictionError)
-    }
-
-    if (historicalError) {
-      console.error("Error fetching historical data:", historicalError)
-    }
-
-    // Set latest prediction data (closest future prediction for insights)
-    if (predictionData && predictionData.length > 0) {
-      // Find the closest future prediction
-      const currentDate = new Date()
-      const currentYear = currentDate.getFullYear()
-      const currentMonth = currentDate.getMonth() + 1 // getMonth() returns 0-11
+    try {
+      const response = await fetch(`/api/market-insights?city=${encodeURIComponent(selectedCity)}`)
       
-      const closestPrediction = predictionData.find(pred => 
-        pred.year > currentYear || (pred.year === currentYear && pred.month >= currentMonth)
-      ) || predictionData[predictionData.length - 1] // fallback to latest if no future predictions
-      
-      console.log("Closest future prediction:", closestPrediction)
-      setMarketData(closestPrediction)
-    } else {
-      setMarketData(null)
-    }
-
-    // Set historical data and format for charts
-    if (historicalData && historicalData.length > 0) {
-      console.log("Historical data fetched successfully:", historicalData.length, "records")
-      setHistoricalData(historicalData)
-      
-      // Format data for charts
-      const formattedData: ChartData[] = historicalData.map(item => {
-        const date = new Date(item.year, item.month - 1);
-        return {
-          date: date.toISOString(),
-          month: date.toLocaleDateString('en-US', { month: 'short' }),
-          monthYear: date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' }),
-          median_listing_price: item.median_listing_price,
-          average_listing_price: item.average_listing_price,
-          total_listing_count: item.total_listing_count,
-          median_days_on_market: item.median_days_on_market,
-          isForecast: false
-        };
-      });
-
-      // Add all prediction points as forecast data
-      if (predictionData && predictionData.length > 0) {
-        predictionData.forEach(prediction => {
-          const forecastDate = new Date(prediction.year, prediction.month - 1);
-          formattedData.push({
-            date: forecastDate.toISOString(),
-            month: forecastDate.toLocaleDateString('en-US', { month: 'short' }),
-            monthYear: forecastDate.toLocaleDateString('en-US', { month: 'short', year: '2-digit' }),
-            median_listing_price: prediction.median_listing_price,
-            average_listing_price: prediction.average_listing_price,
-            total_listing_count: prediction.total_listing_count,
-            median_days_on_market: prediction.median_days_on_market,
-            isForecast: true
-          });
-        });
+      if (!response.ok) {
+        console.error("Error fetching market data:", response.statusText)
+        setLoading(false)
+        return
       }
+
+      const data = await response.json()
       
-      // Sort by date
-      formattedData.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-      
-      setChartData(formattedData);
+      setMarketData(data.marketData)
+      setHistoricalData(data.historicalData)
+      setChartData(data.chartData)
+    } catch (error) {
+      console.error("Error fetching market data:", error)
+    } finally {
+      setLoading(false)
     }
-    
-    setLoading(false)
   }
 
   const getTrendIcon = (trend: string | undefined) => {
