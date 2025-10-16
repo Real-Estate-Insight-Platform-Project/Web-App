@@ -10,6 +10,8 @@ const bigquery = new BigQuery({
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams
   const selectedCity = searchParams.get("city") || "Alaska"
+  const selectedCounty = searchParams.get("county") || null
+  const isCountyView = selectedCounty && selectedCounty !== "none"
 
   try {
     // First, fetch the state ID from the state_lookup table
@@ -31,35 +33,84 @@ export async function GET(request: NextRequest) {
     }
 
     const stateNum = stateRows[0].state_num
+    
+    // Fetch county data if a county was specified
+    let countyNum = null
+    if (isCountyView) {
+      const [countyRows] = await bigquery.query({
+        query: `
+          SELECT county_num
+          FROM \`fourth-webbing-474805-j5.real_estate_market.county_lookup\`
+          WHERE county_name = @countyName AND state_num = @stateNum
+          LIMIT 1
+        `,
+        params: { 
+          countyName: selectedCounty,
+          stateNum 
+        }
+      })
+      
+      if (!countyRows || countyRows.length === 0) {
+        return NextResponse.json(
+          { error: "County not found" },
+          { status: 404 }
+        )
+      }
+      
+      countyNum = countyRows[0].county_num
+    }
 
-    // Fetch all predictions for the selected state
+    // Fetch predictions based on whether we're looking at state or county
     const [predictionRows] = await bigquery.query({
-      query: `
-        SELECT *
-        FROM \`fourth-webbing-474805-j5.real_estate_market.state_predictions\`
-        WHERE state_num = @stateNum
-        ORDER BY year ASC, month ASC
-      `,
-      params: { stateNum }
+      query: isCountyView 
+        ? `
+          SELECT *
+          FROM \`fourth-webbing-474805-j5.real_estate_market.county_predictions\`
+          WHERE county_num = @countyNum AND state_num = @stateNum
+          ORDER BY year ASC, month ASC
+        `
+        : `
+          SELECT *
+          FROM \`fourth-webbing-474805-j5.real_estate_market.state_predictions\`
+          WHERE state_num = @stateNum
+          ORDER BY year ASC, month ASC
+        `,
+      params: isCountyView ? { countyNum, stateNum } : { stateNum }
     })
 
-    // Then fetch historical data using the state ID
+    // Fetch historical data based on whether we're looking at state or county
     const [historicalRows] = await bigquery.query({
-      query: `
-        SELECT
-          year,
-          month,
-          state_num,
-          median_listing_price,
-          average_listing_price,
-          median_listing_price_per_square_foot,
-          total_listing_count,
-          median_days_on_market
-        FROM \`fourth-webbing-474805-j5.real_estate_market.state_market\`
-        WHERE state_num = @stateNum
-        ORDER BY year ASC, month ASC
-      `,
-      params: { stateNum }
+      query: isCountyView
+        ? `
+          SELECT
+            year,
+            month,
+            county_num,
+            state_num,
+            median_listing_price,
+            average_listing_price,
+            median_listing_price_per_square_foot,
+            total_listing_count,
+            median_days_on_market
+          FROM \`fourth-webbing-474805-j5.real_estate_market.county_market\`
+          WHERE county_num = @countyNum AND state_num = @stateNum
+          ORDER BY year ASC, month ASC
+        `
+        : `
+          SELECT
+            year,
+            month,
+            state_num,
+            median_listing_price,
+            average_listing_price,
+            median_listing_price_per_square_foot,
+            total_listing_count,
+            median_days_on_market
+          FROM \`fourth-webbing-474805-j5.real_estate_market.state_market\`
+          WHERE state_num = @stateNum
+          ORDER BY year ASC, month ASC
+        `,
+      params: isCountyView ? { countyNum, stateNum } : { stateNum }
     })
 
     // Find the closest future prediction
@@ -135,6 +186,11 @@ export async function GET(request: NextRequest) {
       marketData: closestPrediction,
       historicalData: historicalRows || [],
       chartData: formattedData,
+      level: isCountyView ? 'county' : 'state',
+      locationInfo: {
+        state: selectedCity,
+        county: isCountyView ? selectedCounty : null
+      }
     })
   } catch (error) {
     console.error("Error in market insights API:", error)
