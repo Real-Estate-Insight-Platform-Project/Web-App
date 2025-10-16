@@ -4,9 +4,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { createClient } from "@/lib/supabase/server"
-import { redirect } from "next/navigation"
-import { Home, TrendingUp, DollarSign, BarChart3, ArrowUpRight, ArrowDownRight, Timer, Map, MapPin, ThumbsUp, PiggyBank } from "lucide-react"
+import { ArrowUpRight, ArrowDownRight, Timer, MapPin, ThumbsUp, PiggyBank } from "lucide-react"
 import { useEffect, useState } from "react"
 
 interface Property {
@@ -78,6 +76,32 @@ export default function DashboardPage() {
     buyerFriendlyCounties: []
   })
   
+  // Helper function to check if cached data is still valid
+  const isCacheValid = (timestamp: number, ttl: number) => {
+    return timestamp && Date.now() - timestamp < ttl
+  }
+
+  // Helper function to store data in localStorage with timestamp
+  const cacheData = (key: string, data: any) => {
+    const item = {
+      data,
+      timestamp: Date.now()
+    }
+    localStorage.setItem(key, JSON.stringify(item))
+  }
+
+  // Helper function to get cached data if valid
+  const getCachedData = (key: string, ttl: number) => {
+    const item = localStorage.getItem(key)
+    if (!item) return null
+
+    const parsedItem = JSON.parse(item)
+    if (isCacheValid(parsedItem.timestamp, ttl)) {
+      return parsedItem.data
+    }
+    return null
+  }
+
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true)
@@ -93,37 +117,87 @@ export default function DashboardPage() {
         }
         setUser(userData as User)
         
-        // Fetch profile data
-        const { data: profileData } = await supabase
+        // TTL constants (in milliseconds)
+        const PROFILE_TTL = 24 * 60 * 60 * 1000 // 24 hours
+        const PROPERTIES_TTL = 6 * 60 * 60 * 1000 // 6 hours
+        const MARKET_DATA_TTL = 12 * 60 * 60 * 1000 // 12 hours
+        const BUYER_INSIGHTS_TTL = 12 * 60 * 60 * 1000 // 12 hours
+
+        // Try to get profile data from cache first
+        const cachedProfile = getCachedData(`profile_${userData.id}`, PROFILE_TTL)
+        if (cachedProfile) {
+          setProfile(cachedProfile as UserProfile)
+        } else {
+          // Fetch profile data
+          const { data: profileData } = await supabase
+            .from("profiles")
+            .select("user_role, full_name")
+            .eq("id", userData.id)
+            .single()
+          
+          if (profileData) {
+            setProfile(profileData as UserProfile)
+            cacheData(`profile_${userData.id}`, profileData)
+          }
+        }
+        
+        // Try to get properties from cache first
+        const cachedProperties = getCachedData('dashboard_properties', PROPERTIES_TTL)
+        if (cachedProperties) {
+          setProperties(cachedProperties as Property[])
+        } else {
+          // Fetch properties
+          const { data: propertiesData } = await supabase
+            .from("properties")
+            .select("*")
+            .limit(3)
+          
+          if (propertiesData) {
+            setProperties(propertiesData as Property[] || [])
+            cacheData('dashboard_properties', propertiesData)
+          }
+        }
+        
+        // Try to get market data from cache first
+        const cachedMarketData = getCachedData('market_data_austin', MARKET_DATA_TTL)
+        if (cachedMarketData) {
+          setMarketData(cachedMarketData as MarketData)
+        } else {
+          // Fetch market data
+          const { data: marketDataRes } = await supabase
+            .from("market_analytics")
+            .select("*")
+            .eq("city", "Austin")
+            .order("month_year", { ascending: false })
+            .limit(1)
+            .single()
+          
+          if (marketDataRes) {
+            setMarketData(marketDataRes as MarketData)
+            cacheData('market_data_austin', marketDataRes)
+          }
+        }
+        
+        // Only fetch buyer insights if user is a buyer
+        const userRole = cachedProfile?.user_role || (await supabase
           .from("profiles")
-          .select("user_role, full_name")
+          .select("user_role")
           .eq("id", userData.id)
-          .single()
-        setProfile(profileData as UserProfile)
+          .single()).data?.user_role
         
-        // Fetch properties
-        const { data: propertiesData } = await supabase
-          .from("properties")
-          .select("*")
-          .limit(3)
-        setProperties(propertiesData as Property[] || [])
-        
-        // Fetch market data
-        const { data: marketDataRes } = await supabase
-          .from("market_analytics")
-          .select("*")
-          .eq("city", "Austin")
-          .order("month_year", { ascending: false })
-          .limit(1)
-          .single()
-        setMarketData(marketDataRes as MarketData)
-        
-        // Fetch buyer insights from our new API endpoint
-        if (profileData?.user_role === "buyer") {
-          const response = await fetch("/api/dashboard")
-          if (response.ok) {
-            const insightsData = await response.json()
-            setBuyerInsights(insightsData as BuyerInsights)
+        if (userRole === "buyer") {
+          // Try to get buyer insights from cache first
+          const cachedInsights = getCachedData('buyer_insights', BUYER_INSIGHTS_TTL)
+          if (cachedInsights) {
+            setBuyerInsights(cachedInsights as BuyerInsights)
+          } else {
+            // Fetch buyer insights from our API endpoint
+            const response = await fetch("/api/dashboard")
+            if (response.ok) {
+              const insightsData = await response.json()
+              setBuyerInsights(insightsData as BuyerInsights)
+              cacheData('buyer_insights', insightsData)
+            }
           }
         }
       } catch (error) {
