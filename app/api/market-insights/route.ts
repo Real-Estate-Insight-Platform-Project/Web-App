@@ -1,90 +1,94 @@
-import { createClient } from "@/lib/supabase/server"
+import { BigQuery } from "@google-cloud/bigquery"
 import { NextRequest, NextResponse } from "next/server"
+import * as path from "path"
+
+const bigquery = new BigQuery({
+  keyFilename: path.join(process.cwd(), "app/api/market-insights/service_keys.json"),
+  projectId: "fourth-webbing-474805-j5"
+})
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams
   const selectedCity = searchParams.get("city") || "Alaska"
 
   try {
-    const supabase = await createClient()
-
     // First, fetch the state ID from the state_lookup table
-    const { data: stateData, error: stateError } = await supabase
-      .from("state_lookup")
-      .select("state_id, state_num")
-      .eq("state", selectedCity)
-      .single()
+    const [stateRows] = await bigquery.query({
+      query: `
+        SELECT state_id, state_num
+        FROM \`fourth-webbing-474805-j5.real_estate_market.state_lookup\`
+        WHERE state = @state
+        LIMIT 1
+      `,
+      params: { state: selectedCity }
+    })
 
-    if (stateError) {
-      console.error("Error fetching state ID:", stateError)
+    if (!stateRows || stateRows.length === 0) {
       return NextResponse.json(
-        { error: "Error fetching state data" },
-        { status: 500 }
+        { error: "State not found" },
+        { status: 404 }
       )
     }
 
-    const stateNum = stateData?.state_num
+    const stateNum = stateRows[0].state_num
 
     // Fetch all predictions for the selected state
-    const { data: predictionData, error: predictionError } = await supabase
-      .from("state_predictions")
-      .select("*")
-      .eq("state_num", stateNum)
-      .order("year", { ascending: true })
-      .order("month", { ascending: true })
+    const [predictionRows] = await bigquery.query({
+      query: `
+        SELECT *
+        FROM \`fourth-webbing-474805-j5.real_estate_market.state_predictions\`
+        WHERE state_num = @stateNum
+        ORDER BY year ASC, month ASC
+      `,
+      params: { stateNum }
+    })
 
     // Then fetch historical data using the state ID
-    const { data: historicalData, error: historicalError } = await supabase
-      .from("state_market")
-      .select(`
-        year,
-        month,
-        state_num,
-        median_listing_price,
-        average_listing_price,
-        median_listing_price_per_square_foot,
-        total_listing_count,
-        median_days_on_market
-      `)
-      .eq("state_num", stateNum)
-      .order("year", { ascending: true })
-      .order("month", { ascending: true })
-
-    if (predictionError) {
-      console.error("Error fetching prediction data:", predictionError)
-    }
-
-    if (historicalError) {
-      console.error("Error fetching historical data:", historicalError)
-    }
+    const [historicalRows] = await bigquery.query({
+      query: `
+        SELECT
+          year,
+          month,
+          state_num,
+          median_listing_price,
+          average_listing_price,
+          median_listing_price_per_square_foot,
+          total_listing_count,
+          median_days_on_market
+        FROM \`fourth-webbing-474805-j5.real_estate_market.state_market\`
+        WHERE state_num = @stateNum
+        ORDER BY year ASC, month ASC
+      `,
+      params: { stateNum }
+    })
 
     // Find the closest future prediction
     let closestPrediction = null
-    if (predictionData && predictionData.length > 0) {
+    if (predictionRows && predictionRows.length > 0) {
       const currentDate = new Date()
       const currentYear = currentDate.getFullYear()
       const currentMonth = currentDate.getMonth() + 1 // getMonth() returns 0-11
 
       closestPrediction =
-        predictionData.find(
-          (pred) =>
+        predictionRows.find(
+          (pred: any) =>
             pred.year > currentYear ||
             (pred.year === currentYear && pred.month >= currentMonth)
-        ) || predictionData[predictionData.length - 1] // fallback to latest if no future predictions
+        ) || predictionRows[predictionRows.length - 1] // fallback to latest if no future predictions
 
       console.log("Closest future prediction:", closestPrediction)
     }
 
     // Format data for charts
     let formattedData: any[] = []
-    if (historicalData && historicalData.length > 0) {
+    if (historicalRows && historicalRows.length > 0) {
       console.log(
         "Historical data fetched successfully:",
-        historicalData.length,
+        historicalRows.length,
         "records"
       )
 
-      formattedData = historicalData.map((item) => {
+      formattedData = historicalRows.map((item: any) => {
         const date = new Date(item.year, item.month - 1)
         return {
           date: date.toISOString(),
@@ -102,8 +106,8 @@ export async function GET(request: NextRequest) {
       })
 
       // Add all prediction points as forecast data
-      if (predictionData && predictionData.length > 0) {
-        predictionData.forEach((prediction) => {
+      if (predictionRows && predictionRows.length > 0) {
+        predictionRows.forEach((prediction: any) => {
           const forecastDate = new Date(prediction.year, prediction.month - 1)
           formattedData.push({
             date: forecastDate.toISOString(),
@@ -129,7 +133,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       marketData: closestPrediction,
-      historicalData: historicalData || [],
+      historicalData: historicalRows || [],
       chartData: formattedData,
     })
   } catch (error) {

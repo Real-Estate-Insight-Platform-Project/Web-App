@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { TrendingUp, TrendingDown, Minus, BarChart3, Home, DollarSign, Calendar } from "lucide-react"
+import { TrendingUp, TrendingDown, Minus, BarChart3, Home, DollarSign, Calendar, Search } from "lucide-react"
 import { 
   LineChart, 
   Line, 
@@ -188,12 +188,28 @@ export default function MarketInsightsPage() {
           <p className="text-muted-foreground mt-2">Real-time market analytics and trends</p>
         </div>
 
-        <div className="w-48">
+        <div className="w-64">
           <Select value={selectedCity} onValueChange={setSelectedCity}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select city" />
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Select state" />
             </SelectTrigger>
             <SelectContent>
+                <div className="flex items-center border-b px-3 pb-2">
+                  <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
+                  <input
+                    className="flex h-8 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
+                    placeholder="Search state..."
+                    onChange={(e) => {
+                      const searchBox = e.currentTarget;
+                      const items = document.querySelectorAll('[role="option"]');
+                      items.forEach((item: any) => {
+                        const text = item.textContent || '';
+                        const matches = text.toLowerCase().includes(searchBox.value.toLowerCase());
+                        item.style.display = matches ? '' : 'none';
+                      });
+                    }}
+                  />
+                </div>
                 <SelectItem value="Alaska">Alaska</SelectItem>
                 <SelectItem value="Alabama">Alabama</SelectItem>
                 <SelectItem value="Arkansas">Arkansas</SelectItem>
