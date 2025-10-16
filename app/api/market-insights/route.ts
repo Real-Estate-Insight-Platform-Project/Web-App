@@ -3,9 +3,10 @@ import { NextRequest, NextResponse } from "next/server"
 import * as path from "path"
 
 const bigquery = new BigQuery({
-  keyFilename: path.join(process.cwd(), "app/api/market-insights/service_keys.json"),
+  keyFilename: path.join(process.cwd(), "service_keys.json"),
   projectId: "fourth-webbing-474805-j5"
 })
+
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams
