@@ -51,6 +51,45 @@ interface BuyerInsights {
   buyerFriendlyCounties: CountyData[]
 }
 
+interface GrowthStateData {
+  state: string
+  median_listing_price: number
+  median_listing_price_mm: number
+}
+
+interface GrowthCountyData {
+  county_name: string
+  state: string
+  median_listing_price: number
+  median_listing_price_mm: number
+}
+
+interface ConsistentGrowthStateData {
+  state: string
+  growth_3month: number
+}
+
+interface ConsistentGrowthCountyData {
+  county_name: string
+  state: string
+  growth_3month: number
+}
+
+interface StableStateData {
+  state: string
+  price_stddev: number
+  price_avg: number
+  coefficient_of_variation: number
+}
+
+interface InvestorInsights {
+  highestGrowthStates: GrowthStateData[]
+  highestGrowthCounties: GrowthCountyData[]
+  consistentGrowthStates: ConsistentGrowthStateData[]
+  consistentGrowthCounties: ConsistentGrowthCountyData[]
+  stableStates: StableStateData[]
+}
+
 interface UserProfile {
   user_role: string
   full_name: string
@@ -74,6 +113,13 @@ export default function DashboardPage() {
     fastSellingStates: [],
     fastSellingCounties: [],
     buyerFriendlyCounties: []
+  })
+  const [investorInsights, setInvestorInsights] = useState<InvestorInsights>({
+    highestGrowthStates: [],
+    highestGrowthCounties: [],
+    consistentGrowthStates: [],
+    consistentGrowthCounties: [],
+    stableStates: []
   })
   
   // Helper function to check if cached data is still valid
@@ -178,12 +224,15 @@ export default function DashboardPage() {
           }
         }
         
-        // Only fetch buyer insights if user is a buyer
+        // Get user role for conditional data fetching
         const userRole = cachedProfile?.user_role || (await supabase
           .from("profiles")
           .select("user_role")
           .eq("id", userData.id)
           .single()).data?.user_role
+        
+        // Define constants for investor data
+        const INVESTOR_INSIGHTS_TTL = 12 * 60 * 60 * 1000 // 12 hours
         
         if (userRole === "buyer") {
           // Try to get buyer insights from cache first
@@ -197,6 +246,32 @@ export default function DashboardPage() {
               const insightsData = await response.json()
               setBuyerInsights(insightsData as BuyerInsights)
               cacheData('buyer_insights', insightsData)
+            }
+          }
+        } else if (userRole === "investor") {
+          // Try to get investor insights from cache first
+          const cachedInvestorInsights = getCachedData('investor_insights', INVESTOR_INSIGHTS_TTL)
+          if (cachedInvestorInsights) {
+            setInvestorInsights(cachedInvestorInsights as InvestorInsights)
+          } else {
+            // Fetch investor insights from our API endpoint with investor role parameter
+            const response = await fetch("/api/dashboard?role=investor")
+            if (response.ok) {
+              const insightsData = await response.json()
+              setInvestorInsights({
+                highestGrowthStates: insightsData.highestGrowthStates || [],
+                highestGrowthCounties: insightsData.highestGrowthCounties || [],
+                consistentGrowthStates: insightsData.consistentGrowthStates || [],
+                consistentGrowthCounties: insightsData.consistentGrowthCounties || [],
+                stableStates: insightsData.stableStates || []
+              })
+              cacheData('investor_insights', {
+                highestGrowthStates: insightsData.highestGrowthStates || [],
+                highestGrowthCounties: insightsData.highestGrowthCounties || [],
+                consistentGrowthStates: insightsData.consistentGrowthStates || [],
+                consistentGrowthCounties: insightsData.consistentGrowthCounties || [],
+                stableStates: insightsData.stableStates || []
+              })
             }
           }
         }
@@ -461,104 +536,167 @@ export default function DashboardPage() {
           </div>
         </div>
       ) : (
-        // Investor dashboard (keeping the original content)
-        <div className="grid gap-6 lg:grid-cols-2">
-          {/* Recent Properties */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Recent Opportunities</CardTitle>
-              <CardDescription>New investment opportunities</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {properties && properties.length > 0 ? (
-                properties.slice(0, 3).map((property: any) => (
-                  <div key={property.id} className="flex items-center justify-between p-3 border rounded-lg">
-                    <div className="flex-1">
-                      <h4 className="font-medium">{property.title}</h4>
-                      <p className="text-sm text-muted-foreground">
-                        {property.city}, {property.state}
-                      </p>
-                      <div className="flex items-center space-x-2 mt-1">
-                        <Badge variant="secondary">{property.property_type}</Badge>
-                        <span className="text-sm text-muted-foreground">
-                          {property.bedrooms}bd • {property.bathrooms}ba
+        // Investor dashboard with enhanced insights
+        <div className="space-y-8">
+          {/* Investor Growth Insights - States & Counties */}
+          <div className="grid gap-6 lg:grid-cols-2">
+            {/* States with Highest Growth */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Top 5 States with Highest Price Growth</CardTitle>
+                <CardDescription>Best performing state markets</CardDescription>
+              </CardHeader>
+              <CardContent className="px-2">
+                <div className="space-y-2">
+                  {investorInsights.highestGrowthStates.map((state, idx) => (
+                    <div key={idx} className="flex items-center justify-between p-2 border rounded-md bg-white bg-opacity-60 hover:bg-opacity-100 transition-all">
+                      <div className="flex items-center">
+                        <span className="flex items-center justify-center w-6 h-6 rounded-full bg-green-100 text-green-800 text-xs font-bold mr-2">
+                          {idx + 1}
                         </span>
+                        <span className="font-medium">{state.state}</span>
+                      </div>
+                      <div className="flex items-center text-green-700">
+                        <ArrowUpRight className="h-4 w-4 mr-1" />
+                        <span>{state.median_listing_price_mm.toFixed(2)}%</span>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <p className="font-semibold">${property.price?.toLocaleString()}</p>
-                      <p className="text-sm text-muted-foreground">
-                        ${Math.round(property.price / property.square_feet)}/sqft
-                      </p>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className="text-center py-4 text-muted-foreground">No properties available</div>
-              )}
-              <Button variant="outline" className="w-full bg-transparent">
-                View All Properties
-              </Button>
-            </CardContent>
-          </Card>
+                  ))}
+                  
+                  {investorInsights.highestGrowthStates.length === 0 && (
+                    <div className="text-center py-4 text-muted-foreground text-sm">No growth data available</div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
 
-          {/* Market Insights */}
+            {/* Counties with Highest Growth */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Top 5 Counties with Highest Price Growth</CardTitle>
+                <CardDescription>Local markets with exceptional growth</CardDescription>
+              </CardHeader>
+              <CardContent className="px-2">
+                <div className="space-y-2">
+                  {investorInsights.highestGrowthCounties.map((county, idx) => (
+                    <div key={idx} className="flex items-center justify-between p-2 border rounded-md bg-white bg-opacity-60 hover:bg-opacity-100 transition-all">
+                      <div className="flex-1">
+                        <span className="font-medium">{county.county_name} County</span>
+                        <div className="text-xs text-muted-foreground">{county.state}</div>
+                      </div>
+                      <div className="flex items-center text-green-700">
+                        <ArrowUpRight className="h-4 w-4 mr-1" />
+                        <span>{county.median_listing_price_mm.toFixed(2)}%</span>
+                      </div>
+                    </div>
+                  ))}
+                  
+                  {investorInsights.highestGrowthCounties.length === 0 && (
+                    <div className="text-center py-4 text-muted-foreground text-sm">No growth data available</div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Consistent Growth - States & Counties */}
+          <div className="grid gap-6 lg:grid-cols-2">
+            {/* States with Consistent Growth */}
+            <Card>
+              <CardHeader>
+                <CardTitle>States with Consistent Growth</CardTitle>
+                <CardDescription>Sustained price increases over 3 months</CardDescription>
+              </CardHeader>
+              <CardContent className="px-2">
+                <div className="space-y-2">
+                  {investorInsights.consistentGrowthStates.map((state, idx) => (
+                    <div key={idx} className="flex items-center justify-between p-2 border rounded-md hover:bg-slate-50 transition-all">
+                      <div className="flex items-center">
+                        <span className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-100 text-blue-800 text-xs font-bold mr-2">
+                          {idx + 1}
+                        </span>
+                        <span className="font-medium">{state.state}</span>
+                      </div>
+                      <Badge variant="secondary" className="bg-blue-50 text-blue-700 border-blue-200">
+                        +{state.growth_3month.toFixed(2)}% (3mo)
+                      </Badge>
+                    </div>
+                  ))}
+                  
+                  {investorInsights.consistentGrowthStates.length === 0 && (
+                    <div className="text-center py-4 text-muted-foreground text-sm">No consistent growth data available</div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Counties with Consistent Growth */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Counties with Consistent Growth</CardTitle>
+                <CardDescription>Local markets with stable price appreciation</CardDescription>
+              </CardHeader>
+              <CardContent className="px-2">
+                <div className="space-y-2">
+                  {investorInsights.consistentGrowthCounties.map((county, idx) => (
+                    <div key={idx} className="flex items-center justify-between p-2 border rounded-md hover:bg-slate-50 transition-all">
+                      <div className="flex-1">
+                        <span className="font-medium">{county.county_name} County</span>
+                        <div className="text-xs text-muted-foreground">{county.state}</div>
+                      </div>
+                      <Badge variant="secondary" className="bg-blue-50 text-blue-700 border-blue-200">
+                        +{county.growth_3month.toFixed(2)}% (3mo)
+                      </Badge>
+                    </div>
+                  ))}
+                  
+                  {investorInsights.consistentGrowthCounties.length === 0 && (
+                    <div className="text-center py-4 text-muted-foreground text-sm">No consistent growth data available</div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Most Stable States */}
           <Card>
             <CardHeader>
-              <CardTitle>Market Insights</CardTitle>
-              <CardDescription>Latest trends in your area</CardDescription>
+              <CardTitle>Most Stable States (Low Price Volatility)</CardTitle>
+              <CardDescription>Markets with minimal price fluctuations over time</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              {marketData ? (
-                <>
-                  <div className="flex items-center justify-between p-3 border rounded-lg">
-                    <div>
-                      <h4 className="font-medium">Average Home Price</h4>
-                      <p className="text-sm text-muted-foreground">Austin, TX</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-semibold">${marketData.avg_price?.toLocaleString()}</p>
-                      <div className="flex items-center text-sm text-green-600">
-                        <ArrowUpRight className="h-3 w-3 mr-1" />
-                        {marketData.market_trend}
+            <CardContent className="px-2">
+              <div className="space-y-2">
+                {investorInsights.stableStates.map((state, idx) => (
+                  <div key={idx} className="flex items-center justify-between p-3 border rounded-md hover:bg-slate-50 transition-all">
+                    <div className="flex items-center">
+                      <span className="flex items-center justify-center w-6 h-6 rounded-full bg-amber-100 text-amber-800 text-xs font-bold mr-2">
+                        {idx + 1}
+                      </span>
+                      <div>
+                        <span className="font-medium">{state.state}</span>
+                        <div className="text-xs text-muted-foreground">Avg price: ${state.price_avg?.toLocaleString(undefined, {maximumFractionDigits: 0})}</div>
                       </div>
                     </div>
-                  </div>
-
-                  <div className="flex items-center justify-between p-3 border rounded-lg">
                     <div>
-                      <h4 className="font-medium">Price per Sq Ft</h4>
-                      <p className="text-sm text-muted-foreground">Market average</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-semibold">${marketData.price_per_sqft}</p>
-                      <p className="text-sm text-muted-foreground">+$12 from last month</p>
+                      <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">
+                        volatility: {(state.coefficient_of_variation * 100).toFixed(2)}%
+                      </Badge>
                     </div>
                   </div>
-
-                  <div className="flex items-center justify-between p-3 border rounded-lg">
-                    <div>
-                      <h4 className="font-medium">Days on Market</h4>
-                      <p className="text-sm text-muted-foreground">Average listing time</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-semibold">{marketData.days_on_market} days</p>
-                      <div className="flex items-center text-sm text-green-600">
-                        <ArrowDownRight className="h-3 w-3 mr-1" />
-                        Faster sales
-                      </div>
-                    </div>
-                  </div>
-                </>
-              ) : (
-                <div className="text-center py-4 text-muted-foreground">No market data available</div>
-              )}
-
-              <Button variant="outline" className="w-full bg-transparent" onClick={() => window.location.href = "/dashboard/market-insights"}>
-                View Detailed Market Report
-              </Button>
+                ))}
+                
+                {investorInsights.stableStates.length === 0 && (
+                  <div className="text-center py-4 text-muted-foreground text-sm">No stability data available</div>
+                )}
+              </div>
             </CardContent>
           </Card>
+          
+          <div className="flex justify-center">
+            <Button className="px-8" onClick={() => window.location.href = "/dashboard/market-insights"}>
+              Explore Detailed Market Insights
+            </Button>
+          </div>
         </div>
       )}
     </div>

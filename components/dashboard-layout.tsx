@@ -68,7 +68,6 @@ export function DashboardLayout({ children, userRole, userName, userEmail }: Das
     { href: "/dashboard/search", icon: Search, label: "Property Search" },
     { href: "/dashboard/analysis", icon: Calculator, label: "Investment Analysis" },
     { href: "/dashboard/market-insights", icon: BarChart3, label: "Market Insights" },
-    { href: "/dashboard/agent-finder", icon: Users, label: "Agent Finder" }, 
     { href: "/dashboard/risk-map", icon: Map, label: "Risk Map" },
     { href: "/dashboard/chat-assistant", icon: MessageSquare, label: "AI Assistant" },
   ]
