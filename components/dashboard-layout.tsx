@@ -64,10 +64,11 @@ export function DashboardLayout({ children, userRole, userName, userEmail }: Das
 
   const investorNavItems = [
     { href: "/dashboard", icon: Home, label: "Dashboard" },
-    { href: "/dashboard/portfolio", icon: TrendingUp, label: "Portfolio" },
+    // { href: "/dashboard/portfolio", icon: TrendingUp, label: "Portfolio" },
     { href: "/dashboard/search", icon: Search, label: "Property Search" },
     { href: "/dashboard/analysis", icon: Calculator, label: "Investment Analysis" },
     { href: "/dashboard/market-insights", icon: BarChart3, label: "Market Insights" },
+    { href: "/dashboard/agent-finder", icon: Users, label: "Agent Finder" }, 
     { href: "/dashboard/risk-map", icon: Map, label: "Risk Map" },
     { href: "/dashboard/chat-assistant", icon: MessageSquare, label: "AI Assistant" },
   ]
