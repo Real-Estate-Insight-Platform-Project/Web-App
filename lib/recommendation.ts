@@ -1,4 +1,4 @@
-const RECOMMENDATION_API_URL = process.env.NEXT_PUBLIC_RECOMMENDATION_API_URL || 'http://localhost:8000';
+const RECOMMENDATION_API_URL = process.env.NEXT_PUBLIC_RECOMMENDATION_API_URL || 'http://localhost:8001';
 
 // It's a good practice to define the structure of your property object
 // This should match the structure of the data you get from your Supabase table
