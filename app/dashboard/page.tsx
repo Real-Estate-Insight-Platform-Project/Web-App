@@ -323,11 +323,11 @@ export default function DashboardPage() {
         <div className="space-y-6">
           {/* Top Row - Most Affordable State & County */}
           <div className="grid gap-4 md:grid-cols-2">
-            <Card className="bg-gradient-to-br from-green-50 to-blue-50">
+            <Card>
               <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-lg">Most Affordable State</CardTitle>
-                  <PiggyBank className="h-5 w-5 text-green-600" />
+                  <MapPin className="h-5 w-5 text-green-600" />
                 </div>
               </CardHeader>
               <CardContent>
@@ -349,7 +349,7 @@ export default function DashboardPage() {
               </CardContent>
             </Card>
 
-            <Card className="bg-gradient-to-br from-green-50 to-blue-50">
+            <Card>
               <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-lg">Most Affordable County</CardTitle>
