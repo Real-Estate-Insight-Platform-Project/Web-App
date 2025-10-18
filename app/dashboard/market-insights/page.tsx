@@ -84,7 +84,7 @@ export default function MarketInsightsPage() {
       const response = await fetch(`/api/market-insights?${params.toString()}`)
       
       if (!response.ok) {
-        console.error("Error fetching market data:", response.statusText)
+        // console.error("Error fetching market data:", response.statusText)
         setLoading(false)
         return
       }
@@ -95,7 +95,7 @@ export default function MarketInsightsPage() {
       setHistoricalData(data.historicalData)
       setChartData(data.chartData)
     } catch (error) {
-      console.error("Error fetching market data:", error)
+      // console.error("Error fetching market data:", error)
     } finally {
       setLoading(false)
     }
