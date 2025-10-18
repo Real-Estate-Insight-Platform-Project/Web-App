@@ -26,3 +26,4 @@ fe_config_test.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+service_keys.json

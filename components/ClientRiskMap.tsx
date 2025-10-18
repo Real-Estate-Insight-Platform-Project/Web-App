@@ -19,7 +19,7 @@ export default function ClientRiskMap() {
 
         if (!mounted || !mapRef.current) return;
 
-        // Create map instance
+        // Create map instance const
         const map = L.map(mapRef.current, {
           center: [39.8283, -98.5795],
           zoom: 4,

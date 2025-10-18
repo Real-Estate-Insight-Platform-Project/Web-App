@@ -4,8 +4,8 @@ import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { createClient } from "@/lib/supabase/client"
-import { TrendingUp, TrendingDown, Minus, BarChart3, Home, DollarSign, Calendar } from "lucide-react"
+import { TrendingUp, TrendingDown, Minus, BarChart3, Home, DollarSign, Calendar, Search } from "lucide-react"
+import stateToCounties from "./state_to_counties.json"
 import { 
   LineChart, 
   Line, 
@@ -47,126 +47,58 @@ export default function MarketInsightsPage() {
   const [historicalData, setHistoricalData] = useState<MarketData[]>([])
   const [chartData, setChartData] = useState<ChartData[]>([])
   const [selectedCity, setSelectedCity] = useState("Alaska")
+  const [selectedCounty, setSelectedCounty] = useState("none")
+  const [availableCounties, setAvailableCounties] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
+  const [viewMode, setViewMode] = useState<"state" | "county">("state")
 
-  const supabase = createClient()
+  // Update available counties when state changes
+  useEffect(() => {
+    const counties = stateToCounties[selectedCity as keyof typeof stateToCounties] || []
+    setAvailableCounties(counties)
+    setSelectedCounty("none") // Reset county selection when state changes
+    setViewMode("state")
+  }, [selectedCity])
 
+  // Fetch data when state or county selection changes
   useEffect(() => {
     fetchMarketData()
-  }, [selectedCity])
+  }, [selectedCity, selectedCounty])
 
   const fetchMarketData = async () => {
     setLoading(true)
     
-    // First, fetch the state ID from the state_lookup table
-    const { data: stateData, error: stateError } = await supabase
-      .from("state_lookup")
-      .select("state_id, state_num")
-      .eq("state", selectedCity)
-      .single();
-
-    if (stateError) {
-      console.error("Error fetching state ID:", stateError);
-      return;
-    }
-
-    const stateID = stateData?.state_id;
-    const stateNum = stateData?.state_num;
-
-    // Fetch all predictions for the selected state
-    const { data: predictionData, error: predictionError } = await supabase
-      .from("predictions")
-      .select("*")
-      .eq("state_num", stateNum)
-      .order("year", { ascending: true })
-      .order("month", { ascending: true })
-
-    // Then fetch historical data using the state ID
-    const { data: historicalData, error: historicalError } = await supabase
-      .from("state_market")
-      .select(`
-      year,
-      month,
-      state_num,
-      median_listing_price,
-      average_listing_price,
-      median_listing_price_per_square_foot,
-      total_listing_count,
-      median_days_on_market
-      `)
-      .eq("state_num", stateNum)
-      .order("year", { ascending: true })
-      .order("month", { ascending: true });
-
-    if (predictionError) {
-      console.error("Error fetching prediction data:", predictionError)
-    }
-
-    if (historicalError) {
-      console.error("Error fetching historical data:", historicalError)
-    }
-
-    // Set latest prediction data (closest future prediction for insights)
-    if (predictionData && predictionData.length > 0) {
-      // Find the closest future prediction
-      const currentDate = new Date()
-      const currentYear = currentDate.getFullYear()
-      const currentMonth = currentDate.getMonth() + 1 // getMonth() returns 0-11
+    try {
+      // Build the query parameters based on whether we're viewing state or county data
+      const params = new URLSearchParams({ 
+        city: selectedCity 
+      })
       
-      const closestPrediction = predictionData.find(pred => 
-        pred.year > currentYear || (pred.year === currentYear && pred.month >= currentMonth)
-      ) || predictionData[predictionData.length - 1] // fallback to latest if no future predictions
-      
-      console.log("Closest future prediction:", closestPrediction)
-      setMarketData(closestPrediction)
-    } else {
-      setMarketData(null)
-    }
-
-    // Set historical data and format for charts
-    if (historicalData && historicalData.length > 0) {
-      console.log("Historical data fetched successfully:", historicalData.length, "records")
-      setHistoricalData(historicalData)
-      
-      // Format data for charts
-      const formattedData: ChartData[] = historicalData.map(item => {
-        const date = new Date(item.year, item.month - 1);
-        return {
-          date: date.toISOString(),
-          month: date.toLocaleDateString('en-US', { month: 'short' }),
-          monthYear: date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' }),
-          median_listing_price: item.median_listing_price,
-          average_listing_price: item.average_listing_price,
-          total_listing_count: item.total_listing_count,
-          median_days_on_market: item.median_days_on_market,
-          isForecast: false
-        };
-      });
-
-      // Add all prediction points as forecast data
-      if (predictionData && predictionData.length > 0) {
-        predictionData.forEach(prediction => {
-          const forecastDate = new Date(prediction.year, prediction.month - 1);
-          formattedData.push({
-            date: forecastDate.toISOString(),
-            month: forecastDate.toLocaleDateString('en-US', { month: 'short' }),
-            monthYear: forecastDate.toLocaleDateString('en-US', { month: 'short', year: '2-digit' }),
-            median_listing_price: prediction.median_listing_price,
-            average_listing_price: prediction.average_listing_price,
-            total_listing_count: prediction.total_listing_count,
-            median_days_on_market: prediction.median_days_on_market,
-            isForecast: true
-          });
-        });
+      if (selectedCounty !== "none") {
+        params.append("county", selectedCounty)
+        setViewMode("county")
+      } else {
+        setViewMode("state")
       }
       
-      // Sort by date
-      formattedData.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+      const response = await fetch(`/api/market-insights?${params.toString()}`)
       
-      setChartData(formattedData);
+      if (!response.ok) {
+        // console.error("Error fetching market data:", response.statusText)
+        setLoading(false)
+        return
+      }
+
+      const data = await response.json()
+      
+      setMarketData(data.marketData)
+      setHistoricalData(data.historicalData)
+      setChartData(data.chartData)
+    } catch (error) {
+      // console.error("Error fetching market data:", error)
+    } finally {
+      setLoading(false)
     }
-    
-    setLoading(false)
   }
 
   const getTrendIcon = (trend: string | undefined) => {
@@ -278,68 +210,123 @@ export default function MarketInsightsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Market Insights</h1>
-          <p className="text-muted-foreground mt-2">Real-time market analytics and trends</p>
+          <p className="text-muted-foreground mt-2">
+            {viewMode === "county" && selectedCounty !== "none" ? 
+              `${selectedCounty.charAt(0).toUpperCase() + selectedCounty.slice(1)} County, ${selectedCity} - real-time market analytics and trends` : 
+              `${selectedCity} - real-time market analytics and trends`
+            }
+          </p>
         </div>
 
-        <div className="w-48">
-          <Select value={selectedCity} onValueChange={setSelectedCity}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select city" />
-            </SelectTrigger>
-            <SelectContent>
-                <SelectItem value="Alaska">Alaska</SelectItem>
-                <SelectItem value="Alabama">Alabama</SelectItem>
-                <SelectItem value="Arkansas">Arkansas</SelectItem>
-                <SelectItem value="Arizona">Arizona</SelectItem>
-                <SelectItem value="California">California</SelectItem>
-                <SelectItem value="Colorado">Colorado</SelectItem>
-                <SelectItem value="Connecticut">Connecticut</SelectItem>
-                <SelectItem value="District of Columbia">District of Columbia</SelectItem>
-                <SelectItem value="Delaware">Delaware</SelectItem>
-                <SelectItem value="Florida">Florida</SelectItem>
-                <SelectItem value="Georgia">Georgia</SelectItem>
-                <SelectItem value="Hawaii">Hawaii</SelectItem>
-                <SelectItem value="Iowa">Iowa</SelectItem>
-                <SelectItem value="Idaho">Idaho</SelectItem>
-                <SelectItem value="Illinois">Illinois</SelectItem>
-                <SelectItem value="Indiana">Indiana</SelectItem>
-                <SelectItem value="Kansas">Kansas</SelectItem>
-                <SelectItem value="Kentucky">Kentucky</SelectItem>
-                <SelectItem value="Louisiana">Louisiana</SelectItem>
-                <SelectItem value="Massachusetts">Massachusetts</SelectItem>
-                <SelectItem value="Maryland">Maryland</SelectItem>
-                <SelectItem value="Maine">Maine</SelectItem>
-                <SelectItem value="Michigan">Michigan</SelectItem>
-                <SelectItem value="Minnesota">Minnesota</SelectItem>
-                <SelectItem value="Missouri">Missouri</SelectItem>
-                <SelectItem value="Mississippi">Mississippi</SelectItem>
-                <SelectItem value="Montana">Montana</SelectItem>
-                <SelectItem value="North Carolina">North Carolina</SelectItem>
-                <SelectItem value="North Dakota">North Dakota</SelectItem>
-                <SelectItem value="Nebraska">Nebraska</SelectItem>
-                <SelectItem value="New Hampshire">New Hampshire</SelectItem>
-                <SelectItem value="New Jersey">New Jersey</SelectItem>
-                <SelectItem value="New Mexico">New Mexico</SelectItem>
-                <SelectItem value="Nevada">Nevada</SelectItem>
-                <SelectItem value="New York">New York</SelectItem>
-                <SelectItem value="Ohio">Ohio</SelectItem>
-                <SelectItem value="Oklahoma">Oklahoma</SelectItem>
-                <SelectItem value="Oregon">Oregon</SelectItem>
-                <SelectItem value="Pennsylvania">Pennsylvania</SelectItem>
-                <SelectItem value="Rhode Island">Rhode Island</SelectItem>
-                <SelectItem value="South Carolina">South Carolina</SelectItem>
-                <SelectItem value="South Dakota">South Dakota</SelectItem>
-                <SelectItem value="Tennessee">Tennessee</SelectItem>
-                <SelectItem value="Texas">Texas</SelectItem>
-                <SelectItem value="Utah">Utah</SelectItem>
-                <SelectItem value="Virginia">Virginia</SelectItem>
-                <SelectItem value="Vermont">Vermont</SelectItem>
-                <SelectItem value="Washington">Washington</SelectItem>
-                <SelectItem value="Wisconsin">Wisconsin</SelectItem>
-                <SelectItem value="West Virginia">West Virginia</SelectItem>
-                <SelectItem value="Wyoming">Wyoming</SelectItem>
+        <div className="flex space-x-4">
+          <div className="w-48">
+            <Select value={selectedCity} onValueChange={setSelectedCity}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select state" />
+              </SelectTrigger>
+              <SelectContent>
+                <div className="flex items-center border-b px-3 pb-2">
+                  <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
+                  <input
+                    className="flex h-8 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
+                    placeholder="Search state..."
+                    onChange={(e) => {
+                      const searchBox = e.currentTarget;
+                      const items = document.querySelectorAll('[data-state-option="true"]');
+                      items.forEach((item: any) => {
+                        const text = item.textContent || '';
+                        const matches = text.toLowerCase().includes(searchBox.value.toLowerCase());
+                        item.style.display = matches ? '' : 'none';
+                      });
+                    }}
+                  />
+                </div>
+                <SelectItem value="Alaska" data-state-option="true">Alaska</SelectItem>
+                <SelectItem value="Alabama" data-state-option="true">Alabama</SelectItem>
+                <SelectItem value="Arkansas" data-state-option="true">Arkansas</SelectItem>
+                <SelectItem value="Arizona" data-state-option="true">Arizona</SelectItem>
+                <SelectItem value="California" data-state-option="true">California</SelectItem>
+                <SelectItem value="Colorado" data-state-option="true">Colorado</SelectItem>
+                <SelectItem value="Connecticut" data-state-option="true">Connecticut</SelectItem>
+                <SelectItem value="District of Columbia" data-state-option="true">District of Columbia</SelectItem>
+                <SelectItem value="Delaware" data-state-option="true">Delaware</SelectItem>
+                <SelectItem value="Florida" data-state-option="true">Florida</SelectItem>
+                <SelectItem value="Georgia" data-state-option="true">Georgia</SelectItem>
+                <SelectItem value="Hawaii" data-state-option="true">Hawaii</SelectItem>
+                <SelectItem value="Iowa" data-state-option="true">Iowa</SelectItem>
+                <SelectItem value="Idaho" data-state-option="true">Idaho</SelectItem>
+                <SelectItem value="Illinois" data-state-option="true">Illinois</SelectItem>
+                <SelectItem value="Indiana" data-state-option="true">Indiana</SelectItem>
+                <SelectItem value="Kansas" data-state-option="true">Kansas</SelectItem>
+                <SelectItem value="Kentucky" data-state-option="true">Kentucky</SelectItem>
+                <SelectItem value="Louisiana" data-state-option="true">Louisiana</SelectItem>
+                <SelectItem value="Massachusetts" data-state-option="true">Massachusetts</SelectItem>
+                <SelectItem value="Maryland" data-state-option="true">Maryland</SelectItem>
+                <SelectItem value="Maine" data-state-option="true">Maine</SelectItem>
+                <SelectItem value="Michigan" data-state-option="true">Michigan</SelectItem>
+                <SelectItem value="Minnesota" data-state-option="true">Minnesota</SelectItem>
+                <SelectItem value="Missouri" data-state-option="true">Missouri</SelectItem>
+                <SelectItem value="Mississippi" data-state-option="true">Mississippi</SelectItem>
+                <SelectItem value="Montana" data-state-option="true">Montana</SelectItem>
+                <SelectItem value="North Carolina" data-state-option="true">North Carolina</SelectItem>
+                <SelectItem value="North Dakota" data-state-option="true">North Dakota</SelectItem>
+                <SelectItem value="Nebraska" data-state-option="true">Nebraska</SelectItem>
+                <SelectItem value="New Hampshire" data-state-option="true">New Hampshire</SelectItem>
+                <SelectItem value="New Jersey" data-state-option="true">New Jersey</SelectItem>
+                <SelectItem value="New Mexico" data-state-option="true">New Mexico</SelectItem>
+                <SelectItem value="Nevada" data-state-option="true">Nevada</SelectItem>
+                <SelectItem value="New York" data-state-option="true">New York</SelectItem>
+                <SelectItem value="Ohio" data-state-option="true">Ohio</SelectItem>
+                <SelectItem value="Oklahoma" data-state-option="true">Oklahoma</SelectItem>
+                <SelectItem value="Oregon" data-state-option="true">Oregon</SelectItem>
+                <SelectItem value="Pennsylvania" data-state-option="true">Pennsylvania</SelectItem>
+                <SelectItem value="Rhode Island" data-state-option="true">Rhode Island</SelectItem>
+                <SelectItem value="South Carolina" data-state-option="true">South Carolina</SelectItem>
+                <SelectItem value="South Dakota" data-state-option="true">South Dakota</SelectItem>
+                <SelectItem value="Tennessee" data-state-option="true">Tennessee</SelectItem>
+                <SelectItem value="Texas" data-state-option="true">Texas</SelectItem>
+                <SelectItem value="Utah" data-state-option="true">Utah</SelectItem>
+                <SelectItem value="Virginia" data-state-option="true">Virginia</SelectItem>
+                <SelectItem value="Vermont" data-state-option="true">Vermont</SelectItem>
+                <SelectItem value="Washington" data-state-option="true">Washington</SelectItem>
+                <SelectItem value="Wisconsin" data-state-option="true">Wisconsin</SelectItem>
+                <SelectItem value="West Virginia" data-state-option="true">West Virginia</SelectItem>
+                <SelectItem value="Wyoming" data-state-option="true">Wyoming</SelectItem>
               </SelectContent>
-              </Select>
+            </Select>
+          </div>
+          
+          <div className="w-48">
+            <Select value={selectedCounty} onValueChange={setSelectedCounty} disabled={availableCounties.length === 0}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select county" />
+              </SelectTrigger>
+              <SelectContent>
+                <div className="flex items-center border-b px-3 pb-2">
+                  <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
+                  <input
+                    className="flex h-8 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
+                    placeholder="Search county..."
+                    onChange={(e) => {
+                      const searchBox = e.currentTarget;
+                      const items = document.querySelectorAll('[data-county-option="true"]');
+                      items.forEach((item: any) => {
+                        const text = item.textContent || '';
+                        const matches = text.toLowerCase().includes(searchBox.value.toLowerCase());
+                        item.style.display = matches ? '' : 'none';
+                      });
+                    }}
+                  />
+                </div>
+                <SelectItem value="none" data-county-option="true">None (State Level)</SelectItem>
+                {availableCounties.map((county) => (
+                  <SelectItem key={county} value={county} data-county-option="true">
+                    {county.charAt(0).toUpperCase() + county.slice(1)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </div>
 
@@ -357,6 +344,18 @@ export default function MarketInsightsPage() {
         </div>
       ) : marketData ? (
         <>
+          {/* Level Indicator Badge */}
+          {viewMode === "county" && selectedCounty !== "none" && (
+            <Card className="mb-2 bg-blue-50">
+              <CardContent className="p-4 flex items-center">
+                <Badge variant="secondary" className="mr-2 bg-blue-100">County Level Data</Badge>
+                <p className="text-sm text-muted-foreground">
+                  Showing detailed market data for {selectedCounty.charAt(0).toUpperCase() + selectedCounty.slice(1)} County
+                </p>
+              </CardContent>
+            </Card>
+          )}
+          
           {/* Key Metrics */}
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <Card>
@@ -645,7 +644,12 @@ export default function MarketInsightsPage() {
           <Card>
             <CardHeader>
               <CardTitle>Market Summary</CardTitle>
-              <CardDescription>Key insights for {selectedCity} real estate market</CardDescription>
+              <CardDescription>
+                {viewMode === "county" && selectedCounty !== "none" 
+                  ? `Key insights for ${selectedCounty.charAt(0).toUpperCase() + selectedCounty.slice(1)} County, ${selectedCity} real estate market`
+                  : `Key insights for ${selectedCity} real estate market`
+                }
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid gap-4 md:grid-cols-2">
@@ -665,7 +669,10 @@ export default function MarketInsightsPage() {
               <div className="p-4 bg-muted rounded-lg">
                 <h4 className="font-medium mb-2">Market Analysis</h4>
                 <p className="text-sm text-muted-foreground">
-                  The {selectedCity} market is currently showing 
+                  {viewMode === "county" && selectedCounty !== "none" 
+                    ? `The ${selectedCounty.charAt(0).toUpperCase() + selectedCounty.slice(1)} County` 
+                    : `The ${selectedCity}`
+                  } market is currently showing 
                   {marketData.market_trend ? (
                     <>
                       a <strong className="capitalize">{marketData.market_trend}</strong> trend. 
