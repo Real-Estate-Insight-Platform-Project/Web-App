@@ -3,500 +3,474 @@
 import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Textarea } from "@/components/ui/textarea"
-import { createClient } from "@/lib/supabase/client"
-import { Calculator, DollarSign, Percent, TrendingUp, Save, BarChart3 } from "lucide-react"
-import { useRouter } from "next/navigation"
+import { Badge } from "@/components/ui/badge"
+import { TrendingUp, BarChart3, MapPin, Activity, Target, DollarSign } from "lucide-react"
 
-interface Property {
-  id: string
-  title: string
-  price: number
-  address: string
-  city: string
+interface MarketData {
   state: string
-  property_type: string
-  bedrooms: number
-  bathrooms: number
-  square_feet: number
+  county: string
+  expectedGrowth: number
+  volatility: number
+  liquidity: number
+  ioi: number
+  riskLevel: "Low" | "Medium" | "High"
 }
 
-export default function InvestmentAnalysisPage() {
-  const [properties, setProperties] = useState<Property[]>([])
-  const [selectedProperty, setSelectedProperty] = useState<string>("")
+interface ComparisonRegion {
+  state: string
+  county: string
+}
+
+export default function MarketAnalysisPage() {
+  const [selectedState, setSelectedState] = useState<string>("")
+  const [selectedCounty, setSelectedCounty] = useState<string>("")
+  const [forecastHorizon, setForecastHorizon] = useState<string>("12")
+  const [comparisonRegions, setComparisonRegions] = useState<ComparisonRegion[]>([])
   const [loading, setLoading] = useState(false)
-  const [saving, setSaving] = useState(false)
 
-  // Investment parameters
-  const [purchasePrice, setPurchasePrice] = useState("")
-  const [downPayment, setDownPayment] = useState("")
-  const [downPaymentPercent, setDownPaymentPercent] = useState("25")
-  const [interestRate, setInterestRate] = useState("7.0")
-  const [loanTerm, setLoanTerm] = useState("30")
-  const [monthlyRent, setMonthlyRent] = useState("")
-  const [monthlyExpenses, setMonthlyExpenses] = useState("")
-  const [notes, setNotes] = useState("")
+  // Hard-coded market data
+  const states = [
+    "California", "Texas", "Florida", "New York", "Pennsylvania", 
+    "Illinois", "Ohio", "Georgia", "North Carolina", "Michigan"
+  ]
 
-  // Calculated results
-  const [results, setResults] = useState<{
-    loanAmount: number
-    monthlyPayment: number
-    cashFlow: number
-    capRate: number
-    roi: number
-    cashOnCash: number
-    totalCashNeeded: number
-  } | null>(null)
+  const counties = {
+    "California": ["Los Angeles", "San Diego", "Orange", "Riverside", "San Bernardino", "Alameda", "Sacramento"],
+    "Texas": ["Harris", "Dallas", "Tarrant", "Bexar", "Travis", "Collin", "Fort Bend"],
+    "Florida": ["Miami-Dade", "Broward", "Palm Beach", "Hillsborough", "Orange", "Pinellas", "Duval"],
+    "New York": ["Kings", "Queens", "New York", "Suffolk", "Bronx", "Nassau", "Westchester"],
+    "Pennsylvania": ["Philadelphia", "Allegheny", "Montgomery", "Bucks", "Chester", "Delaware", "Lancaster"],
+    "Illinois": ["Cook", "DuPage", "Lake", "Will", "Kane", "McHenry", "Winnebago"],
+    "Ohio": ["Cuyahoga", "Franklin", "Hamilton", "Summit", "Montgomery", "Lucas", "Stark"],
+    "Georgia": ["Fulton", "Gwinnett", "DeKalb", "Cobb", "Clayton", "Cherokee", "Forsyth"],
+    "North Carolina": ["Mecklenburg", "Wake", "Guilford", "Forsyth", "Cumberland", "Durham", "Union"],
+    "Michigan": ["Wayne", "Oakland", "Macomb", "Kent", "Genesee", "Washtenaw", "Ottawa"]
+  }
 
-  const supabase = createClient()
-  const router = useRouter()
+  // Hard-coded market data with realistic values
+  const marketData: Record<string, MarketData> = {
+    "California-Los Angeles": {
+      state: "California",
+      county: "Los Angeles",
+      expectedGrowth: 8.5,
+      volatility: 65,
+      liquidity: 85,
+      ioi: 78.2,
+      riskLevel: "Medium"
+    },
+    "California-San Diego": {
+      state: "California",
+      county: "San Diego",
+      expectedGrowth: 9.2,
+      volatility: 58,
+      liquidity: 78,
+      ioi: 82.4,
+      riskLevel: "Medium"
+    },
+    "Texas-Harris": {
+      state: "Texas",
+      county: "Harris",
+      expectedGrowth: 7.8,
+      volatility: 45,
+      liquidity: 92,
+      ioi: 88.6,
+      riskLevel: "Low"
+    },
+    "Florida-Miami-Dade": {
+      state: "Florida",
+      county: "Miami-Dade",
+      expectedGrowth: 6.9,
+      volatility: 72,
+      liquidity: 88,
+      ioi: 75.8,
+      riskLevel: "High"
+    },
+    "New York-Kings": {
+      state: "New York",
+      county: "Kings",
+      expectedGrowth: 5.4,
+      volatility: 38,
+      liquidity: 95,
+      ioi: 84.2,
+      riskLevel: "Low"
+    },
+    "Pennsylvania-Philadelphia": {
+      state: "Pennsylvania",
+      county: "Philadelphia",
+      expectedGrowth: 4.2,
+      volatility: 42,
+      liquidity: 76,
+      ioi: 72.8,
+      riskLevel: "Low"
+    },
+    "Illinois-Cook": {
+      state: "Illinois",
+      county: "Cook",
+      expectedGrowth: 3.8,
+      volatility: 48,
+      liquidity: 82,
+      ioi: 71.4,
+      riskLevel: "Medium"
+    },
+    "Ohio-Cuyahoga": {
+      state: "Ohio",
+      county: "Cuyahoga",
+      expectedGrowth: 5.1,
+      volatility: 35,
+      liquidity: 68,
+      ioi: 76.5,
+      riskLevel: "Low"
+    },
+    "Georgia-Fulton": {
+      state: "Georgia",
+      county: "Fulton",
+      expectedGrowth: 8.9,
+      volatility: 52,
+      liquidity: 79,
+      ioi: 85.7,
+      riskLevel: "Medium"
+    },
+    "North Carolina-Mecklenburg": {
+      state: "North Carolina",
+      county: "Mecklenburg",
+      expectedGrowth: 9.6,
+      volatility: 48,
+      liquidity: 73,
+      ioi: 87.2,
+      riskLevel: "Medium"
+    }
+  }
 
-  useEffect(() => {
-    fetchProperties()
-  }, [])
+  // Top 10 counties by IOI (hard-coded)
+  const topCountiesByIOI = [
+    { name: "Harris, TX", ioi: 88.6 },
+    { name: "Mecklenburg, NC", ioi: 87.2 },
+    { name: "Fulton, GA", ioi: 85.7 },
+    { name: "Kings, NY", ioi: 84.2 },
+    { name: "San Diego, CA", ioi: 82.4 },
+    { name: "Los Angeles, CA", ioi: 78.2 },
+    { name: "Cuyahoga, OH", ioi: 76.5 },
+    { name: "Miami-Dade, FL", ioi: 75.8 },
+    { name: "Philadelphia, PA", ioi: 72.8 },
+    { name: "Cook, IL", ioi: 71.4 }
+  ]
 
-  useEffect(() => {
-    if (selectedProperty) {
-      const property = properties.find((p) => p.id === selectedProperty)
-      if (property) {
-        setPurchasePrice(property.price.toString())
-        calculateDownPayment(property.price.toString(), downPaymentPercent)
+  const getCurrentMarketData = (): MarketData | null => {
+    if (!selectedState || !selectedCounty) return null
+    const key = `${selectedState}-${selectedCounty}`
+    return marketData[key] || null
+  }
+
+  const addComparisonRegion = () => {
+    if (selectedState && selectedCounty && comparisonRegions.length < 3) {
+      const newRegion = { state: selectedState, county: selectedCounty }
+      if (!comparisonRegions.some(r => r.state === selectedState && r.county === selectedCounty)) {
+        setComparisonRegions([...comparisonRegions, newRegion])
       }
     }
-  }, [selectedProperty, properties])
+  }
 
-  const fetchProperties = async () => {
-    const { data, error } = await supabase
-      .from("properties")
-      .select("*")
-      .eq("listing_status", "active")
-      .order("created_at", { ascending: false })
+  const removeComparisonRegion = (index: number) => {
+    setComparisonRegions(comparisonRegions.filter((_, i) => i !== index))
+  }
 
-    if (!error && data) {
-      setProperties(data)
+  const getComparisonData = (region: ComparisonRegion): MarketData | null => {
+    const key = `${region.state}-${region.county}`
+    return marketData[key] || null
+  }
+
+  const getRiskColor = (riskLevel: string) => {
+    switch (riskLevel) {
+      case "Low": return "text-green-600 bg-green-50"
+      case "Medium": return "text-yellow-600 bg-yellow-50"
+      case "High": return "text-red-600 bg-red-50"
+      default: return "text-gray-600 bg-gray-50"
     }
-  }
-
-  const calculateDownPayment = (price: string, percent: string) => {
-    const priceNum = Number.parseFloat(price) || 0
-    const percentNum = Number.parseFloat(percent) || 0
-    const downPaymentAmount = (priceNum * percentNum) / 100
-    setDownPayment(downPaymentAmount.toString())
-  }
-
-  const handleDownPaymentPercentChange = (value: string) => {
-    setDownPaymentPercent(value)
-    calculateDownPayment(purchasePrice, value)
-  }
-
-  const calculateInvestment = () => {
-    const price = Number.parseFloat(purchasePrice) || 0
-    const downPmt = Number.parseFloat(downPayment) || 0
-    const rate = Number.parseFloat(interestRate) || 0
-    const term = Number.parseInt(loanTerm) || 30
-    const rent = Number.parseFloat(monthlyRent) || 0
-    const expenses = Number.parseFloat(monthlyExpenses) || 0
-
-    // Calculate loan details
-    const loanAmount = price - downPmt
-    const monthlyRate = rate / 100 / 12
-    const numPayments = term * 12
-    const monthlyPayment =
-      loanAmount > 0
-        ? (loanAmount * (monthlyRate * Math.pow(1 + monthlyRate, numPayments))) /
-          (Math.pow(1 + monthlyRate, numPayments) - 1)
-        : 0
-
-    // Calculate cash flow
-    const cashFlow = rent - monthlyPayment - expenses
-
-    // Calculate cap rate (NOI / Purchase Price)
-    const noi = (rent - expenses) * 12
-    const capRate = price > 0 ? (noi / price) * 100 : 0
-
-    // Calculate ROI (Annual Cash Flow / Total Cash Invested)
-    const annualCashFlow = cashFlow * 12
-    const totalCashNeeded = downPmt + price * 0.03 // Assume 3% closing costs
-    const roi = totalCashNeeded > 0 ? (annualCashFlow / totalCashNeeded) * 100 : 0
-
-    // Calculate Cash-on-Cash return
-    const cashOnCash = totalCashNeeded > 0 ? (annualCashFlow / totalCashNeeded) * 100 : 0
-
-    setResults({
-      loanAmount,
-      monthlyPayment,
-      cashFlow,
-      capRate,
-      roi,
-      cashOnCash,
-      totalCashNeeded,
-    })
-  }
-
-  const saveAnalysis = async () => {
-    if (!selectedProperty || !results) return
-
-    setSaving(true)
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
-
-    if (user) {
-      const { error } = await supabase.from("investment_analysis").insert({
-        user_id: user.id,
-        property_id: selectedProperty,
-        purchase_price: Number.parseFloat(purchasePrice),
-        down_payment: Number.parseFloat(downPayment),
-        loan_amount: results.loanAmount,
-        interest_rate: Number.parseFloat(interestRate),
-        loan_term: Number.parseInt(loanTerm),
-        monthly_rent: Number.parseFloat(monthlyRent),
-        monthly_expenses: Number.parseFloat(monthlyExpenses),
-        cash_flow: results.cashFlow,
-        cap_rate: results.capRate,
-        roi: results.roi,
-      })
-
-      if (!error) {
-        router.push("/dashboard/portfolio")
-      }
-    }
-    setSaving(false)
   }
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Investment Analysis</h1>
+        <h1 className="text-3xl font-bold">Market Analysis</h1>
         <p className="text-muted-foreground mt-2">
-          Analyze potential real estate investments with detailed calculations
+          Analyze market trends and investment opportunities across different regions
         </p>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        {/* Analysis Form */}
+      <div className="grid gap-6 lg:grid-cols-3">
+        {/* Selection Panel */}
         <div className="space-y-6">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center">
-                <Calculator className="h-5 w-5 mr-2" />
-                Property Selection
+                <MapPin className="h-5 w-5 mr-2" />
+                Region Selection
               </CardTitle>
-              <CardDescription>Choose a property to analyze</CardDescription>
+              <CardDescription>Choose a region to analyze</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="property">Select Property</Label>
-                <Select value={selectedProperty} onValueChange={setSelectedProperty}>
+                <Label htmlFor="state">Select State</Label>
+                <Select value={selectedState} onValueChange={setSelectedState}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Choose a property" />
+                    <SelectValue placeholder="Choose a state" />
                   </SelectTrigger>
                   <SelectContent>
-                    {properties.map((property) => (
-                      <SelectItem key={property.id} value={property.id}>
-                        {property.title} - ${property.price.toLocaleString()}
+                    {states.map((state) => (
+                      <SelectItem key={state} value={state}>
+                        {state}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
 
-              {selectedProperty && (
-                <div className="p-3 bg-muted rounded-lg">
-                  {(() => {
-                    const property = properties.find((p) => p.id === selectedProperty)
-                    return property ? (
-                      <div className="text-sm">
-                        <p className="font-medium">{property.title}</p>
-                        <p className="text-muted-foreground">
-                          {property.address}, {property.city}, {property.state}
-                        </p>
-                        <p className="text-muted-foreground">
-                          {property.bedrooms}bd • {property.bathrooms}ba • {property.square_feet?.toLocaleString()} sqft
-                        </p>
-                      </div>
-                    ) : null
-                  })()}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Purchase Details</CardTitle>
-              <CardDescription>Enter your investment parameters</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="purchase-price">Purchase Price</Label>
-                <div className="relative">
-                  <DollarSign className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="purchase-price"
-                    type="number"
-                    className="pl-9"
-                    value={purchasePrice}
-                    onChange={(e) => setPurchasePrice(e.target.value)}
-                  />
-                </div>
+                <Label htmlFor="county">Select County</Label>
+                <Select 
+                  value={selectedCounty} 
+                  onValueChange={setSelectedCounty}
+                  disabled={!selectedState}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Choose a county" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {selectedState && counties[selectedState as keyof typeof counties]?.map((county) => (
+                      <SelectItem key={county} value={county}>
+                        {county}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="down-payment">Down Payment ($)</Label>
-                  <div className="relative">
-                    <DollarSign className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="down-payment"
-                      type="number"
-                      className="pl-9"
-                      value={downPayment}
-                      onChange={(e) => setDownPayment(e.target.value)}
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="down-payment-percent">Down Payment (%)</Label>
-                  <div className="relative">
-                    <Percent className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="down-payment-percent"
-                      type="number"
-                      step="0.1"
-                      className="pl-9"
-                      value={downPaymentPercent}
-                      onChange={(e) => handleDownPaymentPercentChange(e.target.value)}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="interest-rate">Interest Rate (%)</Label>
-                  <div className="relative">
-                    <Percent className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="interest-rate"
-                      type="number"
-                      step="0.01"
-                      className="pl-9"
-                      value={interestRate}
-                      onChange={(e) => setInterestRate(e.target.value)}
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="loan-term">Loan Term</Label>
-                  <Select value={loanTerm} onValueChange={setLoanTerm}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="15">15 years</SelectItem>
-                      <SelectItem value="20">20 years</SelectItem>
-                      <SelectItem value="25">25 years</SelectItem>
-                      <SelectItem value="30">30 years</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+              <div className="space-y-2">
+                <Label htmlFor="forecast">Forecast Horizon</Label>
+                <Select value={forecastHorizon} onValueChange={setForecastHorizon}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="3">3 months</SelectItem>
+                    <SelectItem value="6">6 months</SelectItem>
+                    <SelectItem value="12">12 months</SelectItem>
+                    <SelectItem value="24">24 months</SelectItem>
+                    <SelectItem value="36">36 months</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader>
-              <CardTitle>Rental Income & Expenses</CardTitle>
-              <CardDescription>Estimate your monthly income and expenses</CardDescription>
+              <CardTitle>Compare Regions</CardTitle>
+              <CardDescription>Add up to 3 regions for comparison</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="monthly-rent">Monthly Rent</Label>
-                <div className="relative">
-                  <DollarSign className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="monthly-rent"
-                    type="number"
-                    className="pl-9"
-                    value={monthlyRent}
-                    onChange={(e) => setMonthlyRent(e.target.value)}
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="monthly-expenses">Monthly Expenses</Label>
-                <div className="relative">
-                  <DollarSign className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="monthly-expenses"
-                    type="number"
-                    className="pl-9"
-                    value={monthlyExpenses}
-                    onChange={(e) => setMonthlyExpenses(e.target.value)}
-                    placeholder="Property tax, insurance, maintenance, etc."
-                  />
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Include property tax, insurance, maintenance, vacancy allowance, property management
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="notes">Notes (Optional)</Label>
-                <Textarea
-                  id="notes"
-                  placeholder="Additional notes about this investment..."
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                />
-              </div>
-
-              <Button onClick={calculateInvestment} className="w-full bg-primary hover:bg-primary/90">
-                Calculate Investment Returns
+              <Button 
+                onClick={addComparisonRegion}
+                disabled={!selectedState || !selectedCounty || comparisonRegions.length >= 3}
+                className="w-full"
+                variant="outline"
+              >
+                Add Current Region
               </Button>
+
+              <div className="space-y-2">
+                {comparisonRegions.map((region, index) => (
+                  <div key={index} className="flex items-center justify-between p-2 bg-muted rounded">
+                    <span className="text-sm">{region.county}, {region.state}</span>
+                    <Button
+                      onClick={() => removeComparisonRegion(index)}
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 w-6 p-0"
+                    >
+                      ×
+                    </Button>
+                  </div>
+                ))}
+              </div>
             </CardContent>
           </Card>
         </div>
 
-        {/* Results */}
-        <div className="space-y-6">
-          {results ? (
+        {/* Market Insights */}
+        <div className="lg:col-span-2 space-y-6">
+          {getCurrentMarketData() ? (
             <>
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center">
-                    <BarChart3 className="h-5 w-5 mr-2" />
-                    Investment Analysis Results
+                    <Activity className="h-5 w-5 mr-2" />
+                    Market Insights
+                    <Badge variant="outline" className="ml-2">
+                      {forecastHorizon} month forecast
+                    </Badge>
                   </CardTitle>
+                  <CardDescription>
+                    {getCurrentMarketData()?.county}, {getCurrentMarketData()?.state}
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-4">
-                    {/* Key Metrics */}
-                    <div className="grid gap-4 md:grid-cols-2">
-                      <div className="text-center p-4 bg-primary/5 rounded-lg">
-                        <p className="text-sm text-muted-foreground">Monthly Cash Flow</p>
-                        <p
-                          className={`text-2xl font-bold ${results.cashFlow >= 0 ? "text-green-600" : "text-red-600"}`}
-                        >
-                          ${results.cashFlow.toFixed(0)}
+                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                    <div className="text-center p-4 bg-blue-50 rounded-lg">
+                      <TrendingUp className="h-6 w-6 mx-auto mb-2 text-blue-600" />
+                      <p className="text-sm text-muted-foreground">Expected Price Growth</p>
+                      <p className="text-2xl font-bold text-blue-600">
+                        {getCurrentMarketData()?.expectedGrowth.toFixed(1)}%
+                      </p>
+                    </div>
+
+                    <div className="text-center p-4 bg-gray-50 rounded-lg">
+                      <Activity className="h-6 w-6 mx-auto mb-2 text-gray-600" />
+                      <p className="text-sm text-muted-foreground">Volatility</p>
+                      <div className="space-y-1">
+                        <p className="text-2xl font-bold text-gray-600">
+                          {getCurrentMarketData()?.volatility}%
                         </p>
-                      </div>
-
-                      <div className="text-center p-4 bg-primary/5 rounded-lg">
-                        <p className="text-sm text-muted-foreground">Cap Rate</p>
-                        <p className="text-2xl font-bold text-primary">{results.capRate.toFixed(2)}%</p>
-                      </div>
-                    </div>
-
-                    {/* Detailed Metrics */}
-                    <div className="space-y-3">
-                      <div className="flex justify-between items-center p-3 border rounded">
-                        <span className="text-sm">Cash-on-Cash ROI</span>
-                        <span className="font-medium">{results.roi.toFixed(2)}%</span>
-                      </div>
-
-                      <div className="flex justify-between items-center p-3 border rounded">
-                        <span className="text-sm">Loan Amount</span>
-                        <span className="font-medium">${results.loanAmount.toLocaleString()}</span>
-                      </div>
-
-                      <div className="flex justify-between items-center p-3 border rounded">
-                        <span className="text-sm">Monthly Mortgage Payment</span>
-                        <span className="font-medium">${results.monthlyPayment.toFixed(0)}</span>
-                      </div>
-
-                      <div className="flex justify-between items-center p-3 border rounded">
-                        <span className="text-sm">Total Cash Needed</span>
-                        <span className="font-medium">${results.totalCashNeeded.toLocaleString()}</span>
-                      </div>
-
-                      <div className="flex justify-between items-center p-3 border rounded bg-muted">
-                        <span className="text-sm font-medium">Annual Cash Flow</span>
-                        <span className={`font-bold ${results.cashFlow >= 0 ? "text-green-600" : "text-red-600"}`}>
-                          ${(results.cashFlow * 12).toFixed(0)}
-                        </span>
+                        <Badge 
+                          variant="outline" 
+                          className={getRiskColor(getCurrentMarketData()?.riskLevel || "Medium")}
+                        >
+                          {getCurrentMarketData()?.riskLevel} Risk
+                        </Badge>
                       </div>
                     </div>
+
+                    <div className="text-center p-4 bg-green-50 rounded-lg">
+                      <DollarSign className="h-6 w-6 mx-auto mb-2 text-green-600" />
+                      <p className="text-sm text-muted-foreground">Liquidity</p>
+                      <p className="text-2xl font-bold text-green-600">
+                        {getCurrentMarketData()?.liquidity}%
+                      </p>
+                    </div>
+
+                    <div className="text-center p-4 bg-purple-50 rounded-lg">
+                      <Target className="h-6 w-6 mx-auto mb-2 text-purple-600" />
+                      <p className="text-sm text-muted-foreground">Investment Opportunity Index</p>
+                      <p className="text-2xl font-bold text-purple-600">
+                        {getCurrentMarketData()?.ioi.toFixed(1)}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="mt-6 p-4 bg-muted rounded-lg">
+                    <h4 className="font-medium mb-2">IOI Calculation</h4>
+                    <p className="text-sm text-muted-foreground">
+                      IOI = (0.4 × Appreciation Score) + (0.3 × Liquidity Score) - (0.3 × Volatility Risk)
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Higher scores indicate better investment opportunities
+                    </p>
                   </div>
                 </CardContent>
               </Card>
 
-              <Card>
-                <CardHeader>
-                  <CardTitle>Investment Summary</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    <div className="p-4 bg-muted rounded-lg">
-                      <h4 className="font-medium mb-2">Investment Quality</h4>
-                      <div className="space-y-2 text-sm">
-                        <div className="flex justify-between">
-                          <span>Cash Flow:</span>
-                          <span className={results.cashFlow >= 0 ? "text-green-600" : "text-red-600"}>
-                            {results.cashFlow >= 0 ? "Positive ✓" : "Negative ✗"}
-                          </span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>Cap Rate:</span>
-                          <span
-                            className={
-                              results.capRate >= 6
-                                ? "text-green-600"
-                                : results.capRate >= 4
-                                  ? "text-yellow-600"
-                                  : "text-red-600"
-                            }
-                          >
-                            {results.capRate >= 6 ? "Excellent ✓" : results.capRate >= 4 ? "Good" : "Poor ✗"}
-                          </span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>ROI:</span>
-                          <span
-                            className={
-                              results.roi >= 10
-                                ? "text-green-600"
-                                : results.roi >= 6
-                                  ? "text-yellow-600"
-                                  : "text-red-600"
-                            }
-                          >
-                            {results.roi >= 10 ? "Excellent ✓" : results.roi >= 6 ? "Good" : "Poor ✗"}
-                          </span>
-                        </div>
-                      </div>
+              {comparisonRegions.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Regional Comparison</CardTitle>
+                    <CardDescription>Side-by-side analysis of selected regions</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="border-b">
+                            <th className="text-left p-2">Region</th>
+                            <th className="text-right p-2">Growth %</th>
+                            <th className="text-right p-2">Volatility %</th>
+                            <th className="text-right p-2">Liquidity %</th>
+                            <th className="text-right p-2">IOI Score</th>
+                            <th className="text-center p-2">Risk Level</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {comparisonRegions.map((region, index) => {
+                            const data = getComparisonData(region)
+                            return data ? (
+                              <tr key={index} className="border-b">
+                                <td className="p-2 font-medium">{region.county}, {region.state}</td>
+                                <td className="p-2 text-right text-blue-600 font-medium">
+                                  {data.expectedGrowth.toFixed(1)}%
+                                </td>
+                                <td className="p-2 text-right">{data.volatility}%</td>
+                                <td className="p-2 text-right text-green-600 font-medium">
+                                  {data.liquidity}%
+                                </td>
+                                <td className="p-2 text-right text-purple-600 font-bold">
+                                  {data.ioi.toFixed(1)}
+                                </td>
+                                <td className="p-2 text-center">
+                                  <Badge 
+                                    variant="outline" 
+                                    className={getRiskColor(data.riskLevel)}
+                                  >
+                                    {data.riskLevel}
+                                  </Badge>
+                                </td>
+                              </tr>
+                            ) : null
+                          })}
+                        </tbody>
+                      </table>
                     </div>
-
-                    <Button
-                      onClick={saveAnalysis}
-                      disabled={!selectedProperty || saving}
-                      className="w-full bg-primary hover:bg-primary/90"
-                    >
-                      <Save className="h-4 w-4 mr-2" />
-                      {saving ? "Saving..." : "Save to Portfolio"}
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+              )}
             </>
           ) : (
             <Card>
               <CardContent className="p-8 text-center">
-                <TrendingUp className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
-                <h3 className="text-lg font-medium mb-2">Ready to Analyze</h3>
+                <BarChart3 className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
+                <h3 className="text-lg font-medium mb-2">Select a Region</h3>
                 <p className="text-muted-foreground">
-                  Select a property and enter your investment parameters to see detailed analysis results.
+                  Choose a state and county to view detailed market analysis and investment insights.
                 </p>
               </CardContent>
             </Card>
           )}
+
+          {/* Top Counties Chart
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <BarChart3 className="h-5 w-5 mr-2" />
+                Top 10 Counties by Investment Opportunity Index
+              </CardTitle>
+              <CardDescription>Highest scoring regions for real estate investment</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {topCountiesByIOI.map((county, index) => (
+                  <div key={index} className="flex items-center justify-between p-3 border rounded">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-6 h-6 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-xs font-bold">
+                        {index + 1}
+                      </div>
+                      <span className="font-medium">{county.name}</span>
+                    </div>
+                    <div className="flex items-center space-x-3">
+                      <div className="w-24 bg-gray-200 rounded-full h-2">
+                        <div 
+                          className="bg-purple-600 h-2 rounded-full" 
+                          style={{ width: `${(county.ioi / 100) * 100}%` }}
+                        />
+                      </div>
+                      <span className="text-purple-600 font-bold min-w-[3rem] text-right">
+                        {county.ioi.toFixed(1)}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card> */}
         </div>
       </div>
     </div>

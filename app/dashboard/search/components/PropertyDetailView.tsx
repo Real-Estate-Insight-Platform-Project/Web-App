@@ -17,9 +17,10 @@ export default function PropertyDetailView({
 }: PropertyDetailProps) {
 
   const PropertyLocationMap = dynamic(() => import('./PropertyLocationMap.tsx'), {
-  ssr: false, // This line is crucial
-  loading: () => <p>Loading map...</p>
-});
+    ssr: false,
+    loading: () => <p>Loading map...</p>
+  });
+
   const formatUrl = (url: string | null) => {
     if (!url) return null;
     
@@ -47,11 +48,10 @@ export default function PropertyDetailView({
       {/* Property Details Card */}
       <Card className="overflow-hidden">
         {/* Property Image */}
-        <div className="relative h-80 w-full">
-          <div className="flex h-96 w-full">
+        <div className="relative h-96 w-full">
+          <div className="flex h-full w-full">
 
             <div className="relative w-[70%]">
-
               {property.property_image ? (
                 <Image
                   src={property.property_image}
@@ -76,7 +76,9 @@ export default function PropertyDetailView({
                     longitude={property.longitude_coordinates} 
                   />
                 ) : (
-                  <div>Location not available</div>
+                  <div className="h-full bg-muted flex items-center justify-center text-muted-foreground">
+                    Location not available
+                  </div>
                 )}
             </div>
           </div>
@@ -115,9 +117,12 @@ export default function PropertyDetailView({
               <div className="flex flex-wrap items-center justify-between gap-4">
                 <div>
                   <p className="text-3xl font-bold text-primary">${property.price.toLocaleString()}</p>
-                  <p className="text-muted-foreground">
-                    ${Math.round(property.price / property.square_feet)}/sqft
-                  </p>
+                  {/* FIXED: Check if square_feet exists and is not zero before calculating */}
+                  {property.square_feet && property.square_feet > 0 && (
+                    <p className="text-muted-foreground">
+                      ${Math.round(property.price / property.square_feet)}/sqft
+                    </p>
+                  )}
                 </div>
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Calendar className="h-4 w-4" />
@@ -130,22 +135,23 @@ export default function PropertyDetailView({
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 py-4">
               <div className="text-center p-4 bg-muted/30 rounded-lg">
                 <Bed className="h-6 w-6 mx-auto mb-2 text-primary" />
-                <p className="font-semibold text-lg">{property.bedrooms}</p>
+                <p className="font-semibold text-lg">{property.bedrooms ?? 'N/A'}</p>
                 <p className="text-sm text-muted-foreground">Bedrooms</p>
               </div>
               <div className="text-center p-4 bg-muted/30 rounded-lg">
                 <Bath className="h-6 w-6 mx-auto mb-2 text-primary" />
-                <p className="font-semibold text-lg">{property.bathrooms}</p>
+                <p className="font-semibold text-lg">{property.bathrooms ?? 'N/A'}</p>
                 <p className="text-sm text-muted-foreground">Bathrooms</p>
               </div>
               <div className="text-center p-4 bg-muted/30 rounded-lg">
                 <Square className="h-6 w-6 mx-auto mb-2 text-primary" />
-                <p className="font-semibold text-lg">{property.square_feet.toLocaleString()}</p>
+                {/* FIXED: Use optional chaining (?.) and nullish coalescing (??) for a fallback */}
+                <p className="font-semibold text-lg">{property.square_feet?.toLocaleString() ?? 'N/A'}</p>
                 <p className="text-sm text-muted-foreground">Sq Ft</p>
               </div>
               <div className="text-center p-4 bg-muted/30 rounded-lg">
                 <Calendar className="h-6 w-6 mx-auto mb-2 text-primary" />
-                <p className="font-semibold text-lg">{property.year_built}</p>
+                <p className="font-semibold text-lg">{property.year_built ?? 'N/A'}</p>
                 <p className="text-sm text-muted-foreground">Year Built</p>
               </div>
             </div>
@@ -263,16 +269,20 @@ export default function PropertyDetailView({
                         </div>
                         <div className="flex items-center">
                           <Square className="h-4 w-4 mr-1" />
-                          {similarProperty.square_feet?.toLocaleString()} sqft
+                          {/* FIXED: Added a fallback here as well for consistency */}
+                          {similarProperty.square_feet?.toLocaleString() ?? 'N/A'} sqft
                         </div>
                       </div>
 
                       <div className="flex items-center justify-between">
                         <div>
                           <p className="text-2xl font-bold text-primary">${similarProperty.price.toLocaleString()}</p>
-                          <p className="text-sm text-muted-foreground">
-                            ${Math.round(similarProperty.price / similarProperty.square_feet)}/sqft
-                          </p>
+                          {/* FIXED: Check for null or zero before dividing */}
+                          {similarProperty.square_feet && similarProperty.square_feet > 0 && (
+                            <p className="text-sm text-muted-foreground">
+                              ${Math.round(similarProperty.price / similarProperty.square_feet)}/sqft
+                            </p>
+                          )}
                         </div>
                         <Badge variant="secondary" className="capitalize">
                           {similarProperty.property_type}
