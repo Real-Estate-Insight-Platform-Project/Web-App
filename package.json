@@ -67,6 +67,7 @@
     "swr": "^2.3.6",
     "tailwind-merge": "^2.5.5",
     "tailwindcss-animate": "^1.0.7",
+    "uuid": "^13.0.0",
     "vaul": "^0.9.9",
     "zod": "3.25.67"
   },
@@ -78,6 +79,7 @@
     "@types/node": "^22",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/uuid": "^10.0.0",
     "cross-env": "^10.0.0",
     "lighthouse": "^12.8.2",
     "playwright": "^1.55.1",
