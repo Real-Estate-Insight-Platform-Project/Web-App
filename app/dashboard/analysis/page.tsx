@@ -25,12 +25,14 @@ interface ComparisonRegion {
   county: string
 }
 
+
 export default function MarketAnalysisPage() {
   const [selectedState, setSelectedState] = useState<string>("")
   const [selectedCounty, setSelectedCounty] = useState<string>("")
   const [forecastHorizon, setForecastHorizon] = useState<string>("12")
   const [comparisonRegions, setComparisonRegions] = useState<ComparisonRegion[]>([])
   const [loading, setLoading] = useState(false)
+
 
   // Hard-coded market data
   const states = [
@@ -260,7 +262,6 @@ export default function MarketAnalysisPage() {
                     <SelectItem value="6">6 months</SelectItem>
                     <SelectItem value="12">12 months</SelectItem>
                     <SelectItem value="24">24 months</SelectItem>
-                    <SelectItem value="36">36 months</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
