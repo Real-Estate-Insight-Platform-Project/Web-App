@@ -7,6 +7,8 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import { TrendingUp, BarChart3, MapPin, Activity, Target, DollarSign } from "lucide-react"
+import stateToCounties from "../../../state_to_counties.json"
+
 
 interface MarketData {
   state: string
