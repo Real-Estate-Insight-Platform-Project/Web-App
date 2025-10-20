@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { TrendingUp, TrendingDown, Minus, BarChart3, Home, DollarSign, Calendar, Search } from "lucide-react"
-import stateToCounties from "./state_to_counties.json"
+import stateToCounties from "../../../state_to_counties.json"
 import { 
   LineChart, 
   Line, 
