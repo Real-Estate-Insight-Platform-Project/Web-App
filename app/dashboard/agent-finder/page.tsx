@@ -1,617 +1,424 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Separator } from "@/components/ui/separator"
-import { Progress } from "@/components/ui/progress"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import {
   Users,
-  Star,
-  Phone,
-  Mail,
-  MapPin,
-  TrendingUp,
-  Award,
-  CheckCircle,
-  ArrowRight,
-  ArrowLeft,
   Search,
   Loader2,
-  ExternalLink,
-  Home,
-  Building,
-  Building2,
-  TreePine,
-  Warehouse,
+  Brain,
+  CheckCircle,
+  AlertCircle,
+  RefreshCw,
+  Sparkles,
+  TrendingUp
 } from "lucide-react"
+import { PreferenceSliders } from "@/components/agent-finder/preference-sliders"
+import { AdvancedFilters } from "@/components/agent-finder/advanced-filters"
+import { AgentCard } from "@/components/agent-finder/agent-card"
+import { AgentDetailModal } from "@/components/agent-finder/agent-detail-modal"
 
-interface Agent {
-  rank: number
+interface UserPreferences {
+  responsiveness: number
+  negotiation: number
+  professionalism: number
+  market_expertise: number
+}
+
+interface UserFilters {
+  state?: string
+  city?: string
+  transaction_type?: "buying" | "selling"
+  price_min?: number
+  price_max?: number
+  language?: string
+  specialization?: string
+  min_rating?: number
+  min_reviews?: number
+  require_recent_activity?: boolean
+  active_only?: boolean
+}
+
+interface AgentRecommendation {
   agent_id: number
   name: string
-  brokerage: string | null
-  star_rating: number
-  num_reviews: number
-  past_year_deals: number
-  avg_transaction_value: number
-  service_regions: string[]
-  comprehensive_areas: string[]
-  business_market: string | null
-  office_state: string | null
-  property_types: string[]
-  phone: string | null
-  email: string | null
-  profile_url: string | null
-  photo_url: string | null
-  is_premier: boolean
-  is_active: boolean
-  total_score: number
-  breakdown: {
-    performance: number
+  rank: number
+  utility_score: number
+  availability_fit?: number
+  confidence_score: number
+  profile: {
+    state: string
+    city: string
+    rating: number
+    review_count: number
+    experience_years: number
+    specializations: string
+    languages: string
+    agent_type: string
+    office_name: string
+    phone: string
+    website: string
+    bio: string
+  }
+  metrics: {
+    responsiveness: number
+    negotiation: number
+    professionalism: number
     market_expertise: number
-    client_satisfaction: number
-    professional_standing: number
-    availability: number
+    q_prior?: number
+    wilson_lower_bound?: number
+    recency_score?: number
   }
 }
 
-interface SearchCriteria {
-  transaction_type: "buying" | "selling" | null
-  locations: string | null
-  property_types: string | null
-  price_range: { min: number; max: number; label: string } | null
+interface ExplanationItem {
+  agent_id: number
+  agent_name: string
+  rank: number
+  preference_matches?: Array<{
+    aspect: string
+    match_quality: string
+    agent_performance: string
+  }>
+  theme_strengths?: Array<{
+    theme_name: string
+    strength_score: number
+    examples: string[]
+  }>
+  confidence_metrics?: {
+    confidence_level: string
+    review_count: number
+    wilson_lower_bound: number
+  }
+  why_recommended: string
 }
 
-const PROPERTY_TYPES = [
-  { value: "Single Family Residential", label: "Single-Family", icon: Home },
-  { value: "Condo/Co-op", label: "Condo", icon: Building },
-  { value: "Townhouse", label: "Townhouse", icon: Building2 },
-  { value: "Vacant Land", label: "Vacant Lot / Land", icon: TreePine },
-  { value: "Multi-Family (2-4 Unit)", label: "Multi-Family", icon: Warehouse },
-  { value: "Other", label: "Other", icon: Building },
-]
-
-const PRICE_RANGES = [
-  { label: "Under $200K", min: 0, max: 200000 },
-  { label: "$200K - $400K", min: 200000, max: 400000 },
-  { label: "$400K - $600K", min: 400000, max: 600000 },
-  { label: "$600K - $800K", min: 600000, max: 800000 },
-  { label: "$800K - $1M", min: 800000, max: 1000000 },
-  { label: "$1M - $2M", min: 1000000, max: 2000000 },
-  { label: "$2M - $5M", min: 2000000, max: 5000000 },
-  { label: "Above $5M", min: 5000000, max: 50000000 },
-]
-
-const MAJOR_MARKETS = [
-  "New York City, New York",
-  "Los Angeles, California",
-  "Chicago, Illinois",
-  "Dallas, Texas",
-  "Houston, Texas",
-  "Washington, D.C.",
-  "Miami, Florida",
-  "Philadelphia, Pennsylvania",
-  "Atlanta, Georgia",
-  "Phoenix, Arizona",
-  "Boston, Massachusetts",
-  "San Francisco, California",
-  "Detroit, Michigan",
-  "Seattle, Washington",
-  "Minneapolis, Minnesota",
-  "San Diego, California",
-  "Tampa, Florida",
-  "Denver, Colorado",
-  "St. Louis, Missouri",
-  "Baltimore, Maryland",
-  "Charlotte, North Carolina",
-  "Portland, Oregon",
-  "San Antonio, Texas",
-  "Orlando, Florida",
-  "Cincinnati, Ohio",
-  "Cleveland, Ohio",
-  "Kansas City, Missouri",
-  "Las Vegas, Nevada",
-  "Columbus, Ohio",
-  "Indianapolis, Indiana",
-  "Nashville, Tennessee",
-  "Virginia Beach, Virginia",
-  "Providence, Rhode Island",
-  "Milwaukee, Wisconsin",
-  "Jacksonville, Florida",
-  "Memphis, Tennessee",
-  "Oklahoma City, Oklahoma",
-  "Louisville, Kentucky",
-  "Hartford, Connecticut",
-  "Richmond, Virginia",
-  "New Orleans, Louisiana",
-  "Buffalo, New York",
-  "Raleigh, North Carolina",
-  "Birmingham, Alabama",
-  "Salt Lake City, Utah",
-  "Austin, Texas",
-  "Fort Worth, Texas",
-  "Sacramento, California",
-]
+interface RecommendationResponse {
+  recommendations: AgentRecommendation[]
+  explanations: ExplanationItem[]
+  metadata: any
+  summary: {
+    total_candidates: number
+    after_filtering: number
+    recommended: number
+    preference_personalization: string
+  }
+}
 
 export default function AgentFinderPage() {
-  const [currentStep, setCurrentStep] = useState(0)
-  const [searchCriteria, setSearchCriteria] = useState<SearchCriteria>({
-    transaction_type: null,
-    locations: null,
-    property_types: null,
-    price_range: null,
+  const [preferences, setPreferences] = useState<UserPreferences>({
+    responsiveness: 0.5,
+    negotiation: 0.5,
+    professionalism: 0.5,
+    market_expertise: 0.5,
   })
-  const [agents, setAgents] = useState<Agent[]>([])
+  
+  const [filters, setFilters] = useState<UserFilters>({
+    active_only: true,
+    language: "English",
+  })
+  
+  const [results, setResults] = useState<RecommendationResponse | null>(null)
   const [isLoading, setIsLoading] = useState(false)
-  const [showResults, setShowResults] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [systemHealth, setSystemHealth] = useState<any>(null)
+  const [isTraining, setIsTraining] = useState(false)
+  const [selectedAgentId, setSelectedAgentId] = useState<number | null>(null)
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
 
-  const steps = ["Transaction Type", "Location", "Property Type", "Price Range", "Results"]
+  // Check system health on load
+  useEffect(() => {
+    checkSystemHealth()
+  }, [])
+
+  const checkSystemHealth = async () => {
+    try {
+      const response = await fetch("/api/agent-finder/train")
+      if (response.ok) {
+        const health = await response.json()
+        setSystemHealth(health)
+      }
+    } catch (error) {
+      console.error("Failed to check system health:", error)
+    }
+  }
 
   const handleSearch = async () => {
     setIsLoading(true)
+    setError(null)
+    
     try {
       const response = await fetch("/api/agent-finder/recommend", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          locations: searchCriteria.locations ? [searchCriteria.locations] : [],
-          property_types: searchCriteria.property_types ? [searchCriteria.property_types] : [],
-          price_min: searchCriteria.price_range?.min,
-          price_max: searchCriteria.price_range?.max,
+          preferences,
+          filters,
           top_k: 10,
+          include_explanations: true,
         }),
       })
 
-      if (response.ok) {
-        const data = await response.json()
-        setAgents(data.results || [])
+      if (!response.ok) {
+        const errorData = await response.json()
+        
+        if (errorData.needs_training) {
+          setError("The Agent Finder system needs to be trained first. Please initialize the system.")
+          return
+        }
+        
+        throw new Error(errorData.error || "Failed to get recommendations")
       }
+
+      const data: RecommendationResponse = await response.json()
+      setResults(data)
     } catch (error) {
-      console.error("Error searching for agents:", error)
+      console.error("Error getting recommendations:", error)
+      setError(error instanceof Error ? error.message : "An error occurred")
     } finally {
       setIsLoading(false)
-      setShowResults(true)
     }
   }
 
-  const nextStep = () => {
-    if (currentStep < steps.length - 1) {
-      if (currentStep === steps.length - 2) {
-        handleSearch()
+  const handleTrainSystem = async () => {
+    setIsTraining(true)
+    setError(null)
+    
+    try {
+      const response = await fetch("/api/agent-finder/train", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          use_cache: true,
+          save_cache: true,
+        }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || "Failed to train system")
       }
-      setCurrentStep(currentStep + 1)
+
+      const data = await response.json()
+      console.log("Training completed:", data)
+      await checkSystemHealth()
+      
+      // Auto-search after training if we have some preferences set
+      const hasPreferences = Object.values(preferences).some(p => p !== 0.5)
+      if (hasPreferences || filters.state) {
+        await handleSearch()
+      }
+    } catch (error) {
+      console.error("Error training system:", error)
+      setError(error instanceof Error ? error.message : "Training failed")
+    } finally {
+      setIsTraining(false)
     }
   }
 
-  const prevStep = () => {
-    if (currentStep > 0) {
-      setCurrentStep(currentStep - 1)
-      setShowResults(false)
+  const handleViewDetails = (agentId: number) => {
+    setSelectedAgentId(agentId)
+    setIsDetailModalOpen(true)
+  }
+
+  const handleContact = (agentId: number, type: "phone" | "email") => {
+    const agent = results?.recommendations.find(a => a.agent_id === agentId)
+    if (!agent) return
+
+    if (type === "phone" && agent.profile.phone) {
+      window.open(`tel:${agent.profile.phone}`)
     }
-  }
-
-  const canProceed = () => {
-    switch (currentStep) {
-      case 0:
-        return searchCriteria.transaction_type !== null
-      case 1:
-        return searchCriteria.locations !== null
-      case 2:
-        return searchCriteria.property_types !== null
-      case 3:
-        return searchCriteria.price_range !== null
-      default:
-        return true
-    }
-  }
-
-  const formatPrice = (price: number) => {
-    if (price >= 1000000) {
-      return `$${(price / 1000000).toFixed(1)}M`
-    } else if (price >= 1000) {
-      return `$${(price / 1000).toFixed(0)}K`
-    }
-    return `$${price.toLocaleString()}`
-  }
-
-  const getPropertyTypeIcon = (type: string) => {
-    const propertyType = PROPERTY_TYPES.find((pt) => pt.value === type)
-    return propertyType?.icon || Building
-  }
-
-  if (showResults) {
-    return (
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground flex items-center gap-2">
-              <Users className="h-8 w-8 text-primary" />
-              Agent Recommendations
-            </h1>
-            <p className="text-muted-foreground mt-2">Found {agents.length} agents matching your criteria</p>
-          </div>
-          <Button
-            variant="outline"
-            onClick={() => {
-              setCurrentStep(0)
-              setShowResults(false)
-            }}
-          >
-            <Search className="h-4 w-4 mr-2" />
-            New Search
-          </Button>
-        </div>
-
-        {isLoading ? (
-          <Card>
-            <CardContent className="flex items-center justify-center py-12">
-              <div className="text-center space-y-4">
-                <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
-                <p className="text-lg font-medium">Searching for agents that match your needs...</p>
-                <p className="text-muted-foreground">This may take a few moments</p>
-              </div>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid gap-6">
-            {agents.map((agent) => (
-              <Card key={agent.agent_id} className="overflow-hidden">
-                <CardContent className="p-6">
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex items-center space-x-4">
-                      <div className="relative">
-                        <Avatar className="h-16 w-16">
-                          <AvatarImage src={agent.photo_url || "/placeholder.svg"} alt={agent.name} />
-                          <AvatarFallback className="bg-primary text-primary-foreground text-lg">
-                            {agent.name
-                              .split(" ")
-                              .map((n) => n[0])
-                              .join("")}
-                          </AvatarFallback>
-                        </Avatar>
-                        <Badge className="absolute -top-2 -right-2 bg-primary text-primary-foreground">
-                          #{agent.rank}
-                        </Badge>
-                      </div>
-                      <div>
-                        <h3 className="text-xl font-semibold">{agent.name}</h3>
-                        <p className="text-muted-foreground">{agent.brokerage}</p>
-                        <div className="flex items-center space-x-4 mt-2">
-                          <div className="flex items-center space-x-1">
-                            <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                            <span className="font-medium">{agent.star_rating.toFixed(1)}</span>
-                            <span className="text-muted-foreground">({agent.num_reviews} reviews)</span>
-                          </div>
-                          {agent.is_premier && (
-                            <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
-                              <Award className="h-3 w-3 mr-1" />
-                              Premier
-                            </Badge>
-                          )}
-                        </div>
-                        <div className="flex items-center space-x-4 mt-2 text-sm">
-                          <div className="flex items-center space-x-1">
-                            <span className="text-muted-foreground">Deals This Year:</span>
-                            <span className="font-medium">{agent.past_year_deals}</span>
-                          </div>
-                          <div className="flex items-center space-x-1">
-                            <span className="text-muted-foreground">Avg Transaction:</span>
-                            <span className="font-medium">{formatPrice(agent.avg_transaction_value)}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-2xl font-bold text-primary">{Math.round(agent.total_score * 100)}%</div>
-                      <p className="text-sm text-muted-foreground">Match Score</p>
-                    </div>
-                  </div>
-
-                  <div className="grid md:grid-cols-2 gap-6">
-                    <div className="space-y-4">
-                      <div>
-                        <h4 className="font-medium mb-2">Service Areas</h4>
-                        <div className="flex flex-wrap gap-1">
-                          {agent.comprehensive_areas.slice(0, 3).map((area, idx) => (
-                            <Badge key={idx} variant="outline" className="text-xs">
-                              <MapPin className="h-3 w-3 mr-1" />
-                              {area}
-                            </Badge>
-                          ))}
-                          {agent.comprehensive_areas.length > 3 && (
-                            <Badge variant="outline" className="text-xs">
-                              +{agent.comprehensive_areas.length - 3} more
-                            </Badge>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="space-y-4">
-                      <div>
-                        <h4 className="font-medium mb-2">Expertise Breakdown</h4>
-                        <div className="space-y-2">
-                          {Object.entries(agent.breakdown).map(([key, value]) => (
-                            <div key={key} className="space-y-1">
-                              <div className="flex justify-between text-sm">
-                                <span className="capitalize">{key.replace("_", " ")}</span>
-                                <span>{Math.round(value * 100)}%</span>
-                              </div>
-                              <Progress value={value * 100} className="h-2" />
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <Separator className="my-4" />
-
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-4">
-                      {agent.phone && (
-                        <Button variant="outline" size="sm" asChild>
-                          <a href={`tel:${agent.phone}`}>
-                            <Phone className="h-4 w-4 mr-2" />
-                            Call
-                          </a>
-                        </Button>
-                      )}
-                      {agent.email && (
-                        <Button variant="outline" size="sm" asChild>
-                          <a href={`mailto:${agent.email}`}>
-                            <Mail className="h-4 w-4 mr-2" />
-                            Email
-                          </a>
-                        </Button>
-                      )}
-                    </div>
-                    {agent.profile_url && (
-                      <Button variant="default" size="sm" asChild>
-                        <a href={agent.profile_url} target="_blank" rel="noopener noreferrer">
-                          View Profile
-                          <ExternalLink className="h-4 w-4 ml-2" />
-                        </a>
-                      </Button>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
-      </div>
-    )
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="space-y-8 max-w-7xl mx-auto px-4">
+      {/* Header */}
       <div className="text-center space-y-4">
-        <h1 className="text-3xl font-bold text-foreground flex items-center justify-center gap-2">
-          <Users className="h-8 w-8 text-primary" />
-          Find Your Perfect Real Estate Agent
-        </h1>
-        <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-          Connect with top-rated real estate professionals who specialize in your area and property type. Our matching system finds agents with proven track records in your market.
-        </p>
-      </div>
-
-      {currentStep === 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Why Work with a Real Estate Agent?</CardTitle>
-            <CardDescription>
-              Professional agents provide invaluable expertise and support throughout your real estate journey
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="grid md:grid-cols-2 gap-6">
-              <div className="space-y-4">
-                <div className="flex items-start space-x-3">
-                  <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
-                  <div>
-                    <h4 className="font-medium">Market Expertise</h4>
-                    <p className="text-sm text-muted-foreground">
-                      Local market knowledge, pricing strategies, and neighborhood insights
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start space-x-3">
-                  <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
-                  <div>
-                    <h4 className="font-medium">Negotiation Skills</h4>
-                    <p className="text-sm text-muted-foreground">
-                      Professional negotiation to get you the best deal possible
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start space-x-3">
-                  <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
-                  <div>
-                    <h4 className="font-medium">Network Access</h4>
-                    <p className="text-sm text-muted-foreground">
-                      Connections with lenders, inspectors, contractors, and other professionals
-                    </p>
-                  </div>
-                </div>
-              </div>
-              <div className="space-y-4">
-                <div className="flex items-start space-x-3">
-                  <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
-                  <div>
-                    <h4 className="font-medium">Legal Protection</h4>
-                    <p className="text-sm text-muted-foreground">
-                      Navigate complex contracts and legal requirements safely
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start space-x-3">
-                  <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
-                  <div>
-                    <h4 className="font-medium">Time Savings</h4>
-                    <p className="text-sm text-muted-foreground">
-                      Handle paperwork, scheduling, and coordination for you
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start space-x-3">
-                  <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
-                  <div>
-                    <h4 className="font-medium">Market Access</h4>
-                    <p className="text-sm text-muted-foreground">Access to MLS listings and off-market opportunities</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <Separator />
-
-            <div>
-              <h4 className="font-medium mb-4">Are you buying or selling?</h4>
-              <div className="grid grid-cols-2 gap-4">
-                <Button
-                  variant={searchCriteria.transaction_type === "buying" ? "default" : "outline"}
-                  className="h-20 text-left flex-col items-start justify-center"
-                  onClick={() => setSearchCriteria((prev) => ({ ...prev, transaction_type: "buying" }))}
-                >
-                  <Home className="h-6 w-6 mb-2" />
-                  <div>
-                    <div className="font-medium">Buying</div>
-                    <div className="text-sm opacity-70">Find your dream home</div>
-                  </div>
-                </Button>
-                <Button
-                  variant={searchCriteria.transaction_type === "selling" ? "default" : "outline"}
-                  className="h-20 text-left flex-col items-start justify-center"
-                  onClick={() => setSearchCriteria((prev) => ({ ...prev, transaction_type: "selling" }))}
-                >
-                  <TrendingUp className="h-6 w-6 mb-2" />
-                  <div>
-                    <div className="font-medium">Selling</div>
-                    <div className="text-sm opacity-70">Get the best price</div>
-                  </div>
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {currentStep === 1 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Which area are you looking to {searchCriteria.transaction_type}?</CardTitle>
-            <CardDescription>Select one location where you want to find an agent</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 max-h-96 overflow-y-auto">
-                {MAJOR_MARKETS.map((location) => (
-                  <Button
-                    key={location}
-                    variant={searchCriteria.locations === location ? "default" : "outline"}
-                    className="justify-start h-auto p-3 text-left"
-                    onClick={() => {
-                      setSearchCriteria((prev) => ({
-                        ...prev,
-                        locations: prev.locations === location ? null : location,
-                      }))
-                    }}
-                  >
-                    <MapPin className="h-4 w-4 mr-2 flex-shrink-0" />
-                    <span className="text-sm">{location}</span>
-                  </Button>
-                ))}
-              </div>
-              {searchCriteria.locations && (
-                <div className="mt-4">
-                  <p className="text-sm font-medium mb-2">Selected location:</p>
-                  <Badge variant="secondary">
-                    {searchCriteria.locations}
-                  </Badge>
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {currentStep === 2 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>What type of property are you interested in?</CardTitle>
-            <CardDescription>Select one property type for your search</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              {PROPERTY_TYPES.map((type) => {
-                const Icon = type.icon
-                return (
-                  <Button
-                    key={type.value}
-                    variant={searchCriteria.property_types === type.value ? "default" : "outline"}
-                    className="h-24 flex-col space-y-2"
-                    onClick={() => {
-                      setSearchCriteria((prev) => ({
-                        ...prev,
-                        property_types: prev.property_types === type.value ? null : type.value,
-                      }))
-                    }}
-                  >
-                    <Icon className="h-8 w-8" />
-                    <span className="text-sm font-medium">{type.label}</span>
-                  </Button>
-                )
-              })}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {currentStep === 3 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>What's your price range?</CardTitle>
-            <CardDescription>Select the price range for your {searchCriteria.transaction_type} search</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {PRICE_RANGES.map((range) => (
-                <Button
-                  key={range.label}
-                  variant={searchCriteria.price_range?.label === range.label ? "default" : "outline"}
-                  className="justify-start h-12"
-                  onClick={() => setSearchCriteria((prev) => ({ ...prev, price_range: range }))}
-                >
-                  {range.label}
-                </Button>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Navigation */}
-      <div className="flex justify-between items-center">
-        <Button variant="outline" onClick={prevStep} disabled={currentStep === 0}>
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Previous
-        </Button>
-
-        <div className="flex space-x-2">
-          {steps.slice(0, -1).map((_, index) => (
-            <div key={index} className={`h-2 w-8 rounded-full ${index <= currentStep ? "bg-primary" : "bg-muted"}`} />
-          ))}
+        <div className="flex items-center justify-center gap-3 mb-4">
+          <div>
+            <h1 className="text-4xl font-bold text-gray-900">
+              AI-Powered Agent Finder
+            </h1>
+            <p className="text-lg text-gray-600 mt-2">
+              Find your perfect real estate agent using advanced machine learning
+            </p>
+          </div>
         </div>
-
-        <Button onClick={nextStep} disabled={!canProceed() || currentStep >= steps.length - 1}>
-          {currentStep === steps.length - 2 ? "Find Agents" : "Next"}
-          <ArrowRight className="h-4 w-4 ml-2" />
-        </Button>
+        <div className="flex items-center justify-center gap-4">
+        </div>
       </div>
+
+      {/* System Status & Training */}
+      {systemHealth && !systemHealth.system_trained && (
+        <Alert className="border-red-200 bg-red-50">
+          <AlertCircle className="h-4 w-4 text-red-600" />
+          <AlertDescription className="flex items-center justify-between text-red-800">
+            <span>
+              The AI agent recommendation system needs to be initialized before making recommendations.
+            </span>
+            <Button
+              onClick={handleTrainSystem}
+              disabled={isTraining}
+              size="sm"
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              {isTraining ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Training...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="h-4 w-4 mr-2" />
+                  Initialize System
+                </>
+              )}
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {/* Error Display */}
+      {error && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+
+      {/* How It Works */}
+      <Card className="border-red-200 bg-gradient-to-br from-red-50 to-white">
+        <CardHeader className="text-center">
+          <CardTitle className="flex items-center justify-center gap-2 text-2xl text-red-800">
+            How Our AI Agent Finder Works
+          </CardTitle>
+          <CardDescription className="text-red-600">
+            Advanced machine learning system that learns from thousands of reviews and agent data
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid md:grid-cols-3 gap-8">
+            <div className="text-center space-y-4">
+              <div className="h-16 w-16 bg-red-100 rounded-full flex items-center justify-center mx-auto border-4 border-white shadow-lg">
+                <Users className="h-8 w-8 text-red-600" />
+              </div>
+              <h4 className="font-semibold text-lg text-gray-900">Set Your Preferences</h4>
+              <p className="text-sm text-gray-600 leading-relaxed">
+                Tell us what matters most: responsiveness, negotiation skills, professionalism, or market expertise
+              </p>
+            </div>
+            
+            <div className="text-center space-y-4">
+              <div className="h-16 w-16 bg-red-100 rounded-full flex items-center justify-center mx-auto border-4 border-white shadow-lg">
+                <Brain className="h-8 w-8 text-red-600" />
+              </div>
+              <h4 className="font-semibold text-lg text-gray-900">AI Analysis</h4>
+              <p className="text-sm text-gray-600 leading-relaxed">
+                Our ML system analyzes review sentiment, agent performance patterns, and skill vectors
+              </p>
+            </div>
+            
+            <div className="text-center space-y-4">
+              <div className="h-16 w-16 bg-red-100 rounded-full flex items-center justify-center mx-auto border-4 border-white shadow-lg">
+                <CheckCircle className="h-8 w-8 text-red-600" />
+              </div>
+              <h4 className="font-semibold text-lg text-gray-900">Personalized Matches</h4>
+              <p className="text-sm text-gray-600 leading-relaxed">
+                Get ranked recommendations with explanations of why each agent is a good fit
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Search Interface */}
+      <div className="grid xl:grid-cols-2 gap-8">
+        <PreferenceSliders
+          preferences={preferences}
+          onChange={setPreferences}
+        />
+        
+        <AdvancedFilters
+          filters={filters}
+          onChange={setFilters}
+        />
+      </div>
+
+      {/* Search Button */}
+      <div className="flex justify-center">
+            <Button
+              onClick={handleSearch}
+              disabled={isLoading || isTraining || (systemHealth && !systemHealth.system_trained)}
+              size="lg"
+              className="text-lg px-12 py-4 bg-red-600 hover:bg-red-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="h-6 w-6 mr-3 animate-spin" />
+                  Finding Your Perfect Agents...
+                </>
+              ) : (
+                <>
+                  <Search className="h-6 w-6 mr-3" />
+                  Find My Ideal Agents
+                </>
+              )}
+            </Button>
+      </div>
+
+      {/* Results */}
+      {results && (
+        <div className="space-y-8">
+
+          {/* Agent Cards */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {results.recommendations.map((agent, index) => {
+              const explanation = results.explanations.find(e => e.agent_id === agent.agent_id)
+              return (
+                <AgentCard
+                  key={agent.agent_id}
+                  agent={agent}
+                  explanation={explanation}
+                  onViewDetails={handleViewDetails}
+                  onContact={handleContact}
+                />
+              )
+            })}
+          </div>
+
+          {results.recommendations.length === 0 && (
+            <Card className="border-red-200">
+              <CardContent className="text-center py-16">
+                <div className="p-4 bg-red-100 rounded-full w-24 h-24 mx-auto mb-6 flex items-center justify-center">
+                  <Search className="h-12 w-12 text-red-600" />
+                </div>
+                <h3 className="text-2xl font-semibold mb-4 text-gray-900">No agents found</h3>
+                <p className="text-gray-600 mb-6 max-w-md mx-auto">
+                  Try adjusting your filters or preferences to find more matches. Our system works best with some flexibility.
+                </p>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setFilters({ active_only: true, language: "English" })}
+                  className="border-red-200 text-red-700 hover:bg-red-50"
+                >
+                  Reset All Filters
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      )}
+
+      {/* Agent Detail Modal */}
+      <AgentDetailModal
+        agentId={selectedAgentId}
+        isOpen={isDetailModalOpen}
+        onClose={() => setIsDetailModalOpen(false)}
+      />
     </div>
   )
 }
