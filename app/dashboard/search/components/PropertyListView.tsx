@@ -41,7 +41,7 @@ export default function PropertyListView({
     setIsAiLoading(true);
     setAiError(null);
     try {
-      const response = await fetch('http://localhost:8000/query', { // Your Python agent URL
+      const response = await fetch('http://localhost:8010/query', { // Your Python agent URL
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ query: aiQuery }),
