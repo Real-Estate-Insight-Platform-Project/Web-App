@@ -1,10 +1,8 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Separator } from "@/components/ui/separator"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import {
   Users,
@@ -13,210 +11,160 @@ import {
   Brain,
   CheckCircle,
   AlertCircle,
-  RefreshCw,
   Sparkles,
-  TrendingUp
 } from "lucide-react"
 import { PreferenceSliders } from "@/components/agent-finder/preference-sliders"
 import { AdvancedFilters } from "@/components/agent-finder/advanced-filters"
 import { AgentCard } from "@/components/agent-finder/agent-card"
 import { AgentDetailModal } from "@/components/agent-finder/agent-detail-modal"
 
-interface UserPreferences {
-  responsiveness: number
-  negotiation: number
-  professionalism: number
-  market_expertise: number
+// Updated interfaces to match backend models
+interface SubScorePreferences {
+  responsiveness?: number
+  negotiation?: number
+  professionalism?: number
+  market_expertise?: number
 }
 
-interface UserFilters {
-  state?: string
-  city?: string
-  transaction_type?: "buying" | "selling"
-  price_min?: number
-  price_max?: number
+interface SkillPreferences {
+  communication?: number
+  local_knowledge?: number
+  attention_to_detail?: number
+  patience?: number
+  honesty?: number
+  problem_solving?: number
+  dedication?: number
+}
+
+interface SearchFilters {
+  user_type: "buyer" | "seller"
+  state: string
+  city: string
+  min_price?: number
+  max_price?: number
+  property_type?: string
+  is_urgent?: boolean
   language?: string
-  specialization?: string
-  min_rating?: number
-  min_reviews?: number
-  require_recent_activity?: boolean
-  active_only?: boolean
+  additional_specializations?: string[]
+  max_results?: number
 }
 
 interface AgentRecommendation {
-  agent_id: number
-  name: string
-  rank: number
-  utility_score: number
-  availability_fit?: number
-  confidence_score: number
-  profile: {
-    state: string
-    city: string
-    rating: number
-    review_count: number
-    experience_years: number
-    specializations: string
-    languages: string
-    agent_type: string
-    office_name: string
-    phone: string
-    website: string
-    bio: string
-  }
-  metrics: {
-    responsiveness: number
-    negotiation: number
-    professionalism: number
-    market_expertise: number
-    q_prior?: number
-    wilson_lower_bound?: number
-    recency_score?: number
-  }
+  advertiser_id: number
+  full_name: string
+  state: string
+  agent_base_city: string
+  agent_base_zipcode: string | null
+  phone_primary: string | null
+  office_phone: string | null
+  agent_website: string | null
+  office_name: string | null
+  has_photo: boolean
+  agent_photo_url: string | null
+  experience_years: number | null
+  matching_score: number
+  proximity_score: number
+  distance_km: number | null
+  review_count: number
+  agent_rating: number
+  positive_review_count: number
+  negative_review_count: number
+  recently_sold_count: number
+  active_listings_count: number
+  days_since_last_sale: number | null
+  property_types: string[]
+  additional_specializations: string[]
+  avg_responsiveness: number | null
+  avg_negotiation: number | null
+  avg_professionalism: number | null
+  avg_market_expertise: number | null
+  buyer_seller_fit: string
 }
 
-interface ExplanationItem {
-  agent_id: number
-  agent_name: string
-  rank: number
-  preference_matches?: Array<{
-    aspect: string
-    match_quality: string
-    agent_performance: string
-  }>
-  theme_strengths?: Array<{
-    theme_name: string
-    strength_score: number
-    examples: string[]
-  }>
-  confidence_metrics?: {
-    confidence_level: string
-    review_count: number
-    wilson_lower_bound: number
-  }
-  why_recommended: string
-}
-
-interface RecommendationResponse {
+interface SearchResponse {
+  success: boolean
+  message: string
+  total_results: number
   recommendations: AgentRecommendation[]
-  explanations: ExplanationItem[]
-  metadata: any
-  summary: {
-    total_candidates: number
-    after_filtering: number
-    recommended: number
-    preference_personalization: string
-  }
+  search_params: any
 }
 
 export default function AgentFinderPage() {
-  const [preferences, setPreferences] = useState<UserPreferences>({
-    responsiveness: 0.5,
-    negotiation: 0.5,
-    professionalism: 0.5,
-    market_expertise: 0.5,
+  const [subScorePreferences, setSubScorePreferences] = useState<SubScorePreferences>({
+    responsiveness: 0.25,
+    negotiation: 0.25,
+    professionalism: 0.25,
+    market_expertise: 0.25,
   })
   
-  const [filters, setFilters] = useState<UserFilters>({
-    active_only: true,
+  const [skillPreferences, setSkillPreferences] = useState<SkillPreferences>({})
+  
+  const [filters, setFilters] = useState<SearchFilters>({
+    user_type: "buyer",
+    state: "",
+    city: "",
     language: "English",
+    is_urgent: false,
+    max_results: 20,
   })
   
-  const [results, setResults] = useState<RecommendationResponse | null>(null)
+  const [results, setResults] = useState<SearchResponse | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [systemHealth, setSystemHealth] = useState<any>(null)
-  const [isTraining, setIsTraining] = useState(false)
   const [selectedAgentId, setSelectedAgentId] = useState<number | null>(null)
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
 
-  // Check system health on load
-  useEffect(() => {
-    checkSystemHealth()
-  }, [])
-
-  const checkSystemHealth = async () => {
-    try {
-      const response = await fetch("/api/agent-finder/train")
-      if (response.ok) {
-        const health = await response.json()
-        setSystemHealth(health)
-      }
-    } catch (error) {
-      console.error("Failed to check system health:", error)
-    }
-  }
-
   const handleSearch = async () => {
+    // Validate required fields
+    if (!filters.state || !filters.city) {
+      setError("Please select both state and city to search for agents")
+      return
+    }
+
     setIsLoading(true)
     setError(null)
     
     try {
-      const response = await fetch("/api/agent-finder/recommend", {
+      // Build preferences object for backend
+      const searchRequest = {
+        user_type: filters.user_type,
+        state: filters.state,
+        city: filters.city,
+        min_price: filters.min_price,
+        max_price: filters.max_price,
+        property_type: filters.property_type,
+        is_urgent: filters.is_urgent || false,
+        language: filters.language || "English",
+        sub_score_preferences: subScorePreferences,
+        skill_preferences: skillPreferences,
+        additional_specializations: filters.additional_specializations || [],
+        max_results: filters.max_results || 20,
+      }
+
+      console.log("Search request:", searchRequest)
+
+      const response = await fetch("/api/agent-finder/search", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          preferences,
-          filters,
-          top_k: 10,
-          include_explanations: true,
-        }),
+        body: JSON.stringify(searchRequest),
       })
 
       if (!response.ok) {
         const errorData = await response.json()
-        
-        if (errorData.needs_training) {
-          setError("The Agent Finder system needs to be trained first. Please initialize the system.")
-          return
-        }
-        
         throw new Error(errorData.error || "Failed to get recommendations")
       }
 
-      const data: RecommendationResponse = await response.json()
+      const data: SearchResponse = await response.json()
       setResults(data)
+      
+      if (data.total_results === 0) {
+        setError("No agents found matching your criteria. Try adjusting your filters.")
+      }
     } catch (error) {
       console.error("Error getting recommendations:", error)
-      setError(error instanceof Error ? error.message : "An error occurred")
+      setError(error instanceof Error ? error.message : "An error occurred while searching for agents")
     } finally {
       setIsLoading(false)
-    }
-  }
-
-  const handleTrainSystem = async () => {
-    setIsTraining(true)
-    setError(null)
-    
-    try {
-      const response = await fetch("/api/agent-finder/train", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          use_cache: true,
-          save_cache: true,
-        }),
-      })
-
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || "Failed to train system")
-      }
-
-      const data = await response.json()
-      console.log("Training completed:", data)
-      await checkSystemHealth()
-      
-      // Auto-search after training if we have some preferences set
-      const hasPreferences = Object.values(preferences).some(p => p !== 0.5)
-      if (hasPreferences || filters.state) {
-        await handleSearch()
-      }
-    } catch (error) {
-      console.error("Error training system:", error)
-      setError(error instanceof Error ? error.message : "Training failed")
-    } finally {
-      setIsTraining(false)
     }
   }
 
@@ -225,12 +173,14 @@ export default function AgentFinderPage() {
     setIsDetailModalOpen(true)
   }
 
-  const handleContact = (agentId: number, type: "phone" | "email") => {
-    const agent = results?.recommendations.find(a => a.agent_id === agentId)
+  const handleContact = (agentId: number, type: "phone" | "website") => {
+    const agent = results?.recommendations.find(a => a.advertiser_id === agentId)
     if (!agent) return
 
-    if (type === "phone" && agent.profile.phone) {
-      window.open(`tel:${agent.profile.phone}`)
+    if (type === "phone" && agent.phone_primary) {
+      window.open(`tel:${agent.phone_primary}`)
+    } else if (type === "website" && agent.agent_website) {
+      window.open(agent.agent_website, "_blank")
     }
   }
 
@@ -248,39 +198,7 @@ export default function AgentFinderPage() {
             </p>
           </div>
         </div>
-        <div className="flex items-center justify-center gap-4">
-        </div>
       </div>
-
-      {/* System Status & Training */}
-      {systemHealth && !systemHealth.system_trained && (
-        <Alert className="border-red-200 bg-red-50">
-          <AlertCircle className="h-4 w-4 text-red-600" />
-          <AlertDescription className="flex items-center justify-between text-red-800">
-            <span>
-              The AI agent recommendation system needs to be initialized before making recommendations.
-            </span>
-            <Button
-              onClick={handleTrainSystem}
-              disabled={isTraining}
-              size="sm"
-              className="bg-red-600 hover:bg-red-700 text-white"
-            >
-              {isTraining ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Training...
-                </>
-              ) : (
-                <>
-                  <Sparkles className="h-4 w-4 mr-2" />
-                  Initialize System
-                </>
-              )}
-            </Button>
-          </AlertDescription>
-        </Alert>
-      )}
 
       {/* Error Display */}
       {error && (
@@ -318,7 +236,7 @@ export default function AgentFinderPage() {
               </div>
               <h4 className="font-semibold text-lg text-gray-900">AI Analysis</h4>
               <p className="text-sm text-gray-600 leading-relaxed">
-                Our ML system analyzes review sentiment, agent performance patterns, and skill vectors
+                Our system analyzes review sentiment, agent performance patterns, and skill vectors
               </p>
             </div>
             
@@ -328,7 +246,7 @@ export default function AgentFinderPage() {
               </div>
               <h4 className="font-semibold text-lg text-gray-900">Personalized Matches</h4>
               <p className="text-sm text-gray-600 leading-relaxed">
-                Get ranked recommendations with explanations of why each agent is a good fit
+                Get ranked recommendations with matching scores showing how well each agent fits your needs
               </p>
             </div>
           </div>
@@ -338,8 +256,10 @@ export default function AgentFinderPage() {
       {/* Search Interface */}
       <div className="grid xl:grid-cols-2 gap-8">
         <PreferenceSliders
-          preferences={preferences}
-          onChange={setPreferences}
+          preferences={subScorePreferences}
+          skillPreferences={skillPreferences}
+          onPreferencesChange={setSubScorePreferences}
+          onSkillPreferencesChange={setSkillPreferences}
         />
         
         <AdvancedFilters
@@ -350,44 +270,53 @@ export default function AgentFinderPage() {
 
       {/* Search Button */}
       <div className="flex justify-center">
-            <Button
-              onClick={handleSearch}
-              disabled={isLoading || isTraining || (systemHealth && !systemHealth.system_trained)}
-              size="lg"
-              className="text-lg px-12 py-4 bg-red-600 hover:bg-red-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 className="h-6 w-6 mr-3 animate-spin" />
-                  Finding Your Perfect Agents...
-                </>
-              ) : (
-                <>
-                  <Search className="h-6 w-6 mr-3" />
-                  Find My Ideal Agents
-                </>
-              )}
-            </Button>
+        <Button
+          onClick={handleSearch}
+          disabled={isLoading || !filters.state || !filters.city}
+          size="lg"
+          className="text-lg px-12 py-4 bg-red-600 hover:bg-red-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
+        >
+          {isLoading ? (
+            <>
+              <Loader2 className="h-6 w-6 mr-3 animate-spin" />
+              Finding Your Perfect Agents...
+            </>
+          ) : (
+            <>
+              <Search className="h-6 w-6 mr-3" />
+              Find My Ideal Agents
+            </>
+          )}
+        </Button>
       </div>
+
+      {/* Results Summary */}
+      {results && results.total_results > 0 && (
+        <div className="text-center">
+          <Card className="border-green-200 bg-green-50">
+            <CardContent className="py-4">
+              <p className="text-green-800 font-medium">
+                <Sparkles className="inline h-5 w-5 mr-2" />
+                Found {results.total_results} matching agents in {filters.city}, {filters.state}
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       {/* Results */}
       {results && (
         <div className="space-y-8">
-
           {/* Agent Cards */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {results.recommendations.map((agent, index) => {
-              const explanation = results.explanations.find(e => e.agent_id === agent.agent_id)
-              return (
-                <AgentCard
-                  key={agent.agent_id}
-                  agent={agent}
-                  explanation={explanation}
-                  onViewDetails={handleViewDetails}
-                  onContact={handleContact}
-                />
-              )
-            })}
+            {results.recommendations.map((agent) => (
+              <AgentCard
+                key={agent.advertiser_id}
+                agent={agent}
+                onViewDetails={handleViewDetails}
+                onContact={handleContact}
+              />
+            ))}
           </div>
 
           {results.recommendations.length === 0 && (
@@ -402,7 +331,14 @@ export default function AgentFinderPage() {
                 </p>
                 <Button 
                   variant="outline" 
-                  onClick={() => setFilters({ active_only: true, language: "English" })}
+                  onClick={() => setFilters({
+                    user_type: "buyer",
+                    state: "",
+                    city: "",
+                    language: "English",
+                    is_urgent: false,
+                    max_results: 20,
+                  })}
                   className="border-red-200 text-red-700 hover:bg-red-50"
                 >
                   Reset All Filters
