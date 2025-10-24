@@ -694,10 +694,10 @@ export default function MarketInsightsPage() {
                     <p className="text-sm text-muted-foreground">
                       Based on historical data analysis, the market has shown {" "}
                       {
-                        historicalData[historicalData.length - 1].median_listing_price > historicalData[0].median_listing_price
+                        historicalData[historicalData.length - 1].median_listing_price > historicalData[historicalData.length - 4].median_listing_price
                           ? <span>a <strong className="text-green-600">positive growth trend</strong> in median listing prices</span>
                           : <span>a <strong className="text-red-600">negative growth trend</strong> in median listing prices</span>
-                      } over the past {historicalData.length} months.
+                      } over the past 4 months.
                       
                       {chartData.some(item => getMarketCondition(chartData.indexOf(item)) === "Buyer's Advantage") && 
                         " There have been periods favorable to buyers when inventory increased while properties took longer to sell."}
