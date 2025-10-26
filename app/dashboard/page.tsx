@@ -4,7 +4,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { ArrowUpRight, ArrowDownRight, Timer, MapPin, ThumbsUp, PiggyBank } from "lucide-react"
+import { ArrowUpRight, ArrowDownRight, Timer, MapPin, ThumbsUp, PiggyBank, Users, TrendingUp, BarChart3, ExternalLink } from "lucide-react"
 import { useEffect, useState } from "react"
 
 interface Property {
@@ -82,6 +82,15 @@ interface StableStateData {
   coefficient_of_variation: number
 }
 
+interface AdminStats {
+  totalBuyers: number
+  totalInvestors: number
+  totalAdmins: number
+  activeBuyers: number
+  activeInvestors: number
+  totalUsers: number
+}
+
 interface InvestorInsights {
   highestGrowthStates: GrowthStateData[]
   highestGrowthCounties: GrowthCountyData[]
@@ -105,6 +114,7 @@ export default function DashboardPage() {
   const [properties, setProperties] = useState<Property[]>([])
   const [marketData, setMarketData] = useState<MarketData | null>(null)
   const [loading, setLoading] = useState(true)
+  const [isAdmin, setIsAdmin] = useState(false)
   const [buyerInsights, setBuyerInsights] = useState<BuyerInsights>({
     mostAffordableState: null,
     mostAffordableCounty: null,
@@ -120,6 +130,14 @@ export default function DashboardPage() {
     consistentGrowthStates: [],
     consistentGrowthCounties: [],
     stableStates: []
+  })
+  const [adminStats, setAdminStats] = useState<AdminStats>({
+    totalBuyers: 0,
+    totalInvestors: 0,
+    totalAdmins: 0,
+    activeBuyers: 0,
+    activeInvestors: 0,
+    totalUsers: 0
   })
   
   // Helper function to check if cached data is still valid
@@ -171,6 +189,8 @@ export default function DashboardPage() {
 
         // Try to get profile data from cache first
         const cachedProfile = getCachedData(`profile_${userData.id}`, PROFILE_TTL)
+        let userProfile = cachedProfile as UserProfile | null
+        
         if (cachedProfile) {
           setProfile(cachedProfile as UserProfile)
         } else {
@@ -183,8 +203,56 @@ export default function DashboardPage() {
           
           if (profileData) {
             setProfile(profileData as UserProfile)
+            userProfile = profileData as UserProfile
             cacheData(`profile_${userData.id}`, profileData)
           }
+        }
+
+        // Check if user is admin
+        const userRole = userProfile?.user_role
+        if (userRole === "admin") {
+          setIsAdmin(true)
+          
+          // Fetch admin statistics from Supabase
+          try {
+            // Get all profiles with their roles
+            const { data: allProfiles } = await supabase
+              .from("profiles")
+              .select("user_role, created_at")
+            
+            if (allProfiles) {
+              const buyers = allProfiles.filter(p => p.user_role === "buyer").length
+              const investors = allProfiles.filter(p => p.user_role === "investor").length
+              const admins = allProfiles.filter(p => p.user_role === "admin").length
+              const total = allProfiles.length
+              
+              // For now, we'll consider users created in last 30 days as "active"
+              const thirtyDaysAgo = new Date()
+              thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+              
+              const activeBuyersCount = allProfiles.filter(
+                p => p.user_role === "buyer" && new Date(p.created_at) > thirtyDaysAgo
+              ).length
+              
+              const activeInvestorsCount = allProfiles.filter(
+                p => p.user_role === "investor" && new Date(p.created_at) > thirtyDaysAgo
+              ).length
+              
+              setAdminStats({
+                totalBuyers: buyers,
+                totalInvestors: investors,
+                totalAdmins: admins,
+                activeBuyers: activeBuyersCount,
+                activeInvestors: activeInvestorsCount,
+                totalUsers: total
+              })
+            }
+          } catch (error) {
+            console.error("Error fetching admin stats:", error)
+          }
+          
+          setLoading(false)
+          return // Don't fetch buyer/investor specific data for admin
         }
         
         // Try to get properties from cache first
@@ -223,13 +291,6 @@ export default function DashboardPage() {
             cacheData('market_data_austin', marketDataRes)
           }
         }
-        
-        // Get user role for conditional data fetching
-        const userRole = cachedProfile?.user_role || (await supabase
-          .from("profiles")
-          .select("user_role")
-          .eq("id", userData.id)
-          .single()).data?.user_role
         
         // Define constants for investor data
         const INVESTOR_INSIGHTS_TTL = 12 * 60 * 60 * 1000 // 12 hours
@@ -305,6 +366,225 @@ export default function DashboardPage() {
   
   const userRole = profile?.user_role || "buyer"
   const userName = profile?.full_name || user?.email?.split("@")[0]
+
+  // Admin Dashboard Component
+  if (isAdmin) {
+    return (
+      <div className="space-y-8">
+        {/* Admin Welcome Section */}
+        <div>
+          <h1 className="text-3xl font-bold text-balance">Admin Dashboard</h1>
+          <p className="text-muted-foreground mt-2">
+            Manage and monitor system operations, user statistics, and analytics platforms.
+          </p>
+        </div>
+
+        {/* Statistics Cards */}
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {/* Total Users */}
+          <Card>
+            <CardHeader className="pb-2">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-lg">Total Users</CardTitle>
+                <Users className="h-5 w-5 text-blue-600" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold">{adminStats.totalUsers}</div>
+              <p className="text-xs text-muted-foreground mt-2">All registered users</p>
+            </CardContent>
+          </Card>
+
+          {/* Total Buyers */}
+          <Card>
+            <CardHeader className="pb-2">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-lg">Total Buyers</CardTitle>
+                <Users className="h-5 w-5 text-green-600" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold">{adminStats.totalBuyers}</div>
+              <p className="text-xs text-muted-foreground mt-2">
+                Active: {adminStats.activeBuyers}
+              </p>
+            </CardContent>
+          </Card>
+
+          {/* Total Investors */}
+          <Card>
+            <CardHeader className="pb-2">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-lg">Total Investors</CardTitle>
+                <TrendingUp className="h-5 w-5 text-purple-600" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold">{adminStats.totalInvestors}</div>
+              <p className="text-xs text-muted-foreground mt-2">
+                Active: {adminStats.activeInvestors}
+              </p>
+            </CardContent>
+          </Card>
+
+          {/* Total Admins */}
+          <Card>
+            <CardHeader className="pb-2">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-lg">Admin Users</CardTitle>
+                <BarChart3 className="h-5 w-5 text-red-600" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold">{adminStats.totalAdmins}</div>
+              <p className="text-xs text-muted-foreground mt-2">System administrators</p>
+            </CardContent>
+          </Card>
+
+          {/* Active Users Percentage */}
+          <Card>
+            <CardHeader className="pb-2">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-lg">Recent Users (30 days)</CardTitle>
+                <TrendingUp className="h-5 w-5 text-orange-600" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold">
+                {adminStats.activeBuyers + adminStats.activeInvestors}
+              </div>
+              <p className="text-xs text-muted-foreground mt-2">
+                {adminStats.totalUsers > 0
+                  ? ((((adminStats.activeBuyers + adminStats.activeInvestors) / adminStats.totalUsers) * 100).toFixed(1))
+                  : "0"}
+                % of total
+              </p>
+            </CardContent>
+          </Card>
+
+          {/* Buyer/Investor Ratio */}
+          <Card>
+            <CardHeader className="pb-2">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-lg">User Distribution</CardTitle>
+                <BarChart3 className="h-5 w-5 text-indigo-600" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Buyers</span>
+                  <span className="font-semibold">
+                    {adminStats.totalUsers > 0
+                      ? ((adminStats.totalBuyers / adminStats.totalUsers) * 100).toFixed(1)
+                      : "0"}
+                    %
+                  </span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Investors</span>
+                  <span className="font-semibold">
+                    {adminStats.totalUsers > 0
+                      ? ((adminStats.totalInvestors / adminStats.totalUsers) * 100).toFixed(1)
+                      : "0"}
+                    %
+                  </span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* External Services */}
+        <div className="grid gap-4 md:grid-cols-2">
+          {/* Airflow UI Card */}
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer border-2 border-transparent hover:border-blue-400">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-xl">Apache Airflow</CardTitle>
+                  <CardDescription>Workflow Orchestration & Scheduling</CardDescription>
+                </div>
+                <BarChart3 className="h-6 w-6 text-blue-600" />
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Monitor and manage data pipelines, ETL processes, and scheduled workflows across the system.
+              </p>
+              <Button
+                className="w-full bg-blue-600 hover:bg-blue-700"
+                onClick={() => window.open("http://34.72.69.249:8080/", "_blank")}
+              >
+                <ExternalLink className="mr-2 h-4 w-4" />
+                Open Airflow Dashboard
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* MLflow UI Card */}
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer border-2 border-transparent hover:border-green-400">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-xl">MLflow</CardTitle>
+                  <CardDescription>ML Experiment & Model Registry</CardDescription>
+                </div>
+                <TrendingUp className="h-6 w-6 text-green-600" />
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Track machine learning experiments, manage model versions, and monitor model performance metrics.
+              </p>
+              <Button
+                className="w-full bg-green-600 hover:bg-green-700"
+                onClick={() => window.open("https://real-estate-insight.duckdns.org/mlflow/", "_blank")}
+              >
+                <ExternalLink className="mr-2 h-4 w-4" />
+                Open MLflow UI
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Quick Stats Summary */}
+        <Card>
+          <CardHeader>
+            <CardTitle>System Summary</CardTitle>
+            <CardDescription>Overview of platform statistics</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              <div className="border rounded-lg p-4">
+                <p className="text-sm text-muted-foreground mb-1">Total Registrations</p>
+                <p className="text-2xl font-bold">{adminStats.totalUsers}</p>
+              </div>
+              <div className="border rounded-lg p-4">
+                <p className="text-sm text-muted-foreground mb-1">Buyers / Investors</p>
+                <p className="text-2xl font-bold">
+                  {adminStats.totalBuyers} / {adminStats.totalInvestors}
+                </p>
+              </div>
+              <div className="border rounded-lg p-4">
+                <p className="text-sm text-muted-foreground mb-1">Recent Activity (30d)</p>
+                <p className="text-2xl font-bold">
+                  {((((adminStats.activeBuyers + adminStats.activeInvestors) / Math.max(adminStats.totalUsers, 1)) * 100).toFixed(0))}%
+                </p>
+              </div>
+              <div className="border rounded-lg p-4">
+                <p className="text-sm text-muted-foreground mb-1">Platform Status</p>
+                <p className="text-2xl font-bold flex items-center">
+                  <span className="inline-block h-2 w-2 rounded-full bg-green-500 mr-2"></span>
+                  Operational
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-8">

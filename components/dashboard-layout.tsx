@@ -35,7 +35,7 @@ import { cn } from "@/lib/utils"
 
 interface DashboardLayoutProps {
   children: React.ReactNode
-  userRole: "buyer" | "investor"
+  userRole: "buyer" | "investor" | "admin"
   userName?: string
   userEmail?: string
 }
@@ -72,7 +72,11 @@ export function DashboardLayout({ children, userRole, userName, userEmail }: Das
     { href: "/dashboard/chat-assistant", icon: MessageSquare, label: "AI Assistant" },
   ]
 
-  const navItems = userRole === "buyer" ? buyerNavItems : investorNavItems
+  const adminNavItems = [
+    { href: "/dashboard", icon: Home, label: "Dashboard" },
+  ]
+
+  const navItems = userRole === "buyer" ? buyerNavItems : userRole === "investor" ? investorNavItems : adminNavItems
 
   const SidebarContent = ({ onNavigate }: { onNavigate?: () => void }) => (
     <div className="flex h-full flex-col">
@@ -110,20 +114,22 @@ export function DashboardLayout({ children, userRole, userName, userEmail }: Das
       </nav>
 
       {/* Settings */}
-      <div className="border-t px-4 py-4">
-        <Link
-          href="/dashboard/settings"
-          className={`flex items-center space-x-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-            pathname === "/dashboard/settings"
-              ? "bg-primary text-primary-foreground"
-              : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-          }`}
-          onClick={onNavigate}
-        >
-          <Settings className="h-5 w-5" />
-          <span>Settings</span>
-        </Link>
-      </div>
+      {userRole !== "admin" && (
+        <div className="border-t px-4 py-4">
+          <Link
+            href="/dashboard/settings"
+            className={`flex items-center space-x-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+              pathname === "/dashboard/settings"
+                ? "bg-primary text-primary-foreground"
+                : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+            }`}
+            onClick={onNavigate}
+          >
+            <Settings className="h-5 w-5" />
+            <span>Settings</span>
+          </Link>
+        </div>
+      )}
     </div>
   )
 
@@ -144,7 +150,7 @@ export function DashboardLayout({ children, userRole, userName, userEmail }: Das
                   <Home className="h-5 w-5" />
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">{userRole === "buyer" ? "Home Buyer" : "Investor"}</span>
+                  <span className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">{userRole === "buyer" ? "Home Buyer" : userRole === "investor" ? "Investor" : "Administrator"}</span>
                   <span className="text-lg font-semibold text-foreground">RealEstate Insights</span>
                 </div>
               </div>
@@ -195,25 +201,29 @@ export function DashboardLayout({ children, userRole, userName, userEmail }: Das
                     </div>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild>
-                    <Link href="/dashboard/profile" className="flex items-center">
-                      <User className="mr-2 h-4 w-4" />
-                      <span>Profile</span>
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href="/dashboard/favorites" className="flex items-center">
-                      <Heart className="mr-2 h-4 w-4" />
-                      <span>Saved Properties</span>
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href="/dashboard/settings" className="flex items-center">
-                      <Settings className="mr-2 h-4 w-4" />
-                      <span>Settings</span>
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
+                  {userRole !== "admin" && (
+                    <>
+                      <DropdownMenuItem asChild>
+                        <Link href="/dashboard/profile" className="flex items-center">
+                          <User className="mr-2 h-4 w-4" />
+                          <span>Profile</span>
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link href="/dashboard/favorites" className="flex items-center">
+                          <Heart className="mr-2 h-4 w-4" />
+                          <span>Saved Properties</span>
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link href="/dashboard/settings" className="flex items-center">
+                          <Settings className="mr-2 h-4 w-4" />
+                          <span>Settings</span>
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                    </>
+                  )}
                   <DropdownMenuItem onClick={handleSignOut} className="text-red-600">
                     <LogOut className="mr-2 h-4 w-4" />
                     <span>Sign out</span>
