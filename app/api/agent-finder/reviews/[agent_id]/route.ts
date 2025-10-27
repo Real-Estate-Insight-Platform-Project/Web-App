@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 
-const BACKEND_API_URL = process.env.AGENT_FINDER_API_URL || "http://localhost:8004"
+const BACKEND_API_URL = process.env.AGENT_FINDER_API_URL || "http://34.72.69.249:8004"
 const API_PREFIX = "/api/v1"
 
 export async function GET(
