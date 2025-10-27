@@ -99,7 +99,7 @@ export default function PropertySearchPage() {
 
         if (history.length > 0) {
           const latestPropertyId = history[0].id;
-          const response = await fetch('http://34.72.69.249:8011/recommendations', {
+          const response = await fetch('http://34.72.69.249:7000/recommendations', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
