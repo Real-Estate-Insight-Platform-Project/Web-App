@@ -55,7 +55,7 @@ export default function PropertySearchPage() {
     saveUserActivity({ type: 'search', query: aiQuery });
 
     try {
-      const response = await fetch('http://localhost:8010/query', {
+      const response = await fetch('http://34.72.69.249:8010/query', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ query: aiQuery }),
@@ -99,7 +99,7 @@ export default function PropertySearchPage() {
 
         if (history.length > 0) {
           const latestPropertyId = history[0].id;
-          const response = await fetch('http://localhost:8011/recommendations', {
+          const response = await fetch('http://34.72.69.249:8011/recommendations', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
