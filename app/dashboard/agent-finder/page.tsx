@@ -2,51 +2,47 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Progress } from "@/components/ui/progress"
 import {
-  Users,
-  Search,
-  Loader2,
   Brain,
   CheckCircle,
   AlertCircle,
   Sparkles,
+  ArrowLeft,
+  Loader2,
 } from "lucide-react"
-import { PreferenceSliders } from "@/components/agent-finder/preference-sliders"
-import { AdvancedFilters } from "@/components/agent-finder/advanced-filters"
-import { AgentCard } from "@/components/agent-finder/agent-card"
-import { AgentDetailModal } from "@/components/agent-finder/agent-detail-modal"
+import { Step1UserType } from "@/components/agent-finder/wizard/step1-user-type"
+import { Step2LocationProperty } from "@/components/agent-finder/wizard/step2-location-property"
+import { Step3Priorities } from "@/components/agent-finder/wizard/step3-priorities"
+import { Step4AdditionalQualities } from "@/components/agent-finder/wizard/step4-additional-qualities"
+import { Step5FinalPreferences } from "@/components/agent-finder/wizard/step5-final-preferences"
+import { AgentCardEnhanced } from "@/components/agent-finder/agent-card-enhanced"
 
-// Updated interfaces to match backend models
-interface SubScorePreferences {
-  responsiveness?: number
-  negotiation?: number
-  professionalism?: number
-  market_expertise?: number
-}
-
-interface SkillPreferences {
-  communication?: number
-  local_knowledge?: number
-  attention_to_detail?: number
-  patience?: number
-  honesty?: number
-  problem_solving?: number
-  dedication?: number
-}
-
-interface SearchFilters {
-  user_type: "buyer" | "seller"
+// Form data interface
+interface FormData {
+  // Step 1
+  userType: "buyer" | "seller"
+  
+  // Step 2
   state: string
   city: string
-  min_price?: number
-  max_price?: number
-  property_type?: string
-  is_urgent?: boolean
-  language?: string
-  additional_specializations?: string[]
-  max_results?: number
+  minPrice: number
+  maxPrice: number
+  propertyType: string
+  
+  // Step 3
+  subScorePreferences: Record<string, number>
+  
+  // Step 4
+  skillPreferences: Record<string, number>
+  
+  // Step 5
+  language: string
+  additionalSpecializations: string[]
+  isUrgent: boolean
+  maxResults: number
 }
 
 interface AgentRecommendation {
@@ -90,33 +86,58 @@ interface SearchResponse {
 }
 
 export default function AgentFinderPage() {
-  const [subScorePreferences, setSubScorePreferences] = useState<SubScorePreferences>({
-    responsiveness: 0.25,
-    negotiation: 0.25,
-    professionalism: 0.25,
-    market_expertise: 0.25,
-  })
-  
-  const [skillPreferences, setSkillPreferences] = useState<SkillPreferences>({})
-  
-  const [filters, setFilters] = useState<SearchFilters>({
-    user_type: "buyer",
-    state: "",
-    city: "",
-    language: "English",
-    is_urgent: false,
-    max_results: 20,
-  })
-  
-  const [results, setResults] = useState<SearchResponse | null>(null)
+  const [currentStep, setCurrentStep] = useState(1)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [selectedAgentId, setSelectedAgentId] = useState<number | null>(null)
-  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
+  const [results, setResults] = useState<SearchResponse | null>(null)
+  
+  const [formData, setFormData] = useState<FormData>({
+    userType: "buyer",
+    state: "",
+    city: "",
+    minPrice: 0,
+    maxPrice: 5000000,
+    propertyType: "",
+    subScorePreferences: {
+      responsiveness: 0.25,
+      negotiation: 0.25,
+      professionalism: 0.25,
+      market_expertise: 0.25,
+    },
+    skillPreferences: {
+      communication: 0.25,
+      local_knowledge: 0.25,
+      attention_to_detail: 0.25,
+      patience: 0.25,
+      honesty: 0.25,
+      problem_solving: 0.25,
+    },
+    language: "English",
+    additionalSpecializations: [],
+    isUrgent: false,
+    maxResults: 20,
+  })
 
-  const handleSearch = async () => {
+  const totalSteps = 5
+  const progress = (currentStep / totalSteps) * 100
+
+  const handleBack = () => {
+    if (currentStep > 1) {
+      setCurrentStep(currentStep - 1)
+      setError(null)
+    }
+  }
+
+  const handleNext = () => {
+    if (currentStep < totalSteps) {
+      setCurrentStep(currentStep + 1)
+      setError(null)
+    }
+  }
+
+  const handleSubmit = async () => {
     // Validate required fields
-    if (!filters.state || !filters.city) {
+    if (!formData.state || !formData.city) {
       setError("Please select both state and city to search for agents")
       return
     }
@@ -125,20 +146,20 @@ export default function AgentFinderPage() {
     setError(null)
     
     try {
-      // Build preferences object for backend
+      // Build search request for backend API
       const searchRequest = {
-        user_type: filters.user_type,
-        state: filters.state,
-        city: filters.city,
-        min_price: filters.min_price,
-        max_price: filters.max_price,
-        property_type: filters.property_type,
-        is_urgent: filters.is_urgent || false,
-        language: filters.language || "English",
-        sub_score_preferences: subScorePreferences,
-        skill_preferences: skillPreferences,
-        additional_specializations: filters.additional_specializations || [],
-        max_results: filters.max_results || 20,
+        user_type: formData.userType,
+        state: formData.state,
+        city: formData.city,
+        min_price: formData.minPrice,
+        max_price: formData.maxPrice,
+        property_type: formData.propertyType || undefined,
+        is_urgent: formData.isUrgent,
+        language: formData.language,
+        sub_score_preferences: formData.subScorePreferences,
+        skill_preferences: formData.skillPreferences,
+        additional_specializations: formData.additionalSpecializations,
+        max_results: formData.maxResults,
       }
 
       console.log("Search request:", searchRequest)
@@ -159,6 +180,9 @@ export default function AgentFinderPage() {
       
       if (data.total_results === 0) {
         setError("No agents found matching your criteria. Try adjusting your filters.")
+      } else {
+        // Move to results view
+        setCurrentStep(6)
       }
     } catch (error) {
       console.error("Error getting recommendations:", error)
@@ -168,37 +192,234 @@ export default function AgentFinderPage() {
     }
   }
 
-  const handleViewDetails = (agentId: number) => {
-    setSelectedAgentId(agentId)
-    setIsDetailModalOpen(true)
+  const handleStartOver = () => {
+    setCurrentStep(1)
+    setResults(null)
+    setError(null)
+    setFormData({
+      userType: "buyer",
+      state: "",
+      city: "",
+      minPrice: 0,
+      maxPrice: 5000000,
+      propertyType: "",
+      subScorePreferences: {
+        responsiveness: 0.25,
+        negotiation: 0.25,
+        professionalism: 0.25,
+        market_expertise: 0.25,
+      },
+      skillPreferences: {
+        communication: 0.25,
+        local_knowledge: 0.25,
+        attention_to_detail: 0.25,
+        patience: 0.25,
+        honesty: 0.25,
+        problem_solving: 0.25,
+      },
+      language: "English",
+      additionalSpecializations: [],
+      isUrgent: false,
+      maxResults: 20,
+    })
   }
 
-  const handleContact = (agentId: number, type: "phone" | "website") => {
-    const agent = results?.recommendations.find(a => a.advertiser_id === agentId)
-    if (!agent) return
-
-    if (type === "phone" && agent.phone_primary) {
-      window.open(`tel:${agent.phone_primary}`)
-    } else if (type === "website" && agent.agent_website) {
-      window.open(agent.agent_website, "_blank")
-    }
-  }
-
-  return (
-    <div className="space-y-8 max-w-7xl mx-auto px-4">
-      {/* Header */}
-      <div className="text-center space-y-4">
-        <div className="flex items-center justify-center gap-3 mb-4">
-          <div>
-            <h1 className="text-4xl font-bold text-gray-900">
-              AI-Powered Agent Finder
+  // Render results view
+  if (currentStep === 6 && results) {
+    return (
+      <div className="space-y-6 max-w-7xl mx-auto px-4 py-8">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <Button
+            onClick={handleStartOver}
+            variant="outline"
+            className="gap-2 border-red-200 text-red-600 hover:bg-red-50"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Start New Search
+          </Button>
+          
+          <div className="text-center">
+            <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2 justify-center">
+              <Sparkles className="h-8 w-8 text-red-600" />
+              Your Perfect Agents
             </h1>
-            <p className="text-lg text-gray-600 mt-2">
-              Find your perfect real estate agent using advanced machine learning
+            <p className="text-gray-600 mt-1">
+              Found {results.total_results} agent{results.total_results !== 1 ? 's' : ''} matching your criteria
             </p>
           </div>
+          
+          <div className="w-[160px]"></div>
         </div>
+
+        {/* Results */}
+        <div className="space-y-4">
+          {results.recommendations.map((agent) => (
+            <AgentCardEnhanced
+              key={agent.advertiser_id}
+              agent={agent}
+            />
+          ))}
+        </div>
+
+        {/* No Results Message */}
+        {results.total_results === 0 && (
+          <Card className="border-gray-200">
+            <CardContent className="text-center py-12">
+              <AlertCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                No Agents Found
+              </h3>
+              <p className="text-gray-600 mb-6">
+                We couldn't find any agents matching your criteria. Try adjusting your filters.
+              </p>
+              <Button onClick={handleStartOver}>
+                Adjust Search Criteria
+              </Button>
+            </CardContent>
+          </Card>
+        )}
       </div>
+    )
+  }
+
+  // Render wizard view
+  return (
+    <div className="space-y-6 max-w-6xl mx-auto px-4 py-8">
+      {/* Header */}
+      <div className="text-center space-y-2">
+        <h1 className="text-4xl font-bold text-gray-900 flex items-center gap-3 justify-center">
+          <Brain className="h-10 w-10 text-red-600" />
+          Find Your Perfect Real Estate Agent
+        </h1>
+        <p className="text-lg text-gray-600">
+          Connect with top-rated real estate professionals who specialize in your area and property type.
+        </p>
+        <p className="text-sm text-gray-500">
+          Our matching system finds agents with proven track records in your market.
+        </p>
+      </div>
+
+      {/* Why Work with a Real Estate Agent - Only on first step */}
+      {currentStep === 1 && (
+        <Card className="border-gray-200 bg-white">
+          <CardContent className="pt-6 pb-8">
+            <h3 className="text-xl font-bold text-center text-gray-900 mb-6">
+              Why Work with a Real Estate Agent?
+            </h3>
+            <p className="text-center text-gray-600 mb-8 max-w-3xl mx-auto">
+              Professional agents provide invaluable expertise and support throughout your real estate journey
+            </p>
+            <div className="grid md:grid-cols-2 gap-6">
+              <div className="flex gap-4">
+                <div className="flex-shrink-0">
+                  <div className="h-5 w-5 rounded-full border-2 border-red-600 flex items-center justify-center mt-0.5">
+                    <CheckCircle className="h-3 w-3 text-red-600" />
+                  </div>
+                </div>
+                <div>
+                  <h4 className="font-semibold text-gray-900 mb-1">Market Expertise</h4>
+                  <p className="text-sm text-gray-600">
+                    Local market knowledge, pricing strategies, and neighborhood insights
+                  </p>
+                </div>
+              </div>
+              
+              <div className="flex gap-4">
+                <div className="flex-shrink-0">
+                  <div className="h-5 w-5 rounded-full border-2 border-red-600 flex items-center justify-center mt-0.5">
+                    <CheckCircle className="h-3 w-3 text-red-600" />
+                  </div>
+                </div>
+                <div>
+                  <h4 className="font-semibold text-gray-900 mb-1">Legal Protection</h4>
+                  <p className="text-sm text-gray-600">
+                    Navigate complex contracts and legal requirements safely
+                  </p>
+                </div>
+              </div>
+              
+              <div className="flex gap-4">
+                <div className="flex-shrink-0">
+                  <div className="h-5 w-5 rounded-full border-2 border-red-600 flex items-center justify-center mt-0.5">
+                    <CheckCircle className="h-3 w-3 text-red-600" />
+                  </div>
+                </div>
+                <div>
+                  <h4 className="font-semibold text-gray-900 mb-1">Negotiation Skills</h4>
+                  <p className="text-sm text-gray-600">
+                    Professional negotiation to get you the best deal possible
+                  </p>
+                </div>
+              </div>
+              
+              <div className="flex gap-4">
+                <div className="flex-shrink-0">
+                  <div className="h-5 w-5 rounded-full border-2 border-red-600 flex items-center justify-center mt-0.5">
+                    <CheckCircle className="h-3 w-3 text-red-600" />
+                  </div>
+                </div>
+                <div>
+                  <h4 className="font-semibold text-gray-900 mb-1">Time Savings</h4>
+                  <p className="text-sm text-gray-600">
+                    Handle paperwork, scheduling, and coordination for you
+                  </p>
+                </div>
+              </div>
+              
+              <div className="flex gap-4">
+                <div className="flex-shrink-0">
+                  <div className="h-5 w-5 rounded-full border-2 border-red-600 flex items-center justify-center mt-0.5">
+                    <CheckCircle className="h-3 w-3 text-red-600" />
+                  </div>
+                </div>
+                <div>
+                  <h4 className="font-semibold text-gray-900 mb-1">Network Access</h4>
+                  <p className="text-sm text-gray-600">
+                    Connections with lenders, inspectors, contractors, and other professionals
+                  </p>
+                </div>
+              </div>
+              
+              <div className="flex gap-4">
+                <div className="flex-shrink-0">
+                  <div className="h-5 w-5 rounded-full border-2 border-red-600 flex items-center justify-center mt-0.5">
+                    <CheckCircle className="h-3 w-3 text-red-600" />
+                  </div>
+                </div>
+                <div>
+                  <h4 className="font-semibold text-gray-900 mb-1">Market Access</h4>
+                  <p className="text-sm text-gray-600">
+                    Access to MLS listings and off-market opportunities
+                  </p>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Progress Bar */}
+      {currentStep !== 1 && (
+        <Card>
+          <CardContent className="pt-6">
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm font-medium">
+                <span className="text-gray-700">Step {currentStep} of {totalSteps}</span>
+                <span className="text-red-600">{Math.round(progress)}% Complete</span>
+              </div>
+              <Progress value={progress} className="h-2" />
+              <div className="flex justify-between text-xs text-gray-500">
+                <span>User Type</span>
+                <span>Location</span>
+                <span>Priorities</span>
+                <span>Qualities</span>
+                <span>Preferences</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Error Display */}
       {error && (
@@ -208,153 +429,134 @@ export default function AgentFinderPage() {
         </Alert>
       )}
 
-      {/* How It Works */}
-      <Card className="border-red-200 bg-gradient-to-br from-red-50 to-white">
-        <CardHeader className="text-center">
-          <CardTitle className="flex items-center justify-center gap-2 text-2xl text-red-800">
-            How Our AI Agent Finder Works
-          </CardTitle>
-          <CardDescription className="text-red-600">
-            Advanced machine learning system that learns from thousands of reviews and agent data
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="text-center space-y-4">
-              <div className="h-16 w-16 bg-red-100 rounded-full flex items-center justify-center mx-auto border-4 border-white shadow-lg">
-                <Users className="h-8 w-8 text-red-600" />
+      {/* Wizard Steps */}
+      {currentStep === 1 && (
+        <>
+          <Step1UserType
+            userType={formData.userType}
+            onUserTypeChange={(type) =>
+              setFormData({ ...formData, userType: type })
+            }
+            onNext={handleNext}
+          />
+          
+          {/* How It Works - Only on first step, at bottom */}
+          <Card className="border-red-200 bg-gradient-to-br from-red-50 to-white">
+            <CardContent className="pt-6">
+              <h3 className="text-xl font-bold text-center text-red-800 mb-6">
+                How Our AI Agent Finder Works
+              </h3>
+              <div className="grid md:grid-cols-3 gap-6">
+                <div className="text-center space-y-3">
+                  <div className="h-14 w-14 bg-white rounded-full flex items-center justify-center mx-auto border-2 border-red-600 shadow-sm">
+                    <span className="text-2xl font-bold text-red-600">1</span>
+                  </div>
+                  <h4 className="font-semibold text-gray-900">Set Your Preferences</h4>
+                  <p className="text-sm text-gray-600">
+                    Tell us what matters most in your ideal agent
+                  </p>
+                </div>
+                
+                <div className="text-center space-y-3">
+                  <div className="h-14 w-14 bg-white rounded-full flex items-center justify-center mx-auto border-2 border-red-600 shadow-sm">
+                    <Brain className="h-7 w-7 text-red-600" />
+                  </div>
+                  <h4 className="font-semibold text-gray-900">AI Analysis</h4>
+                  <p className="text-sm text-gray-600">
+                    Our system analyzes thousands of reviews and agent data
+                  </p>
+                </div>
+                
+                <div className="text-center space-y-3">
+                  <div className="h-14 w-14 bg-white rounded-full flex items-center justify-center mx-auto border-2 border-red-600 shadow-sm">
+                    <CheckCircle className="h-7 w-7 text-red-600" />
+                  </div>
+                  <h4 className="font-semibold text-gray-900">Perfect Matches</h4>
+                  <p className="text-sm text-gray-600">
+                    Get ranked recommendations tailored to your needs
+                  </p>
+                </div>
               </div>
-              <h4 className="font-semibold text-lg text-gray-900">Set Your Preferences</h4>
-              <p className="text-sm text-gray-600 leading-relaxed">
-                Tell us what matters most: responsiveness, negotiation skills, professionalism, or market expertise
-              </p>
-            </div>
-            
-            <div className="text-center space-y-4">
-              <div className="h-16 w-16 bg-red-100 rounded-full flex items-center justify-center mx-auto border-4 border-white shadow-lg">
-                <Brain className="h-8 w-8 text-red-600" />
-              </div>
-              <h4 className="font-semibold text-lg text-gray-900">AI Analysis</h4>
-              <p className="text-sm text-gray-600 leading-relaxed">
-                Our system analyzes review sentiment, agent performance patterns, and skill vectors
-              </p>
-            </div>
-            
-            <div className="text-center space-y-4">
-              <div className="h-16 w-16 bg-red-100 rounded-full flex items-center justify-center mx-auto border-4 border-white shadow-lg">
-                <CheckCircle className="h-8 w-8 text-red-600" />
-              </div>
-              <h4 className="font-semibold text-lg text-gray-900">Personalized Matches</h4>
-              <p className="text-sm text-gray-600 leading-relaxed">
-                Get ranked recommendations with matching scores showing how well each agent fits your needs
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Search Interface */}
-      <div className="grid xl:grid-cols-2 gap-8">
-        <PreferenceSliders
-          preferences={subScorePreferences}
-          skillPreferences={skillPreferences}
-          onPreferencesChange={setSubScorePreferences}
-          onSkillPreferencesChange={setSkillPreferences}
-        />
-        
-        <AdvancedFilters
-          filters={filters}
-          onChange={setFilters}
-        />
-      </div>
-
-      {/* Search Button */}
-      <div className="flex justify-center">
-        <Button
-          onClick={handleSearch}
-          disabled={isLoading || !filters.state || !filters.city}
-          size="lg"
-          className="text-lg px-12 py-4 bg-red-600 hover:bg-red-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
-        >
-          {isLoading ? (
-            <>
-              <Loader2 className="h-6 w-6 mr-3 animate-spin" />
-              Finding Your Perfect Agents...
-            </>
-          ) : (
-            <>
-              <Search className="h-6 w-6 mr-3" />
-              Find My Ideal Agents
-            </>
-          )}
-        </Button>
-      </div>
-
-      {/* Results Summary */}
-      {results && results.total_results > 0 && (
-        <div className="text-center">
-          <Card className="border-green-200 bg-green-50">
-            <CardContent className="py-4">
-              <p className="text-green-800 font-medium">
-                <Sparkles className="inline h-5 w-5 mr-2" />
-                Found {results.total_results} matching agents in {filters.city}, {filters.state}
-              </p>
             </CardContent>
           </Card>
-        </div>
+        </>
       )}
 
-      {/* Results */}
-      {results && (
-        <div className="space-y-8">
-          {/* Agent Cards */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {results.recommendations.map((agent) => (
-              <AgentCard
-                key={agent.advertiser_id}
-                agent={agent}
-                onViewDetails={handleViewDetails}
-                onContact={handleContact}
-              />
-            ))}
-          </div>
-
-          {results.recommendations.length === 0 && (
-            <Card className="border-red-200">
-              <CardContent className="text-center py-16">
-                <div className="p-4 bg-red-100 rounded-full w-24 h-24 mx-auto mb-6 flex items-center justify-center">
-                  <Search className="h-12 w-12 text-red-600" />
-                </div>
-                <h3 className="text-2xl font-semibold mb-4 text-gray-900">No agents found</h3>
-                <p className="text-gray-600 mb-6 max-w-md mx-auto">
-                  Try adjusting your filters or preferences to find more matches. Our system works best with some flexibility.
-                </p>
-                <Button 
-                  variant="outline" 
-                  onClick={() => setFilters({
-                    user_type: "buyer",
-                    state: "",
-                    city: "",
-                    language: "English",
-                    is_urgent: false,
-                    max_results: 20,
-                  })}
-                  className="border-red-200 text-red-700 hover:bg-red-50"
-                >
-                  Reset All Filters
-                </Button>
-              </CardContent>
-            </Card>
-          )}
-        </div>
+      {currentStep === 2 && (
+        <Step2LocationProperty
+          state={formData.state}
+          city={formData.city}
+          minPrice={formData.minPrice}
+          maxPrice={formData.maxPrice}
+          propertyType={formData.propertyType}
+          onStateChange={(state) => {
+            setFormData({ ...formData, state, city: "" })
+          }}
+          onCityChange={(city) => {
+            setFormData({ ...formData, city })
+          }}
+          onPriceRangeChange={(min, max) =>
+            setFormData({ ...formData, minPrice: min, maxPrice: max })
+          }
+          onPropertyTypeChange={(type: string) =>
+            setFormData({ ...formData, propertyType: type })
+          }
+          onBack={handleBack}
+          onNext={handleNext}
+        />
       )}
 
-      {/* Agent Detail Modal */}
-      <AgentDetailModal
-        agentId={selectedAgentId}
-        isOpen={isDetailModalOpen}
-        onClose={() => setIsDetailModalOpen(false)}
-      />
+      {currentStep === 3 && (
+        <Step3Priorities
+          subScorePreferences={formData.subScorePreferences}
+          onSubScoreChange={(key: string, value: number) =>
+            setFormData({
+              ...formData,
+              subScorePreferences: { ...formData.subScorePreferences, [key]: value }
+            })
+          }
+          onBack={handleBack}
+          onNext={handleNext}
+        />
+      )}
+
+      {currentStep === 4 && (
+        <Step4AdditionalQualities
+          skillPreferences={formData.skillPreferences}
+          onSkillChange={(key: string, value: number) =>
+            setFormData({
+              ...formData,
+              skillPreferences: { ...formData.skillPreferences, [key]: value }
+            })
+          }
+          onBack={handleBack}
+          onNext={handleNext}
+        />
+      )}
+
+      {currentStep === 5 && (
+        <Step5FinalPreferences
+          language={formData.language}
+          additionalSpecializations={formData.additionalSpecializations}
+          isUrgent={formData.isUrgent}
+          maxResults={formData.maxResults}
+          onLanguageChange={(language) =>
+            setFormData({ ...formData, language })
+          }
+          onSpecializationsChange={(specializations: string[]) =>
+            setFormData({ ...formData, additionalSpecializations: specializations })
+          }
+          onUrgentChange={(isUrgent) =>
+            setFormData({ ...formData, isUrgent })
+          }
+          onMaxResultsChange={(maxResults) =>
+            setFormData({ ...formData, maxResults })
+          }
+          onBack={handleBack}
+          onSubmit={handleSubmit}
+          isLoading={isLoading}
+        />
+      )}
     </div>
   )
 }

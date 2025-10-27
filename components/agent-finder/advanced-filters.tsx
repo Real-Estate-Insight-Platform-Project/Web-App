@@ -1,5 +1,6 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
@@ -7,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { X, MapPin, Home, DollarSign, Globe, Zap } from "lucide-react"
+import { X, MapPin, Home, DollarSign, Globe, Zap, Loader2 } from "lucide-react"
 
 interface SearchFilters {
   user_type: "buyer" | "seller"
@@ -28,58 +29,72 @@ interface AdvancedFiltersProps {
   className?: string
 }
 
-const US_STATES = [
-  { value: "AL", label: "Alabama" },
-  { value: "AK", label: "Alaska" },
-  { value: "AZ", label: "Arizona" },
-  { value: "AR", label: "Arkansas" },
-  { value: "CA", label: "California" },
-  { value: "CO", label: "Colorado" },
-  { value: "CT", label: "Connecticut" },
-  { value: "DE", label: "Delaware" },
-  { value: "FL", label: "Florida" },
-  { value: "GA", label: "Georgia" },
-  { value: "HI", label: "Hawaii" },
-  { value: "ID", label: "Idaho" },
-  { value: "IL", label: "Illinois" },
-  { value: "IN", label: "Indiana" },
-  { value: "IA", label: "Iowa" },
-  { value: "KS", label: "Kansas" },
-  { value: "KY", label: "Kentucky" },
-  { value: "LA", label: "Louisiana" },
-  { value: "ME", label: "Maine" },
-  { value: "MD", label: "Maryland" },
-  { value: "MA", label: "Massachusetts" },
-  { value: "MI", label: "Michigan" },
-  { value: "MN", label: "Minnesota" },
-  { value: "MS", label: "Mississippi" },
-  { value: "MO", label: "Missouri" },
-  { value: "MT", label: "Montana" },
-  { value: "NE", label: "Nebraska" },
-  { value: "NV", label: "Nevada" },
-  { value: "NH", label: "New Hampshire" },
-  { value: "NJ", label: "New Jersey" },
-  { value: "NM", label: "New Mexico" },
-  { value: "NY", label: "New York" },
-  { value: "NC", label: "North Carolina" },
-  { value: "ND", label: "North Dakota" },
-  { value: "OH", label: "Ohio" },
-  { value: "OK", label: "Oklahoma" },
-  { value: "OR", label: "Oregon" },
-  { value: "PA", label: "Pennsylvania" },
-  { value: "RI", label: "Rhode Island" },
-  { value: "SC", label: "South Carolina" },
-  { value: "SD", label: "South Dakota" },
-  { value: "TN", label: "Tennessee" },
-  { value: "TX", label: "Texas" },
-  { value: "UT", label: "Utah" },
-  { value: "VT", label: "Vermont" },
-  { value: "VA", label: "Virginia" },
-  { value: "WA", label: "Washington" },
-  { value: "WV", label: "West Virginia" },
-  { value: "WI", label: "Wisconsin" },
-  { value: "WY", label: "Wyoming" }
-]
+interface StatesResponse {
+  success: boolean
+  total_states: number
+  states: string[]
+}
+
+interface CitiesResponse {
+  success: boolean
+  state_name: string
+  total_cities: number
+  cities: string[]
+}
+
+// State name to code mapping for backend API
+const STATE_NAME_TO_CODE: Record<string, string> = {
+  "Alabama": "AL",
+  "Alaska": "AK",
+  "Arizona": "AZ",
+  "Arkansas": "AR",
+  "California": "CA",
+  "Colorado": "CO",
+  "Connecticut": "CT",
+  "Delaware": "DE",
+  "Florida": "FL",
+  "Georgia": "GA",
+  "Hawaii": "HI",
+  "Idaho": "ID",
+  "Illinois": "IL",
+  "Indiana": "IN",
+  "Iowa": "IA",
+  "Kansas": "KS",
+  "Kentucky": "KY",
+  "Louisiana": "LA",
+  "Maine": "ME",
+  "Maryland": "MD",
+  "Massachusetts": "MA",
+  "Michigan": "MI",
+  "Minnesota": "MN",
+  "Mississippi": "MS",
+  "Missouri": "MO",
+  "Montana": "MT",
+  "Nebraska": "NE",
+  "Nevada": "NV",
+  "New Hampshire": "NH",
+  "New Jersey": "NJ",
+  "New Mexico": "NM",
+  "New York": "NY",
+  "North Carolina": "NC",
+  "North Dakota": "ND",
+  "Ohio": "OH",
+  "Oklahoma": "OK",
+  "Oregon": "OR",
+  "Pennsylvania": "PA",
+  "Rhode Island": "RI",
+  "South Carolina": "SC",
+  "South Dakota": "SD",
+  "Tennessee": "TN",
+  "Texas": "TX",
+  "Utah": "UT",
+  "Vermont": "VT",
+  "Virginia": "VA",
+  "Washington": "WA",
+  "West Virginia": "WV",
+  "Wisconsin": "WI",
+  "Wyoming": "WY"
+}
 
 const PROPERTY_TYPES = [
   { value: "single_family", label: "Single Family" },
@@ -127,9 +142,86 @@ const ADDITIONAL_SPECIALIZATIONS = [
 ]
 
 export function AdvancedFilters({ filters, onChange, className }: AdvancedFiltersProps) {
+  const [states, setStates] = useState<string[]>([])
+  const [cities, setCities] = useState<string[]>([])
+  const [isLoadingStates, setIsLoadingStates] = useState(false)
+  const [isLoadingCities, setIsLoadingCities] = useState(false)
+  const [statesError, setStatesError] = useState<string | null>(null)
+  const [citiesError, setCitiesError] = useState<string | null>(null)
+  const [selectedStateName, setSelectedStateName] = useState<string>("")
+
+  // Fetch states on component mount
+  useEffect(() => {
+    const fetchStates = async () => {
+      setIsLoadingStates(true)
+      setStatesError(null)
+      try {
+        const response = await fetch("/api/agent-finder/locations/states")
+        if (!response.ok) {
+          throw new Error("Failed to fetch states")
+        }
+        const data: StatesResponse = await response.json()
+        if (data.success && data.states) {
+          setStates(data.states)
+        }
+      } catch (error) {
+        console.error("Error fetching states:", error)
+        setStatesError("Failed to load states")
+      } finally {
+        setIsLoadingStates(false)
+      }
+    }
+
+    fetchStates()
+  }, [])
+
+  // Fetch cities when state name changes
+  useEffect(() => {
+    const fetchCities = async () => {
+      if (!selectedStateName) {
+        setCities([])
+        return
+      }
+
+      setIsLoadingCities(true)
+      setCitiesError(null)
+      try {
+        const response = await fetch(
+          `/api/agent-finder/locations/cities?state_name=${encodeURIComponent(selectedStateName)}`
+        )
+        if (!response.ok) {
+          throw new Error("Failed to fetch cities")
+        }
+        const data: CitiesResponse = await response.json()
+        if (data.success && data.cities) {
+          setCities(data.cities)
+          // Clear city selection if it's not in the new list
+          if (filters.city && !data.cities.includes(filters.city)) {
+            updateFilter("city", "")
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching cities:", error)
+        setCitiesError("Failed to load cities")
+        setCities([])
+      } finally {
+        setIsLoadingCities(false)
+      }
+    }
+
+    fetchCities()
+  }, [selectedStateName])
   
   const updateFilter = <K extends keyof SearchFilters>(key: K, value: SearchFilters[K]) => {
     onChange({ ...filters, [key]: value })
+  }
+
+  const handleStateChange = (stateName: string) => {
+    setSelectedStateName(stateName)
+    // Convert state name to code for the backend
+    const stateCode = STATE_NAME_TO_CODE[stateName] || stateName
+    // Update both state and city at once to avoid React batching issues
+    onChange({ ...filters, state: stateCode, city: "" })
   }
 
   const toggleSpecialization = (spec: string) => {
@@ -207,16 +299,37 @@ export function AdvancedFilters({ filters, onChange, className }: AdvancedFilter
               <Label htmlFor="state" className="text-sm font-medium text-gray-900">
                 State *
               </Label>
-              <Select value={filters.state} onValueChange={(value) => updateFilter("state", value)}>
+              <Select 
+                value={selectedStateName} 
+                onValueChange={handleStateChange}
+                disabled={isLoadingStates}
+              >
                 <SelectTrigger id="state" className="bg-white">
-                  <SelectValue placeholder="Select state" />
+                  <SelectValue placeholder={isLoadingStates ? "Loading states..." : "Select state"} />
                 </SelectTrigger>
                 <SelectContent className="max-h-[300px]">
-                  {US_STATES.map((state) => (
-                    <SelectItem key={state.value} value={state.value}>
-                      {state.label} ({state.value})
+                  {isLoadingStates ? (
+                    <SelectItem value="loading" disabled>
+                      <div className="flex items-center gap-2">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Loading...
+                      </div>
                     </SelectItem>
-                  ))}
+                  ) : statesError ? (
+                    <SelectItem value="error" disabled>
+                      {statesError}
+                    </SelectItem>
+                  ) : states.length === 0 ? (
+                    <SelectItem value="empty" disabled>
+                      No states available
+                    </SelectItem>
+                  ) : (
+                    states.map((state) => (
+                      <SelectItem key={state} value={state}>
+                        {state}
+                      </SelectItem>
+                    ))
+                  )}
                 </SelectContent>
               </Select>
             </div>
@@ -225,14 +338,47 @@ export function AdvancedFilters({ filters, onChange, className }: AdvancedFilter
               <Label htmlFor="city" className="text-sm font-medium text-gray-900">
                 City *
               </Label>
-              <Input
-                id="city"
-                type="text"
-                placeholder="Enter city name"
-                value={filters.city}
-                onChange={(e) => updateFilter("city", e.target.value)}
-                className="bg-white"
-              />
+              <Select 
+                value={filters.city} 
+                onValueChange={(value) => updateFilter("city", value)}
+                disabled={!selectedStateName || isLoadingCities}
+              >
+                <SelectTrigger id="city" className="bg-white">
+                  <SelectValue 
+                    placeholder={
+                      !selectedStateName 
+                        ? "Select state first" 
+                        : isLoadingCities 
+                        ? "Loading cities..." 
+                        : "Select city"
+                    } 
+                  />
+                </SelectTrigger>
+                <SelectContent className="max-h-[300px]">
+                  {isLoadingCities ? (
+                    <SelectItem value="loading" disabled>
+                      <div className="flex items-center gap-2">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Loading cities...
+                      </div>
+                    </SelectItem>
+                  ) : citiesError ? (
+                    <SelectItem value="error" disabled>
+                      {citiesError}
+                    </SelectItem>
+                  ) : cities.length === 0 ? (
+                    <SelectItem value="empty" disabled>
+                      {selectedStateName ? "No cities found" : "Select a state first"}
+                    </SelectItem>
+                  ) : (
+                    cities.map((city) => (
+                      <SelectItem key={city} value={city}>
+                        {city}
+                      </SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
             </div>
           </div>
         </div>
