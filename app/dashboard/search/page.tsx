@@ -55,7 +55,7 @@ export default function PropertySearchPage() {
     saveUserActivity({ type: 'search', query: aiQuery });
 
     try {
-      const response = await fetch('https://34.72.69.249:8010/query', {
+      const response = await fetch('http://34.72.69.249:8010/query', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ query: aiQuery }),
