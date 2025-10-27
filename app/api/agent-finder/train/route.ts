@@ -3,7 +3,7 @@ import { type NextRequest, NextResponse } from "next/server"
 export async function GET(request: NextRequest) {
   try {
     // Get the Agent Finder API URL from environment variables
-    const agentFinderApiUrl = process.env.AGENT_FINDER_API_URL || "http://localhost:8003"
+    const agentFinderApiUrl = process.env.AGENT_FINDER_API_URL || "http://34.72.69.249:8003"
 
     console.log("Checking Agent Finder health")
 
@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
 
     // Get the Agent Finder API URL from environment variables
-    const agentFinderApiUrl = process.env.AGENT_FINDER_API_URL || "http://localhost:8003"
+    const agentFinderApiUrl = process.env.AGENT_FINDER_API_URL || "http://34.72.69.249:8003"
 
     console.log("Training Agent Finder system")
 

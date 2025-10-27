@@ -119,7 +119,7 @@ export async function POST(request: NextRequest) {
     const body: AgentFinderRequest = await request.json()
 
     // Get the Agent Finder API URL from environment variables
-    const agentFinderApiUrl = process.env.AGENT_FINDER_API_URL || "http://localhost:8003"
+    const agentFinderApiUrl = process.env.AGENT_FINDER_API_URL || "http://34.72.69.249:8003"
 
     // Prepare the request payload for the Agent Finder ML system
     const agentFinderPayload = {

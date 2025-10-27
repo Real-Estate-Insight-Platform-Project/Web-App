@@ -41,7 +41,7 @@ export default function PropertyListView({
     setIsAiLoading(true);
     setAiError(null);
     try {
-      const response = await fetch('https://real-estate-insight.duckdns.org/query/query', { 
+      const response = await fetch('http://localhost:8010/query', { // Your Python agent URL
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ query: aiQuery }),

@@ -48,7 +48,7 @@ export async function GET(
     }
 
     // Get the Agent Finder API URL from environment variables
-    const agentFinderApiUrl = process.env.AGENT_FINDER_API_URL || "http://localhost:8003"
+    const agentFinderApiUrl = process.env.AGENT_FINDER_API_URL || "http://34.72.69.249:8003"
 
     console.log("Fetching sentiment analysis for agent ID:", agentId)
 
